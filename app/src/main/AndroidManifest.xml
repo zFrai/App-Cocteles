@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.bartender.cocktailapp">
+
+    <!-- Permisos necesarios para acceder a imágenes -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <!-- Android 13+ usa permisos granulares -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_cocktail_placeholder"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_cocktail_placeholder"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <!-- Actividad principal (lista de cócteles) -->
+        <activity
+            android:name=".activity.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Pantalla de detalle -->
+        <activity
+            android:name=".activity.DetailCocktailActivity"
+            android:exported="false"
+            android:parentActivityName=".activity.MainActivity" />
+
+        <!-- Pantalla de creación/edición -->
+        <activity
+            android:name=".activity.EditCocktailActivity"
+            android:exported="false"
+            android:parentActivityName=".activity.MainActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+    </application>
+</manifest>
