@@ -21,6 +21,8 @@ object FirebaseProvider {
 /** Nombres de colecciones y campos en Firestore. */
 object Collections {
     const val USERS = "users"
+    /** Un documento por tag (`tags/{tag}` -> uid) para que no haya dos iguales. */
+    const val TAGS = "tags"
     const val CHATS = "chats"
     const val MESSAGES = "messages"
     const val POSTS = "posts"

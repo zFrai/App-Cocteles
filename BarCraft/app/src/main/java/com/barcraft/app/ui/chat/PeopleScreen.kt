@@ -66,7 +66,7 @@ fun PeopleScreen(onBack: () -> Unit, onRoomReady: (String) -> Unit) {
         Column(Modifier.fillMaxSize().padding(padding)) {
             OutlinedTextField(
                 value = query, onValueChange = { query = it },
-                placeholder = { Text("Buscar por nombre") },
+                placeholder = { Text("Nombre o @usuario") },
                 leadingIcon = { Icon(Icons.Filled.Search, null) },
                 singleLine = true,
                 shape = MaterialTheme.shapes.extraLarge,
@@ -81,7 +81,7 @@ fun PeopleScreen(onBack: () -> Unit, onRoomReady: (String) -> Unit) {
             val list = people.everyone.filter {
                 !it.blocked && !it.profile.banned &&
                     (roleFilter == null || it.profile.role == roleFilter) &&
-                    (query.isBlank() || it.profile.name.contains(query.trim(), true))
+                    it.profile.matches(query)
             }.sortedWith(compareByDescending<Person> { it.favorite }.thenBy { it.profile.name.lowercase() })
 
             when {
