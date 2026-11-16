@@ -33,4 +33,6 @@ object Permissions {
     fun canComment(role: Role?): Boolean = role != null
     fun canModerate(role: Role?): Boolean = role == Role.ADMIN
     fun canManageUsers(role: Role?): Boolean = role == Role.ADMIN
+    /** Borrar valoraciones de un cóctel. Invitados y comensales solo pueden añadirlas. */
+    fun canDeleteRatings(role: Role?): Boolean = role == Role.BARMAN || role == Role.ADMIN
 }
