@@ -1,0 +1,112 @@
+rules_version = '2';
+
+// Reglas de seguridad de BarCraft (v3).
+// Pégalas en Firebase Console > Firestore Database > Reglas > Publicar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isAdmin() { return signedIn() && me().role == 'admin'; }
+    function active() { return signedIn() && me().banned != true; }
+    // Debe coincidir con Permissions.canPublishPosts en model/Role.kt
+    function canPublish() { return active() && me().role in ['barman', 'admin']; }
+    function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // ── Usuarios ───────────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if signedIn();
+      // Al registrarse cada uno crea SU documento como Barman o Comensal (nunca Admin).
+      allow create: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.role in ['barman', 'cliente']
+                    && request.resource.data.banned == false;
+      // Cada uno edita su nombre y bio, pero no su rol ni su bloqueo.
+      allow update: if (signedIn() && request.auth.uid == uid && !changed().hasAny(['role', 'banned']))
+                    // Un Admin cambia roles y bloqueos de otros.
+                    || (isAdmin() && request.auth.uid != uid
+                        && changed().hasOnly(['role', 'banned'])
+                        && request.resource.data.role in ['barman', 'cliente', 'admin']);
+      allow delete: if false;
+
+      // Favoritos y bloqueados: privados, solo su dueño.
+      match /private/{doc} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // ── Amistades ──────────────────────────────────────────────
+    match /friendships/{pairId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.users;
+      allow create: if active()
+                    && request.resource.data.requesterId == request.auth.uid
+                    && request.auth.uid in request.resource.data.users
+                    && request.resource.data.users.size() == 2
+                    && request.resource.data.status == 'pending';
+      // Solo quien recibe la solicitud puede aceptarla.
+      allow update: if active() && request.auth.uid in resource.data.users
+                    && request.auth.uid != resource.data.requesterId
+                    && changed().hasOnly(['status'])
+                    && request.resource.data.status == 'accepted';
+      // Cualquiera de los dos puede cancelar, rechazar o romper la amistad.
+      allow delete: if signedIn() && request.auth.uid in resource.data.users;
+    }
+
+    // ── Chats privados ─────────────────────────────────────────
+    match /chats/{roomId} {
+      function room() { return get(/databases/$(database)/documents/chats/$(roomId)).data; }
+
+      allow read: if signedIn() && request.auth.uid in resource.data.participants;
+      allow create: if active() && request.auth.uid in request.resource.data.participants
+                    && request.resource.data.participants.size() == 2;
+      allow update: if signedIn() && request.auth.uid in resource.data.participants
+                    && request.resource.data.participants == resource.data.participants;
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        function inRoom() { return request.auth.uid in room().participants; }
+        function notBlocked() { return room().get('blockedBy', []).size() == 0; }
+
+        allow read: if signedIn() && inRoom();
+        allow create: if active() && inRoom() && notBlocked()
+                      && request.resource.data.senderId == request.auth.uid
+                      && request.resource.data.type in ['text', 'image', 'audio', 'gif', 'sticker']
+                      && request.resource.data.text.size() <= 2000;
+        // Reacciones: cada uno solo puede tocar la suya.
+        allow update: if active() && inRoom()
+                      && changed().hasOnly(['reactions'])
+                      && request.resource.data.reactions.diff(resource.data.reactions).affectedKeys().hasOnly([request.auth.uid]);
+        allow delete: if signedIn() && resource.data.senderId == request.auth.uid;
+      }
+    }
+
+    // ── Fotos y notas de voz ───────────────────────────────────
+    match /media/{mediaId} {
+      allow read: if signedIn();
+      allow create: if active() && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.data.size() <= 1000000;
+      allow delete: if signedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow update: if false;
+    }
+
+    // ── Comunidad (red social) ─────────────────────────────────
+    match /posts/{postId} {
+      allow read: if signedIn();
+      allow create: if canPublish() && request.resource.data.authorId == request.auth.uid
+                    && request.resource.data.likes.size() == 0
+                    && request.resource.data.commentCount == 0;
+      // Cualquiera activo puede dar "me gusta" o sumar comentarios; el autor puede editar el resto.
+      allow update: if active() && (changed().hasOnly(['likes', 'commentCount'])
+                                    || resource.data.authorId == request.auth.uid);
+      allow delete: if signedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+
+      match /comments/{commentId} {
+        allow read: if signedIn();
+        allow create: if active() && request.resource.data.authorId == request.auth.uid
+                      && request.resource.data.text.size() > 0
+                      && request.resource.data.text.size() <= 1000;
+        allow delete: if signedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+        allow update: if false;
+      }
+    }
+  }
+}

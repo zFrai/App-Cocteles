@@ -1,0 +1,15 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+# Credenciales de Firebase: cada desarrollador usa la suya
+app/google-services.json
+
+# Claves de APIs (GIPHY)
+secrets.properties
