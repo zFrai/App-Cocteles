@@ -98,6 +98,8 @@ fun CocktailDetailScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var ratingDialog by remember { mutableStateOf(false) }
+    var ratingToDelete by remember { mutableStateOf<RatingEntity?>(null) }
+    val canDeleteRatings = Permissions.canDeleteRatings(session.profile?.role)
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
@@ -186,7 +188,9 @@ fun CocktailDetailScreen(
                 else -> {
                     item { RatingSummary(d) }
                     if (d.ratings.isEmpty()) item { InlineEmpty("Aún sin valoraciones. ¡Sé el primero!") }
-                    items(d.sortedRatings, key = { it.id }) { RatingRow(it, onDelete = { vm.deleteRating(it.id) }) }
+                    items(d.sortedRatings, key = { it.id }) { r ->
+                        RatingRow(r, onDelete = if (canDeleteRatings) ({ ratingToDelete = r }) else null)
+                    }
                 }
             }
         }
@@ -203,6 +207,20 @@ fun CocktailDetailScreen(
                 }
             },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancelar") } }
+        )
+    }
+
+    ratingToDelete?.let { r ->
+        AlertDialog(
+            onDismissRequest = { ratingToDelete = null },
+            title = { Text("¿Borrar valoración?") },
+            text = { Text("Se eliminará el voto de ${r.voterName}. No se puede deshacer.") },
+            confirmButton = {
+                TextButton(onClick = { vm.deleteRating(r.id); ratingToDelete = null }) {
+                    Text("Borrar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { ratingToDelete = null }) { Text("Cancelar") } }
         )
     }
 
@@ -326,7 +344,7 @@ private fun RatingSummary(d: CocktailWithDetails) {
 }
 
 @Composable
-private fun RatingRow(r: RatingEntity, onDelete: () -> Unit) {
+private fun RatingRow(r: RatingEntity, onDelete: (() -> Unit)?) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         UserAvatar(r.voterName, size = 36.dp)
         Spacer(Modifier.width(12.dp))
@@ -338,7 +356,8 @@ private fun RatingRow(r: RatingEntity, onDelete: () -> Unit) {
             StarRating(r.stars.toFloat(), starSize = 14.dp)
             if (r.comment.isNotBlank()) Text(r.comment, style = MaterialTheme.typography.bodyMedium)
         }
-        IconButton(onClick = onDelete) {
+        // Solo Barman y Admin (ver Permissions.canDeleteRatings).
+        if (onDelete != null) IconButton(onClick = onDelete) {
             Icon(Icons.Outlined.Delete, "Borrar valoración", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
