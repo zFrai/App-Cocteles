@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono placeholder para cócteles sin imagen -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="80dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Copa de cóctel simplificada -->
+    <path
+        android:fillColor="#BDBDBD"
+        android:pathData="M5,3L19,3L13,11L13,19L15,19L15,21L9,21L9,19L11,19L11,11Z" />
+
+    <!-- Adorno de la copa -->
+    <path
+        android:fillColor="#FF6F00"
+        android:pathData="M14,7L16,4L17,5Z" />
+
+</vector>

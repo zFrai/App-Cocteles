@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Diálogo para añadir una valoración -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <!-- Nombre del votante -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nombre del votante"
+        android:textColor="#333333"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/editVoterName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Ej: Juan, María..."
+        android:inputType="textPersonName" />
+
+    <!-- Puntuación -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Puntuación (1-6 estrellas)"
+        android:textColor="#333333"
+        android:textStyle="bold" />
+
+    <RatingBar
+        android:id="@+id/ratingBarDialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:numStars="6"
+        android:rating="3"
+        android:stepSize="1" />
+
+</LinearLayout>
