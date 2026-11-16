@@ -19,3 +19,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+Third-party content: GIPHY
+
+GIFs and stickers shown in this app are provided through the GIPHY API
+(https://developers.giphy.com/). That content is not covered by the MIT
+License above: it belongs to GIPHY and its respective owners, and its use is
+governed by the GIPHY Terms of Service (https://giphy.com/terms). As those
+terms require, the app displays the "Powered by GIPHY" attribution wherever
+GIPHY content appears. The GIPHY API key is personal and is not included in
+this repository.
