@@ -1,13 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Cocktail Manager</string>
-    <string name="title_cocktails">Mis Cócteles</string>
-    <string name="hint_search">Buscar cóctel…</string>
-    <string name="empty_list">¡Añade tu primer cóctel! 🍸</string>
-    <string name="btn_add_rating">+ Añadir valoración</string>
-    <string name="btn_save">💾 Guardar cóctel</string>
-    <string name="label_no_rating">Sin valoraciones aún</string>
-    <string name="confirm_delete">¿Eliminar este cóctel?</string>
-    <string name="yes">Sí</string>
-    <string name="cancel">Cancelar</string>
+    <string name="app_name">BarCraft</string>
 </resources>
