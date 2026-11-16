@@ -40,6 +40,14 @@ Al registrarse cada persona elige **Barman** o **Comensal**. Para tener el prime
 > Si vienes de la versión 2: vuelve a publicar `firestore.rules`, han cambiado.
 > Las cuentas antiguas con rol `user` se tratan como Barman.
 
+> **Cada vez que cambie `firestore.rules` hay que volver a publicarlas** en la consola.
+> Por ejemplo, las denuncias del chat (colección `reports`) no funcionan hasta publicarlas.
+
+## Denuncias
+Desde un chat, menú ⋮ > **Denunciar** (o mantén pulsado un mensaje > **Denunciar mensaje**).
+Las denuncias se guardan en la colección `reports` y solo las ve el Admin, en la pestaña
+**Admin > Denuncias**, donde puede marcarlas como revisadas, descartarlas o bloquear la cuenta.
+
 ## Probar el chat entre dos usuarios
 Usa dos móviles o dos emuladores (o un móvil y un emulador), registra una cuenta en cada uno,
 y en **Chats > Nuevo chat** busca al otro usuario. Los mensajes llegan al instante.

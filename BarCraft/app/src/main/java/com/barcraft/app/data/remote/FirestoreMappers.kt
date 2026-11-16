@@ -7,6 +7,9 @@ import com.barcraft.app.model.Friendship
 import com.barcraft.app.model.MessageType
 import com.barcraft.app.model.PrivateSettings
 import com.barcraft.app.model.Post
+import com.barcraft.app.model.Report
+import com.barcraft.app.model.ReportReason
+import com.barcraft.app.model.ReportStatus
 import com.barcraft.app.model.Role
 import com.barcraft.app.model.UserProfile
 import com.google.firebase.firestore.DocumentSnapshot
@@ -96,5 +99,20 @@ fun DocumentSnapshot.toComment(): Comment = Comment(
     authorId = getString("authorId").orEmpty(),
     authorName = getString("authorName").orEmpty(),
     text = getString("text").orEmpty(),
+    createdAt = millis("createdAt")
+)
+
+fun DocumentSnapshot.toReport(): Report = Report(
+    id = id,
+    reporterId = getString("reporterId").orEmpty(),
+    reporterName = getString("reporterName").orEmpty(),
+    reportedId = getString("reportedId").orEmpty(),
+    reportedName = getString("reportedName").orEmpty(),
+    roomId = getString("roomId").orEmpty(),
+    reason = ReportReason.from(getString("reason")),
+    details = getString("details").orEmpty(),
+    messageId = getString("messageId").orEmpty(),
+    messageText = getString("messageText").orEmpty(),
+    status = ReportStatus.from(getString("status")),
     createdAt = millis("createdAt")
 )
