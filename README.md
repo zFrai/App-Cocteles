@@ -187,10 +187,6 @@ El trabajo pendiente está en los [issues del repositorio](https://github.com/zF
 
 - [Licencia](#licencia)
 
----
-
-## Licencia
-
 Este proyecto se distribuye bajo la **licencia MIT**. Consulta el archivo [LICENSE](LICENSE) para ver el texto completo.
 
 Copyright (c) 2026 Fräi
