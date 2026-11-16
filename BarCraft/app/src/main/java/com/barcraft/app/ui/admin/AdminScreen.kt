@@ -113,14 +113,14 @@ fun AdminScreen(onOpenPost: (String) -> Unit) {
             if (tab == 0) {
                 OutlinedTextField(
                     value = query, onValueChange = { query = it },
-                    placeholder = { Text("Buscar usuario o email") },
+                    placeholder = { Text("Buscar nombre, @usuario o email") },
                     leadingIcon = { Icon(Icons.Filled.Search, null) },
                     singleLine = true,
                     shape = MaterialTheme.shapes.extraLarge,
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
                 )
                 val filtered = list.filter {
-                    query.isBlank() || it.name.contains(query, true) || it.email.contains(query, true)
+                    it.matches(query) || it.email.contains(query.trim(), true)
                 }
                 LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                     items(filtered, key = { it.uid }) { user ->
@@ -206,7 +206,8 @@ private fun UserAdminRow(
         },
         supportingContent = {
             Text(
-                if (user.banned) "Bloqueado · ${user.email}" else user.email,
+                listOf(if (user.banned) "Bloqueado" else "", user.handle, user.email)
+                    .filter { it.isNotBlank() }.joinToString(" · "),
                 color = if (user.banned) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis
             )

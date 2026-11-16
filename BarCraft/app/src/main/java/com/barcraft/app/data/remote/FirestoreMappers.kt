@@ -36,7 +36,8 @@ fun DocumentSnapshot.toUserProfile(): UserProfile? {
         role = Role.from(getString("role")),
         banned = getBoolean("banned") ?: false,
         bio = getString("bio").orEmpty(),
-        createdAt = millis("createdAt")
+        createdAt = millis("createdAt"),
+        tag = getString("tag").orEmpty()
     )
 }
 

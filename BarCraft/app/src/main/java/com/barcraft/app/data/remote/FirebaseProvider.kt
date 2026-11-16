@@ -27,6 +27,8 @@ object Collections {
     const val COMMENTS = "comments"
     const val FRIENDSHIPS = "friendships"
     const val MEDIA = "media"
+    /** Un documento por tag (`tags/{tag}` -> uid) para que no haya dos iguales. */
+    const val TAGS = "tags"
     const val PRIVATE = "private"
     const val SETTINGS_DOC = "settings"
 }

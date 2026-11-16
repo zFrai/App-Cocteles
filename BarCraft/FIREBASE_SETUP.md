@@ -44,6 +44,13 @@ Al registrarse cada persona elige **Barman** o **Comensal**. Para tener el prime
 Usa dos móviles o dos emuladores (o un móvil y un emulador), registra una cuenta en cada uno,
 y en **Chats > Nuevo chat** busca al otro usuario. Los mensajes llegan al instante.
 
+## @usuario (tag único)
+Cada cuenta tiene un identificador único y fijo, como `@laura4821`: su nombre sin tildes ni
+espacios + 4 cifras. Se crea solo al entrar en la app (también a las cuentas que ya existían),
+se ve en **Perfil** y sirve para buscar a alguien en **Chats > Buscar personas** (escribe `@laura`).
+Firestore guarda un documento por tag en la colección `tags`, así que no puede haber dos iguales.
+Necesita las reglas actualizadas: vuelve a publicar `firestore.rules`.
+
 ## GIFs y stickers (GIPHY)
 La clave de GIPHY va en el archivo `secrets.properties` de la raíz del proyecto. Copia
 `secrets.properties.example` como `secrets.properties` y pon tu clave:

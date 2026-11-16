@@ -15,13 +15,22 @@ service cloud.firestore {
 
     // ── Usuarios ───────────────────────────────────────────────
     match /users/{uid} {
+      // El @tag solo se pone una vez y tiene que estar reservado a mi nombre en tags/{tag}
+      // en la misma transacción (ver UserRepository.ensureTag).
+      function tagOk() {
+        return !('tag' in changed())
+               || (resource.data.get('tag', '') == ''
+                   && getAfter(/databases/$(database)/documents/tags/$(request.resource.data.tag)).data.uid == uid);
+      }
+
       allow read: if signedIn();
       // Al registrarse cada uno crea SU documento como Barman o Comensal (nunca Admin).
       allow create: if signedIn() && request.auth.uid == uid
                     && request.resource.data.role in ['barman', 'cliente']
-                    && request.resource.data.banned == false;
+                    && request.resource.data.banned == false
+                    && !('tag' in request.resource.data);
       // Cada uno edita su nombre y bio, pero no su rol ni su bloqueo.
-      allow update: if (signedIn() && request.auth.uid == uid && !changed().hasAny(['role', 'banned']))
+      allow update: if (signedIn() && request.auth.uid == uid && !changed().hasAny(['role', 'banned']) && tagOk())
                     // Un Admin cambia roles y bloqueos de otros.
                     || (isAdmin() && request.auth.uid != uid
                         && changed().hasOnly(['role', 'banned'])
@@ -32,6 +41,18 @@ service cloud.firestore {
       match /private/{doc} {
         allow read, write: if signedIn() && request.auth.uid == uid;
       }
+    }
+
+    // ── @tags (identificador único de cada usuario) ────────────
+    // tags/{tag} = { uid }. El id del documento es el tag, así que no puede haber dos iguales.
+    match /tags/{tag} {
+      allow read: if signedIn();
+      // Solo se reserva junto con el perfil (misma transacción) y con formato válido.
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && tag.matches('^[a-z0-9]{3,20}$')
+                    && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.tag == tag;
+      allow update, delete: if false;
     }
 
     // ── Amistades ──────────────────────────────────────────────

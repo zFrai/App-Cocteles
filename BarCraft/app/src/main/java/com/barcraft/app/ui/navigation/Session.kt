@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /** En qué situación está la persona que usa la app. */
 sealed interface SessionState {
@@ -45,6 +46,18 @@ val LocalAppSession = compositionLocalOf { AppSession() }
 
 class SessionViewModel(private val container: AppContainer) : ViewModel() {
 
+    /** Cuentas a las que ya se ha intentado dar @tag en esta ejecución (para no repetirlo en cada cambio). */
+    private val tagRequested = mutableSetOf<String>()
+
+    /** Las cuentas sin @tag (nuevas o de antes de existir) reciben uno al entrar. */
+    private fun assignTagIfMissing(profile: UserProfile) {
+        if (profile.tag.isNotBlank() || profile.banned || !tagRequested.add(profile.uid)) return
+        viewModelScope.launch {
+            runCatching { container.userRepository.ensureTag(profile.uid, profile.name) }
+                .onFailure { tagRequested.remove(profile.uid) } // se reintenta la próxima vez
+        }
+    }
+
     val state: StateFlow<SessionState> =
         if (!container.firebaseEnabled) {
             MutableStateFlow(SessionState.Local(firebaseEnabled = false))
@@ -54,6 +67,7 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
                     when {
                         uid != null -> container.userRepository.observeUser(uid)
                             .onEach { if (it == null) runCatching { container.authRepository.ensureProfile(uid) } }
+                            .onEach { it?.let(::assignTagIfMissing) }
                             .map { profile ->
                                 when {
                                     profile == null -> SessionState.Loading
