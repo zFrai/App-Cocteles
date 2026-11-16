@@ -12,6 +12,7 @@ import com.barcraft.app.model.Friendship
 import com.barcraft.app.model.GiphyItem
 import com.barcraft.app.model.MessageType
 import com.barcraft.app.model.PrivateSettings
+import com.barcraft.app.model.ReportReason
 import com.barcraft.app.model.UserProfile
 import com.barcraft.app.repository.GiphyRepository
 import com.barcraft.app.repository.OutgoingMessage
@@ -203,6 +204,17 @@ class ChatRoomViewModel(
         chat.deleteMessage(roomId, message.id)
         if (message.mediaId.isNotBlank()) container.mediaRepository.delete(message.mediaId)
     }
+
+    // ── Denuncias ────────────────────────────────────────────────────
+    /** Denuncia a la otra persona del chat. [message] es opcional: el mensaje concreto que se denuncia. */
+    fun report(reason: ReportReason, details: String, message: ChatMessage?) =
+        launchSafely(_errors, "No se pudo enviar la denuncia") {
+            val r = room.value ?: error("Sala no cargada")
+            val otherId = r.otherId(me.uid)
+            require(otherId != me.uid)
+            container.reportRepository.report(me, otherId, r.otherName(me.uid), roomId, reason, details, message)
+            _errors.emit("Denuncia enviada. Un administrador la revisará.")
+        }
 
     fun saveToGallery(mediaId: String) = viewModelScope.launch {
         _errors.emit(if (container.mediaRepository.saveToGallery(mediaId)) "Foto guardada en la galería" else "No se pudo guardar la foto")

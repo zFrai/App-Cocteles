@@ -27,6 +27,7 @@ object Collections {
     const val COMMENTS = "comments"
     const val FRIENDSHIPS = "friendships"
     const val MEDIA = "media"
+    const val REPORTS = "reports"
     const val PRIVATE = "private"
     const val SETTINGS_DOC = "settings"
 }

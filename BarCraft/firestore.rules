@@ -88,6 +88,29 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    // ── Denuncias ──────────────────────────────────────────────
+    // Se denuncia desde un chat: quien denuncia y el denunciado deben ser los dos participantes.
+    // Solo el Admin las lee y las cierra (pestaña "Denuncias" de su panel).
+    match /reports/{reportId} {
+      function chatOf(roomId) { return get(/databases/$(database)/documents/chats/$(roomId)).data; }
+
+      allow create: if active()
+                    && request.resource.data.reporterId == request.auth.uid
+                    && request.resource.data.reportedId != request.auth.uid
+                    && request.auth.uid in chatOf(request.resource.data.roomId).participants
+                    && request.resource.data.reportedId in chatOf(request.resource.data.roomId).participants
+                    && request.resource.data.reason in ['spam', 'harassment', 'inappropriate', 'impersonation', 'other']
+                    && request.resource.data.status == 'open'
+                    && request.resource.data.details.size() <= 500
+                    && request.resource.data.messageText.size() <= 2000;
+      allow read: if isAdmin();
+      allow update: if isAdmin()
+                    && changed().hasOnly(['status', 'resolvedBy', 'resolvedAt'])
+                    && request.resource.data.status in ['resolved', 'dismissed']
+                    && request.resource.data.resolvedBy == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
     // ── Comunidad (red social) ─────────────────────────────────
     match /posts/{postId} {
       allow read: if signedIn();
