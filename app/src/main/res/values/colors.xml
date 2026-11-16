@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colores principales de la app -->
+    <color name="colorPrimary">#1A237E</color>        <!-- Azul oscuro bartender -->
+    <color name="colorPrimaryDark">#0D1258</color>
+    <color name="colorAccent">#FF6F00</color>          <!-- Naranja cóctel -->
+    <color name="colorError">#D32F2F</color>
+
+    <!-- Fondos y texto -->
+    <color name="background">#F5F5F5</color>
+    <color name="textPrimary">#212121</color>
+    <color name="textSecondary">#757575</color>
+
+    <!-- Tags de tarjeta -->
+    <color name="tagSmoke">#546E7A</color>             <!-- Gris azulado para humo -->
+    <color name="tagTopping">#2E7D32</color>           <!-- Verde para topping -->
+</resources>

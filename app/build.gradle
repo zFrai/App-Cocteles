@@ -1,0 +1,47 @@
+// build.gradle (Module: app)
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.bartender.cocktailapp'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.bartender.cocktailapp"
+        minSdk 24              // Android 7.0 — amplio soporte
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    // AndroidX core y AppCompat
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.core:core:1.13.1'
+
+    // Material Components (Tarjetas, FAB, Switches, etc.)
+    implementation 'com.google.android.material:material:1.12.0'
+
+    // RecyclerView
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+
+    // ConstraintLayout (útil en layouts futuros)
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    // CoordinatorLayout (para FAB + AppBar)
+    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
+}
