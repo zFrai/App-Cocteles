@@ -5,6 +5,8 @@ package com.barcraft.app.ui.profile
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -100,6 +102,24 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit) {
                         Spacer(Modifier.height(12.dp))
                         Text(me?.name ?: "Invitado", style = MaterialTheme.typography.headlineSmall)
                         if (me != null) {
+                            if (me.handle.isNotBlank()) {
+                                // Su identificador único: lo pueden usar otros para encontrarle en Chats > Buscar personas.
+                                val clipboard = LocalClipboardManager.current
+                                Text(
+                                    me.handle,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier
+                                        .clickable { clipboard.setText(AnnotatedString(me.handle)) }
+                                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                                Text(
+                                    "Comparte tu @usuario para que te encuentren (toca para copiar)",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(Modifier.height(4.dp))
+                            }
                             Text(me.email, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(Modifier.height(8.dp))
                             RoleBadge(me.role, showUser = true)

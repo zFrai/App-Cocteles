@@ -40,9 +40,24 @@ Al registrarse cada persona elige **Barman** o **Comensal**. Para tener el prime
 > Si vienes de la versión 2: vuelve a publicar `firestore.rules`, han cambiado.
 > Las cuentas antiguas con rol `user` se tratan como Barman.
 
+> **Cada vez que cambie `firestore.rules` hay que volver a publicarlas** en la consola.
+> Por ejemplo, las denuncias del chat (colección `reports`) no funcionan hasta publicarlas.
+
+## Denuncias
+Desde un chat, menú ⋮ > **Denunciar** (o mantén pulsado un mensaje > **Denunciar mensaje**).
+Las denuncias se guardan en la colección `reports` y solo las ve el Admin, en la pestaña
+**Admin > Denuncias**, donde puede marcarlas como revisadas, descartarlas o bloquear la cuenta.
+
 ## Probar el chat entre dos usuarios
 Usa dos móviles o dos emuladores (o un móvil y un emulador), registra una cuenta en cada uno,
 y en **Chats > Nuevo chat** busca al otro usuario. Los mensajes llegan al instante.
+
+## @usuario (tag único)
+Cada cuenta tiene un identificador único y fijo, como `@laura4821`: su nombre sin tildes ni
+espacios + 4 cifras. Se crea solo al entrar en la app (también a las cuentas que ya existían),
+se ve en **Perfil** y sirve para buscar a alguien en **Chats > Buscar personas** (escribe `@laura`).
+Firestore guarda un documento por tag en la colección `tags`, así que no puede haber dos iguales.
+Necesita las reglas actualizadas: vuelve a publicar `firestore.rules`.
 
 ## GIFs y stickers (GIPHY)
 La clave de GIPHY va en el archivo `secrets.properties` de la raíz del proyecto. Copia

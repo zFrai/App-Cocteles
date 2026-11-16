@@ -11,6 +11,7 @@ import com.barcraft.app.repository.CocktailRepository
 import com.barcraft.app.repository.FriendsRepository
 import com.barcraft.app.repository.GiphyRepository
 import com.barcraft.app.repository.MediaRepository
+import com.barcraft.app.repository.ReportRepository
 import com.barcraft.app.repository.SocialRepository
 import com.barcraft.app.repository.UserRepository
 import com.barcraft.app.utils.AppLockController
@@ -51,4 +52,5 @@ class AppContainer(context: Context) {
     val socialRepository by lazy { SocialRepository(firestore) }
     val friendsRepository by lazy { FriendsRepository(firestore) }
     val mediaRepository by lazy { MediaRepository(firestore, appContext) }
+    val reportRepository by lazy { ReportRepository(firestore) }
 }

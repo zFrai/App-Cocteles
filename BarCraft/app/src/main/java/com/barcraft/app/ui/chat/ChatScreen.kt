@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,9 +38,13 @@ import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Gif
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -47,6 +52,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -77,6 +83,7 @@ import coil.compose.AsyncImage
 import com.barcraft.app.model.ChatMessage
 import com.barcraft.app.model.MessageType
 import com.barcraft.app.model.REACTION_EMOJIS
+import com.barcraft.app.model.ReportReason
 import com.barcraft.app.ui.components.AudioPlayer
 import com.barcraft.app.ui.components.EmptyState
 import com.barcraft.app.ui.components.LoadingBox
@@ -105,6 +112,9 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
     var selected by remember { mutableStateOf<ChatMessage?>(null) }
     var viewer by remember { mutableStateOf<String?>(null) }
     var giphyOpen by remember { mutableStateOf(false) }
+    var menuOpen by remember { mutableStateOf(false) }
+    /** Denuncia en curso: null = cerrada. El mensaje dentro es opcional (denuncia de la persona en general). */
+    var reporting by remember { mutableStateOf<ReportDraft?>(null) }
 
     val photoPicker = rememberPhotoPicker { vm.sendImage(it) }
     val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -129,7 +139,19 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
                         Text(otherName)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } },
+                actions = {
+                    if (r != null) Box {
+                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, "Más opciones") }
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            DropdownMenuItem(
+                                text = { Text("Denunciar a $otherName") },
+                                leadingIcon = { Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = { menuOpen = false; reporting = ReportDraft(message = null) }
+                            )
+                        }
+                    }
+                }
             )
         },
         bottomBar = {
@@ -235,7 +257,23 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
                     Icon(Icons.Outlined.Delete, null, tint = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.width(6.dp))
                     Text("Borrar para todos", color = MaterialTheme.colorScheme.error)
+                } else TextButton(onClick = { reporting = ReportDraft(message = msg); selected = null }) {
+                    Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.error)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Denunciar mensaje", color = MaterialTheme.colorScheme.error)
                 }
+            }
+        )
+    }
+
+    reporting?.let { draft ->
+        ReportDialog(
+            otherName = otherName,
+            message = draft.message,
+            onDismiss = { reporting = null },
+            onSend = { reason, details ->
+                vm.report(reason, details, draft.message)
+                reporting = null
             }
         )
     }
@@ -250,6 +288,76 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
             onPick = { item, kind -> vm.sendGiphy(item, kind); giphyOpen = false }
         )
     }
+}
+
+/** Denuncia que se está preparando. [message] = null si se denuncia a la persona en general. */
+private data class ReportDraft(val message: ChatMessage?)
+
+/** Elegir motivo y, si se quiere, añadir detalles. La denuncia le llega al Admin. */
+@Composable
+private fun ReportDialog(
+    otherName: String,
+    message: ChatMessage?,
+    onDismiss: () -> Unit,
+    onSend: (ReportReason, String) -> Unit
+) {
+    var reason by rememberSaveable { mutableStateOf<ReportReason?>(null) }
+    var details by rememberSaveable { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.error) },
+        title = { Text(if (message != null) "Denunciar mensaje" else "Denunciar a $otherName") },
+        text = {
+            Column {
+                if (message != null) {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    ) {
+                        Text(
+                            "\u201C${message.preview}\u201D",
+                            maxLines = 3,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+                Text("¿Qué ocurre?", style = MaterialTheme.typography.titleSmall)
+                ReportReason.entries.forEach { option ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .selectable(selected = reason == option, onClick = { reason = option })
+                            .padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = reason == option, onClick = { reason = option })
+                        Text(option.label, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                OutlinedTextField(
+                    value = details,
+                    onValueChange = { if (it.length <= 500) details = it },
+                    label = { Text("Detalles (opcional)") },
+                    maxLines = 4,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                )
+                Text(
+                    "$otherName no sabrá quién le ha denunciado. Si además no quieres hablar con esta persona, bloquéala desde Chats.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = reason != null, onClick = { reason?.let { onSend(it, details) } }) {
+                Text("Enviar denuncia", color = if (reason != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
 }
 
 @Composable

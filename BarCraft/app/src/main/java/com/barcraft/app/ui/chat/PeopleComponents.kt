@@ -62,13 +62,15 @@ fun PersonRow(
             }
         },
         supportingContent = {
+            val status = when (person.state) {
+                FriendState.FRIENDS -> p.bio.ifBlank { "Amigo" }
+                FriendState.REQUEST_SENT -> "Solicitud enviada"
+                FriendState.REQUEST_RECEIVED -> "Quiere ser tu amigo"
+                FriendState.NONE -> p.bio.ifBlank { p.role.description }
+            }
+            // "@laura4821 · Amigo": el @tag distingue a personas con el mismo nombre.
             Text(
-                when (person.state) {
-                    FriendState.FRIENDS -> p.bio.ifBlank { "Amigo" }
-                    FriendState.REQUEST_SENT -> "Solicitud enviada"
-                    FriendState.REQUEST_RECEIVED -> "Quiere ser tu amigo"
-                    FriendState.NONE -> p.bio.ifBlank { p.role.description }
-                },
+                if (p.handle.isBlank()) status else "${p.handle} · $status",
                 maxLines = 1, overflow = TextOverflow.Ellipsis
             )
         },

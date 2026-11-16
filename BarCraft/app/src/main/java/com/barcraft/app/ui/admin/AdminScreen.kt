@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PersonOff
 import androidx.compose.material.icons.outlined.Shield
@@ -55,8 +56,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.barcraft.app.model.Post
+import com.barcraft.app.model.Report
+import com.barcraft.app.model.ReportStatus
 import com.barcraft.app.model.Role
 import com.barcraft.app.model.UserProfile
+import com.barcraft.app.ui.components.EmptyState
 import com.barcraft.app.ui.components.LoadingBox
 import com.barcraft.app.ui.components.RoleBadge
 import com.barcraft.app.ui.components.UserAvatar
@@ -67,13 +71,15 @@ import com.barcraft.app.utils.appViewModel
 @Composable
 fun AdminScreen(onOpenPost: (String) -> Unit) {
     val me = LocalAppSession.current.profile ?: return
-    val vm = appViewModel { AdminViewModel(it.userRepository, it.socialRepository) }
+    val vm = appViewModel { AdminViewModel(it.userRepository, it.socialRepository, it.reportRepository, me.uid) }
+    val openReports by vm.openReports.collectAsStateWithLifecycle()
     val users by vm.allUsers.collectAsStateWithLifecycle()
     val posts by vm.posts.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var query by rememberSaveable { mutableStateOf("") }
     var postToDelete by remember { mutableStateOf<Post?>(null) }
+    var reportToBan by remember { mutableStateOf<Report?>(null) }
 
     LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
 
@@ -109,18 +115,48 @@ fun AdminScreen(onOpenPost: (String) -> Unit) {
             PrimaryTabRow(selectedTabIndex = tab) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Usuarios") })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Publicaciones") })
+                val pending = openReports?.size ?: 0
+                Tab(
+                    selected = tab == 2, onClick = { tab = 2 },
+                    text = {
+                        Text(
+                            if (pending > 0) "Denuncias ($pending)" else "Denuncias",
+                            color = if (pending > 0) MaterialTheme.colorScheme.error else androidx.compose.ui.graphics.Color.Unspecified
+                        )
+                    }
+                )
             }
-            if (tab == 0) {
+            if (tab == 2) {
+                val pending = openReports
+                when {
+                    pending == null -> LoadingBox()
+                    pending.isEmpty() -> EmptyState(
+                        Icons.Outlined.Flag, "Sin denuncias pendientes",
+                        "Cuando alguien denuncie a otra persona desde un chat aparecerá aquí."
+                    )
+                    else -> LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+                        items(pending, key = { it.id }) { report ->
+                            ReportRow(
+                                report = report,
+                                reportedIsBanned = list.firstOrNull { it.uid == report.reportedId }?.banned == true,
+                                onResolve = { vm.closeReport(report, ReportStatus.RESOLVED) },
+                                onDismiss = { vm.closeReport(report, ReportStatus.DISMISSED) },
+                                onBan = { reportToBan = report }
+                            )
+                        }
+                    }
+                }
+            } else if (tab == 0) {
                 OutlinedTextField(
                     value = query, onValueChange = { query = it },
-                    placeholder = { Text("Buscar usuario o email") },
+                    placeholder = { Text("Buscar nombre, @usuario o email") },
                     leadingIcon = { Icon(Icons.Filled.Search, null) },
                     singleLine = true,
                     shape = MaterialTheme.shapes.extraLarge,
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
                 )
                 val filtered = list.filter {
-                    query.isBlank() || it.name.contains(query, true) || it.email.contains(query, true)
+                    it.matches(query) || it.email.contains(query.trim(), true)
                 }
                 LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                     items(filtered, key = { it.uid }) { user ->
@@ -161,6 +197,20 @@ fun AdminScreen(onOpenPost: (String) -> Unit) {
         }
     }
 
+    reportToBan?.let { r ->
+        AlertDialog(
+            onDismissRequest = { reportToBan = null },
+            title = { Text("¿Bloquear a ${r.reportedName}?") },
+            text = { Text("No podrá volver a entrar en BarCraft hasta que lo desbloquees desde Usuarios. La denuncia quedará como revisada.") },
+            confirmButton = {
+                TextButton(onClick = { vm.banReported(r); reportToBan = null }) {
+                    Text("Bloquear", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { reportToBan = null }) { Text("Cancelar") } }
+        )
+    }
+
     postToDelete?.let { p ->
         AlertDialog(
             onDismissRequest = { postToDelete = null },
@@ -173,6 +223,67 @@ fun AdminScreen(onOpenPost: (String) -> Unit) {
             },
             dismissButton = { TextButton(onClick = { postToDelete = null }) { Text("Cancelar") } }
         )
+    }
+}
+
+@Composable
+private fun ReportRow(
+    report: Report,
+    reportedIsBanned: Boolean,
+    onResolve: () -> Unit,
+    onDismiss: () -> Unit,
+    onBan: () -> Unit
+) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                UserAvatar(report.reportedName, size = 36.dp)
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(report.reportedName, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        report.reason.label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                Text(DateUtils.relative(report.createdAt), style = MaterialTheme.typography.labelSmall)
+            }
+            if (report.messageText.isNotBlank()) {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) {
+                    Text(
+                        "Mensaje: \u201C${report.messageText}\u201D",
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 4, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            }
+            if (report.details.isNotBlank()) {
+                Text(report.details, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            }
+            Text(
+                "Denunciado por ${report.reporterName}" + if (reportedIsBanned) " · cuenta ya bloqueada" else "",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 6.dp)
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onDismiss) { Text("Descartar") }
+                TextButton(onClick = onResolve) { Text("Revisada") }
+                if (!reportedIsBanned) TextButton(onClick = onBan) {
+                    Text("Bloquear cuenta", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
     }
 }
 
@@ -206,7 +317,8 @@ private fun UserAdminRow(
         },
         supportingContent = {
             Text(
-                if (user.banned) "Bloqueado · ${user.email}" else user.email,
+                listOf(if (user.banned) "Bloqueado" else "", user.handle, user.email)
+                    .filter { it.isNotBlank() }.joinToString(" · "),
                 color = if (user.banned) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis
             )
