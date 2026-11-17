@@ -1,10 +1,12 @@
 package com.barcraft.app.ui.profile
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,22 +29,31 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.barcraft.app.R
 import com.barcraft.app.ui.theme.AppTheme
+import com.barcraft.app.ui.theme.ThemePair
+import kotlinx.coroutines.launch
 
 /**
- * Selector de "Tema del perfil" como desplegable de fichas.
- * Un toque aplica el tema. El tema activo lleva borde y un tick abajo a la derecha.
+ * Selector de "Tema del perfil" como desplegable de fichas, una por pareja oscuro/claro.
+ * Deslizar a la derecha aplica la versión oscura (tick a la derecha) y a la izquierda la clara
+ * (tick a la izquierda). Un toque aplica la versión que se ve en la ficha.
  */
 @Composable
 fun ThemePicker(current: AppTheme, onApply: (AppTheme) -> Unit, modifier: Modifier = Modifier) {
@@ -70,12 +81,8 @@ fun ThemePicker(current: AppTheme, onApply: (AppTheme) -> Unit, modifier: Modifi
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 4.dp)
                 )
-                AppTheme.entries.forEach { t ->
-                    ThemeCard(
-                        theme = t,
-                        active = t == current,
-                        onClick = { if (t != current) onApply(t) }
-                    )
+                ThemePair.entries.forEach { pair ->
+                    ThemePairCard(pair, current) { t -> if (t != current) onApply(t) }
                 }
             }
         }
@@ -83,13 +90,21 @@ fun ThemePicker(current: AppTheme, onApply: (AppTheme) -> Unit, modifier: Modifi
 }
 
 @Composable
-private fun ThemeCard(
-    theme: AppTheme,
-    active: Boolean,
-    onClick: () -> Unit
-) {
-    val scheme = theme.colorScheme
+private fun ThemePairCard(pair: ThemePair, current: AppTheme, onApply: (AppTheme) -> Unit) {
+    val active = current in pair
+    // Versión visible: la activa si la ficha es la del tema actual; si no, la oscura.
+    var showDark by rememberSaveable(pair) { mutableStateOf(if (active) current == pair.dark else true) }
+    LaunchedEffect(current) { if (active) showDark = current == pair.dark }
+    val shown = if (showDark) pair.dark else pair.light
+    val scheme = shown.colorScheme
     val shape = MaterialTheme.shapes.medium
+
+    val offset = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val maxDrag = with(density) { 72.dp.toPx() }
+    val threshold = with(density) { 40.dp.toPx() }
+
     Surface(
         shape = shape,
         color = scheme.surfaceContainer,
@@ -97,16 +112,38 @@ private fun ThemeCard(
         border = if (active) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer { translationX = offset.value }
             .clip(shape)
-            .clickable(onClick = onClick)
+            .pointerInput(pair, current) {
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        val dx = offset.value
+                        when {
+                            dx > threshold -> { showDark = true; onApply(pair.dark) }
+                            dx < -threshold -> { showDark = false; onApply(pair.light) }
+                        }
+                        scope.launch { offset.animateTo(0f) }
+                    },
+                    onDragCancel = { scope.launch { offset.animateTo(0f) } },
+                    onHorizontalDrag = { change, delta ->
+                        change.consume()
+                        scope.launch { offset.snapTo((offset.value + delta).coerceIn(-maxDrag, maxDrag)) }
+                    }
+                )
+            }
+            .clickable { onApply(shown) }
     ) {
         Box {
-            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(theme.emoji, style = MaterialTheme.typography.titleLarge)
+            Row(Modifier.padding(horizontal = 28.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(shown.emoji, style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(stringResource(theme.labelRes), style = MaterialTheme.typography.titleSmall, color = scheme.primary)
-                    Text(stringResource(theme.descriptionRes), style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
+                    Text(stringResource(shown.labelRes), style = MaterialTheme.typography.titleSmall, color = scheme.primary)
+                    Text(
+                        stringResource(if (showDark) R.string.theme_picker_dark else R.string.theme_picker_light),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = scheme.onSurfaceVariant
+                    )
                 }
                 Spacer(Modifier.width(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -115,12 +152,28 @@ private fun ThemeCard(
                     }
                 }
             }
+            // Flechas laterales: recuerdan hacia dónde deslizar.
+            Text(
+                "‹ ☀",
+                style = MaterialTheme.typography.labelSmall,
+                color = scheme.onSurfaceVariant.copy(alpha = if (showDark) 0.8f else 0.3f),
+                modifier = Modifier.align(Alignment.CenterStart).padding(start = 6.dp)
+            )
+            Text(
+                "☾ ›",
+                style = MaterialTheme.typography.labelSmall,
+                color = scheme.onSurfaceVariant.copy(alpha = if (showDark) 0.3f else 0.8f),
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 6.dp)
+            )
             if (active) {
                 Icon(
                     Icons.Outlined.CheckCircle,
                     stringResource(R.string.theme_picker_current),
                     tint = scheme.primary,
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp).size(18.dp)
+                    modifier = Modifier
+                        .align(if (current == pair.dark) Alignment.BottomEnd else Alignment.BottomStart)
+                        .padding(4.dp)
+                        .size(18.dp)
                 )
             }
         }
