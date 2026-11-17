@@ -2,11 +2,15 @@ package com.barcraft.app.repository
 
 import com.barcraft.app.data.remote.Collections
 import com.barcraft.app.data.remote.snapshotFlow
+import com.barcraft.app.data.remote.toPrivateSettings
 import com.barcraft.app.data.remote.toUserProfile
+import com.barcraft.app.model.NotificationPrefs
+import com.barcraft.app.model.ProfileLinks
 import com.barcraft.app.model.Role
 import com.barcraft.app.model.UserProfile
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -27,7 +31,27 @@ class UserRepository(private val db: FirebaseFirestore) {
         }
 
     suspend fun updateProfile(uid: String, name: String, bio: String) {
-        users.document(uid).update(mapOf("name" to name.trim(), "bio" to bio.trim())).await()
+        users.document(uid).update(mapOf("name" to name.trim(), "bio" to bio.trim().take(UserProfile.BIO_MAX))).await()
+    }
+
+    /** Guarda "Dónde encontrarme" entero (los campos vacíos lo borran). */
+    suspend fun updateLinks(uid: String, links: ProfileLinks) {
+        users.document(uid).update("links", links.cleaned().toMap()).await()
+    }
+
+    suspend fun setPrivateAccount(uid: String, private: Boolean) {
+        users.document(uid).update("privateAccount", private).await()
+    }
+
+    private fun settingsDoc(uid: String) =
+        users.document(uid).collection(Collections.PRIVATE).document(Collections.SETTINGS_DOC)
+
+    fun observeNotificationPrefs(uid: String): Flow<NotificationPrefs> =
+        settingsDoc(uid).snapshotFlow().map { it.toPrivateSettings().notifications }
+
+    /** [key] es una de las constantes de [NotificationPrefs]. */
+    suspend fun setNotificationPref(uid: String, key: String, enabled: Boolean) {
+        settingsDoc(uid).set(mapOf(key to enabled), SetOptions.merge()).await()
     }
 
     /**

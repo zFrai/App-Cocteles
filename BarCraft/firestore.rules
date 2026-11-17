@@ -23,6 +23,14 @@ service cloud.firestore {
                    && getAfter(/databases/$(database)/documents/tags/$(request.resource.data.tag)).data.uid == uid);
       }
 
+      // Descripción de 250 caracteres como máximo y "Dónde encontrarme" como mapa de textos cortos.
+      function profileFieldsOk() {
+        return request.resource.data.get('bio', '').size() <= 250
+               && (!('links' in request.resource.data)
+                   || (request.resource.data.links is map && request.resource.data.links.size() <= 6))
+               && request.resource.data.get('privateAccount', false) is bool;
+      }
+
       allow read: if signedIn();
       // Al registrarse cada uno crea SU documento como Barman o Comensal (nunca Admin).
       allow create: if signedIn() && request.auth.uid == uid
@@ -30,7 +38,9 @@ service cloud.firestore {
                     && request.resource.data.banned == false
                     && !('tag' in request.resource.data);
       // Cada uno edita su nombre y bio, pero no su rol ni su bloqueo.
-      allow update: if (signedIn() && request.auth.uid == uid && !changed().hasAny(['role', 'banned']) && tagOk())
+      // También su descripción, "Dónde encontrarme" y si la cuenta es privada.
+      allow update: if (signedIn() && request.auth.uid == uid && !changed().hasAny(['role', 'banned']) && tagOk()
+                        && profileFieldsOk())
                     // Un Admin cambia roles y bloqueos de otros.
                     || (isAdmin() && request.auth.uid != uid
                         && changed().hasOnly(['role', 'banned'])
