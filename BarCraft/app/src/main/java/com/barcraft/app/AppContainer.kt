@@ -2,6 +2,7 @@ package com.barcraft.app
 
 import android.content.Context
 import com.barcraft.app.data.local.AppDatabase
+import com.barcraft.app.data.local.BiometricCredentialStore
 import com.barcraft.app.data.local.LockStore
 import com.barcraft.app.data.local.SettingsStore
 import com.barcraft.app.data.remote.FirebaseProvider
@@ -32,6 +33,7 @@ class AppContainer(context: Context) {
 
     val settings = SettingsStore(appContext)
     val lockStore = LockStore(appContext)
+    val biometricLogin = BiometricCredentialStore(appContext)
     val appLock = AppLockController()
 
     val cocktailRepository = CocktailRepository(AppDatabase.get(appContext))
