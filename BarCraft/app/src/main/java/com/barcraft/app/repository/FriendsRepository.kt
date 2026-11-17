@@ -2,9 +2,10 @@ package com.barcraft.app.repository
 
 import com.barcraft.app.data.remote.Collections
 import com.barcraft.app.data.remote.snapshotFlow
+import com.barcraft.app.data.remote.toFollow
 import com.barcraft.app.data.remote.toFriendship
 import com.barcraft.app.data.remote.toPrivateSettings
-import com.barcraft.app.model.Friendship
+import com.barcraft.app.model.Follow
 import com.barcraft.app.model.PrivateSettings
 import com.barcraft.app.model.UserProfile
 import com.google.firebase.firestore.FieldValue
@@ -15,15 +16,17 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
 /**
- * Amigos, favoritos y bloqueos.
+ * Seguidores, favoritos y bloqueos.
  *
- * - La amistad es compartida: `friendships/{uidA_uidB}` con estado "pending" o "accepted".
+ * - Seguir es en un solo sentido: `follows/{followerUid_followedUid}` con estado "accepted" o, si la
+ *   cuenta seguida es privada, "pending" hasta que la acepte.
  * - Favoritos y bloqueados son privados: `users/{uid}/private/settings` (solo los ve su dueño).
- * - Al bloquear también se marca la conversación (`chats/{id}.blockedBy`) para que nadie pueda escribir.
+ * - Al bloquear se borran los seguimientos entre los dos y se marca la conversación
+ *   (`chats/{id}.blockedBy`) para que nadie pueda escribir.
  */
 class FriendsRepository(private val db: FirebaseFirestore) {
 
-    private val friendships get() = db.collection(Collections.FRIENDSHIPS)
+    private val follows get() = db.collection(Collections.FOLLOWS)
 
     private fun settingsDoc(uid: String) =
         db.collection(Collections.USERS).document(uid)
@@ -31,32 +34,75 @@ class FriendsRepository(private val db: FirebaseFirestore) {
 
     fun pairId(a: String, b: String): String = listOf(a, b).sorted().joinToString("_")
 
-    fun observeFriendships(myUid: String): Flow<List<Friendship>> =
-        friendships.whereArrayContains("users", myUid).snapshotFlow()
-            .map { snap -> snap.documents.map { it.toFriendship() } }
+    /** Id del seguimiento: quién sigue + "_" + a quién. Debe coincidir con firestore.rules. */
+    fun followId(followerUid: String, followedUid: String): String = "${followerUid}_$followedUid"
+
+    /** A quién sigo yo (y a quién he pedido seguir). */
+    fun observeFollowing(myUid: String): Flow<List<Follow>> =
+        follows.whereEqualTo("followerId", myUid).snapshotFlow()
+            .map { snap -> snap.documents.map { it.toFollow() } }
+
+    /** Quién me sigue (y quién me ha pedido seguirme). */
+    fun observeFollowers(myUid: String): Flow<List<Follow>> =
+        follows.whereEqualTo("followedId", myUid).snapshotFlow()
+            .map { snap -> snap.documents.map { it.toFollow() } }
 
     fun observeSettings(myUid: String): Flow<PrivateSettings> =
         settingsDoc(myUid).snapshotFlow().map { it.toPrivateSettings() }
 
-    suspend fun sendRequest(me: UserProfile, other: UserProfile) {
-        friendships.document(pairId(me.uid, other.uid)).set(
+    /** Sigue a [other]. Si su cuenta es privada queda como solicitud. */
+    suspend fun follow(me: UserProfile, other: UserProfile) {
+        follows.document(followId(me.uid, other.uid)).set(
             mapOf(
-                "users" to listOf(me.uid, other.uid).sorted(),
-                "names" to mapOf(me.uid to me.name, other.uid to other.name),
-                "requesterId" to me.uid,
-                "status" to "pending",
+                "followerId" to me.uid,
+                "followedId" to other.uid,
+                "status" to if (other.privateAccount) "pending" else "accepted",
                 "createdAt" to FieldValue.serverTimestamp()
             )
         ).await()
     }
 
-    suspend fun accept(friendshipId: String) {
-        friendships.document(friendshipId).update("status", "accepted").await()
+    /** Deja de seguir o cancela la solicitud enviada. */
+    suspend fun unfollow(myUid: String, otherUid: String) {
+        follows.document(followId(myUid, otherUid)).delete().await()
     }
 
-    /** Sirve para rechazar, cancelar una solicitud o eliminar a un amigo. */
-    suspend fun remove(friendshipId: String) {
-        friendships.document(friendshipId).delete().await()
+    /** Acepta la solicitud de [followerUid] para seguirme. */
+    suspend fun acceptFollower(myUid: String, followerUid: String) {
+        follows.document(followId(followerUid, myUid)).update("status", "accepted").await()
+    }
+
+    /** Rechaza una solicitud o quita a alguien de mis seguidores. */
+    suspend fun removeFollower(myUid: String, followerUid: String) {
+        follows.document(followId(followerUid, myUid)).delete().await()
+    }
+
+    /**
+     * Convierte las amistades antiguas en seguimientos, una sola vez por cuenta:
+     * - amistad aceptada: sigo a la otra persona (ella hará lo mismo al entrar), así quedáis en seguimiento mutuo;
+     * - solicitud que envié: pasa a ser seguimiento (o solicitud si su cuenta es privada).
+     * Las solicitudes recibidas las convierte quien las envió. Las amistades antiguas se dejan como estaban.
+     */
+    suspend fun migrateFriendships(me: UserProfile, profiles: Map<String, UserProfile>) {
+        val old = db.collection(Collections.FRIENDSHIPS).whereArrayContains("users", me.uid).get().await()
+        for (doc in old.documents) {
+            val f = doc.toFriendship()
+            val other = profiles[f.otherId(me.uid)] ?: continue
+            val accepted = f.accepted
+            if (accepted || f.requesterId == me.uid) {
+                follows.document(followId(me.uid, other.uid)).set(
+                    mapOf(
+                        "followerId" to me.uid,
+                        "followedId" to other.uid,
+                        // Una amistad aceptada se respeta aunque la cuenta sea privada (lo permiten las reglas).
+                        "status" to if (accepted || !other.privateAccount) "accepted" else "pending",
+                        "fromFriendship" to accepted,
+                        "createdAt" to FieldValue.serverTimestamp()
+                    )
+                ).await()
+            }
+        }
+        settingsDoc(me.uid).set(mapOf("followsMigrated" to true), SetOptions.merge()).await()
     }
 
     suspend fun setFavorite(myUid: String, otherUid: String, favorite: Boolean) {
@@ -72,7 +118,8 @@ class FriendsRepository(private val db: FirebaseFirestore) {
             ),
             SetOptions.merge()
         ).await()
-        runCatching { remove(pairId(myUid, otherUid)) }
+        runCatching { unfollow(myUid, otherUid) }
+        runCatching { removeFollower(myUid, otherUid) }
         markRoom(myUid, otherUid, blocked = true)
     }
 
