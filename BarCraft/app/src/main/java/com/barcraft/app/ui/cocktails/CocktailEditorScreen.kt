@@ -226,9 +226,10 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SectionTitle("Quién puede verla")
                         val current = RecipeVisibility.from(draft.visibility)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             RecipeVisibility.entries.forEach { v ->
                                 FilterChip(
+                                    modifier = Modifier.weight(1f),
                                     selected = current == v,
                                     enabled = me != null || v == RecipeVisibility.PRIVATE,
                                     onClick = { vm.update { copy(visibility = v.id) } },
