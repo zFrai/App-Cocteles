@@ -13,7 +13,10 @@ import com.barcraft.app.model.ProfileLinks
 import com.barcraft.app.model.Report
 import com.barcraft.app.model.ReportReason
 import com.barcraft.app.model.ReportStatus
+import com.barcraft.app.model.RecipeVisibility
 import com.barcraft.app.model.Role
+import com.barcraft.app.model.SharedIngredient
+import com.barcraft.app.model.SharedRecipe
 import com.barcraft.app.model.UserProfile
 import com.google.firebase.firestore.DocumentSnapshot
 
@@ -138,4 +141,31 @@ fun DocumentSnapshot.toReport(): Report = Report(
     messageText = getString("messageText").orEmpty(),
     status = ReportStatus.from(getString("status")),
     createdAt = millis("createdAt")
+)
+
+fun DocumentSnapshot.toSharedRecipe(): SharedRecipe = SharedRecipe(
+    id = id,
+    authorId = getString("authorId").orEmpty(),
+    authorName = getString("authorName").orEmpty().ifBlank { "Usuario" },
+    authorTag = getString("authorTag").orEmpty(),
+    visibility = RecipeVisibility.from(getString("visibility")),
+    name = getString("name").orEmpty(),
+    description = getString("description").orEmpty(),
+    category = getString("category").orEmpty(),
+    difficulty = (getLong("difficulty") ?: 2L).toInt(),
+    prepTimeMinutes = (getLong("prepTimeMinutes") ?: 5L).toInt(),
+    hasSmoke = getBoolean("hasSmoke") ?: false,
+    garnishDescription = getString("garnishDescription").orEmpty(),
+    imageUrl = getString("imageUrl").orEmpty(),
+    ingredients = (get("ingredients") as? List<*>)?.mapNotNull { item ->
+        (item as? Map<*, *>)?.let {
+            SharedIngredient(
+                name = it["name"] as? String ?: return@let null,
+                amount = it["amount"] as? String ?: "",
+                type = it["type"] as? String ?: "Alcohol"
+            )
+        }
+    } ?: emptyList(),
+    steps = stringList("steps"),
+    updatedAt = millis("updatedAt")
 )

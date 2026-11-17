@@ -33,6 +33,8 @@ object Collections {
     const val FRIENDSHIPS = "friendships"
     /** Seguimientos: `follows/{followerUid_followedUid}`. */
     const val FOLLOWS = "follows"
+    /** Recetas compartidas: `users/{uid}/recipes/{idLocal}` (consulta de grupo para las públicas). */
+    const val RECIPES = "recipes"
     const val MEDIA = "media"
     const val REPORTS = "reports"
     const val PRIVATE = "private"

@@ -87,10 +87,33 @@ service cloud.firestore {
       match /private/{doc} {
         allow read, write: if signedIn() && request.auth.uid == uid;
       }
+
+      // Recetas compartidas (ver RecipeShareRepository). Las privadas no se suben.
+      match /recipes/{recipeId} {
+        allow read: if signedIn()
+                    && (request.auth.uid == uid
+                        || resource.data.visibility == 'public'
+                        || (resource.data.visibility == 'followers' && follows(request.auth.uid, uid)));
+        allow create, update: if active() && request.auth.uid == uid
+                              && request.resource.data.authorId == uid
+                              && request.resource.data.visibility in ['followers', 'public']
+                              && request.resource.data.name is string
+                              && request.resource.data.name.size() > 0
+                              && request.resource.data.name.size() <= 100
+                              && request.resource.data.ingredients.size() <= 40
+                              && request.resource.data.steps.size() <= 40;
+        // Su autor, o un Admin para moderar.
+        allow delete: if signedIn() && (request.auth.uid == uid || isAdmin());
+      }
     }
 
     // ── @tags (identificador único de cada usuario) ────────────
     // tags/{tag} = { uid }. El id del documento es el tag, así que no puede haber dos iguales.
+    // Comunidad: consulta de grupo con todas las recetas públicas.
+    match /{path=**}/recipes/{recipeId} {
+      allow read: if signedIn() && resource.data.visibility == 'public';
+    }
+
     // ── Emails (fuera del perfil público) ──────────────────────────
     match /emails/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
