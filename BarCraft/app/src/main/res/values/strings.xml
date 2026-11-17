@@ -32,12 +32,20 @@
     <!-- Temas visuales -->
     <string name="theme_deluxe">Deluxe</string>
     <string name="theme_deluxe_desc">Negro y dorado</string>
+    <string name="theme_champan">Champán</string>
+    <string name="theme_champan_desc">Deluxe, versión clara</string>
     <string name="theme_volcan">Volcán</string>
     <string name="theme_volcan_desc">Brasas y ámbar</string>
+    <string name="theme_terracota">Terracota</string>
+    <string name="theme_terracota_desc">Volcán, versión clara</string>
     <string name="theme_abisal">Abisal</string>
     <string name="theme_abisal_desc">Azul profundo</string>
+    <string name="theme_laguna">Laguna</string>
+    <string name="theme_laguna_desc">Abisal, versión clara</string>
     <string name="theme_cielo">Cielo</string>
     <string name="theme_cielo_desc">Claro y fresco</string>
+    <string name="theme_tormenta">Tormenta</string>
+    <string name="theme_tormenta_desc">Cielo, versión oscura</string>
     <string name="theme_absenta">Absenta</string>
     <string name="theme_absenta_desc">Verde absenta en la noche</string>
     <string name="theme_menta">Menta</string>

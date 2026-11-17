@@ -13,9 +13,13 @@ import com.barcraft.app.utils.Txt
 /** Temas visuales que el usuario puede elegir en Perfil. */
 enum class AppTheme(@StringRes val labelRes: Int, @StringRes val descriptionRes: Int, val emoji: String, val isLight: Boolean) {
     DELUXE(R.string.theme_deluxe, R.string.theme_deluxe_desc, "🥃", false),
+    CHAMPAN(R.string.theme_champan, R.string.theme_champan_desc, "🍾", true),
     VOLCAN(R.string.theme_volcan, R.string.theme_volcan_desc, "🌋", false),
+    TERRACOTA(R.string.theme_terracota, R.string.theme_terracota_desc, "🏺", true),
     ABISAL(R.string.theme_abisal, R.string.theme_abisal_desc, "🌊", false),
+    LAGUNA(R.string.theme_laguna, R.string.theme_laguna_desc, "🏝️", true),
     CIELO(R.string.theme_cielo, R.string.theme_cielo_desc, "☀️", true),
+    TORMENTA(R.string.theme_tormenta, R.string.theme_tormenta_desc, "⛈️", false),
     ABSENTA(R.string.theme_absenta, R.string.theme_absenta_desc, "🌿", false),
     MENTA(R.string.theme_menta, R.string.theme_menta_desc, "🍃", true),
     GRANADINA(R.string.theme_granadina, R.string.theme_granadina_desc, "🍒", false),
@@ -34,9 +38,13 @@ enum class AppTheme(@StringRes val labelRes: Int, @StringRes val descriptionRes:
     val colorScheme: ColorScheme
         get() = when (this) {
             DELUXE -> DeluxeScheme
+            CHAMPAN -> ChampanScheme
             VOLCAN -> VolcanScheme
+            TERRACOTA -> TerracotaScheme
             ABISAL -> AbisalScheme
+            LAGUNA -> LagunaScheme
             CIELO -> CieloScheme
+            TORMENTA -> TormentaScheme
             ABSENTA -> AbsentaScheme
             MENTA -> MentaScheme
             GRANADINA -> GranadinaScheme
