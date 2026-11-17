@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.cocktails
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -108,11 +109,11 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text(if (vm.isEditing) "Editar cóctel" else "Nuevo cóctel") },
+                title = { FitText(if (vm.isEditing) "Editar cóctel" else "Nuevo cóctel") },
                 navigationIcon = { IconButton(onClick = onDone) { Icon(Icons.Filled.Close, "Cerrar") } },
                 actions = {
                     Button(onClick = { vm.save { onDone() } }, modifier = Modifier.padding(end = 8.dp)) {
-                        Text("Guardar")
+                        FitText("Guardar")
                     }
                 }
             )
@@ -225,13 +226,14 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SectionTitle("Quién puede verla")
                         val current = RecipeVisibility.from(draft.visibility)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             RecipeVisibility.entries.forEach { v ->
                                 FilterChip(
+                                    modifier = Modifier.weight(1f),
                                     selected = current == v,
                                     enabled = me != null || v == RecipeVisibility.PRIVATE,
                                     onClick = { vm.update { copy(visibility = v.id) } },
-                                    label = { Text(v.label) }
+                                    label = { FitText(v.label) }
                                 )
                             }
                         }
@@ -272,7 +274,7 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
                         FilledTonalButton(onClick = { ingredientDialog = -1 }, modifier = Modifier.fillMaxWidth()) {
                             Icon(Icons.Outlined.PlaylistAdd, null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Añadir ingrediente")
+                            FitText("Añadir ingrediente")
                         }
                     }
                 }
@@ -312,7 +314,7 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
                             FilledTonalButton(
                                 onClick = { vm.addStep(newStep.trim()); newStep = "" },
                                 enabled = newStep.isNotBlank()
-                            ) { Text("Añadir") }
+                            ) { FitText("Añadir") }
                         }
                     }
                 }
@@ -345,7 +347,7 @@ private fun CategoryPicker(selected: String, onSelect: (String) -> Unit) {
         )
         ExposedDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             CocktailCatalog.categories.forEach { cat ->
-                DropdownMenuItem(text = { Text(cat) }, onClick = { onSelect(cat); open = false })
+                DropdownMenuItem(text = { FitText(cat) }, onClick = { onSelect(cat); open = false })
             }
         }
     }
@@ -388,7 +390,7 @@ private fun IngredientDialog(
                 Text("Tipo", style = MaterialTheme.typography.labelLarge)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(CocktailCatalog.ingredientTypes) { t ->
-                        FilterChip(selected = type == t, onClick = { type = t }, label = { Text(t) })
+                        FilterChip(selected = type == t, onClick = { type = t }, label = { FitText(t) })
                     }
                 }
             }
@@ -397,8 +399,8 @@ private fun IngredientDialog(
             Button(
                 onClick = { onSave(IngredientDraft(name.trim(), amount.trim(), type)) },
                 enabled = name.isNotBlank()
-            ) { Text("Guardar") }
+            ) { FitText("Guardar") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { FitText("Cancelar") } }
     )
 }

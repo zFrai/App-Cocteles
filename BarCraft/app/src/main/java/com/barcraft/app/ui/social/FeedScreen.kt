@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.social
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.material3.TabRow
@@ -63,8 +64,8 @@ fun FeedScreen(
         topBar = {
             TopAppBar(title = {
                 Column {
-                    Text("Comunidad")
-                    Text(
+                    FitText("Comunidad")
+                    FitText(
                         "Recetas y publicaciones de BarCraft",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -76,7 +77,7 @@ fun FeedScreen(
             if (me != null && Permissions.canPublishPosts(me.role)) ExtendedFloatingActionButton(
                 onClick = onCompose,
                 icon = { Icon(Icons.Outlined.Edit, null) },
-                text = { Text("Publicar") }
+                text = { FitText("Publicar") }
             )
         }
     ) { padding ->
@@ -94,8 +95,8 @@ fun FeedScreen(
 
         Column(Modifier.fillMaxSize().padding(padding)) {
             TabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Recetas") })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Publicaciones") })
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { FitText("Recetas") })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { FitText("Publicaciones") })
             }
             // Recetas: públicas + las de "Seguidores" de las cuentas que sigo.
             if (tab == 0) {
@@ -141,10 +142,10 @@ fun FeedScreen(
                 text = { Text(if (p.authorId == me.uid) "Se borrará para todos." else "Vas a borrar la publicación de ${p.authorName} como Admin.") },
                 confirmButton = {
                     TextButton(onClick = { vm.delete(p); toDelete = null }) {
-                        Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                        FitText("Eliminar", color = MaterialTheme.colorScheme.error)
                     }
                 },
-                dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancelar") } }
+                dismissButton = { TextButton(onClick = { toDelete = null }) { FitText("Cancelar") } }
             )
         }
     }

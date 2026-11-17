@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.profile
 
+import com.barcraft.app.ui.components.FitText
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -102,7 +103,7 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbar) },
-        topBar = { TopAppBar(title = { Text("Perfil") }) }
+        topBar = { TopAppBar(title = { FitText("Perfil") }) }
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().padding(padding),
@@ -131,7 +132,7 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                                 TextButton(onClick = { showingQr = true }) {
                                     Icon(Icons.Outlined.QrCode2, null)
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Mi QR")
+                                    FitText("Mi QR")
                                 }
                                 Text(
                                     "Comparte tu @nombre #1234 o tu QR para que te encuentren (toca el nombre para copiarlo)",
@@ -152,16 +153,16 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                                 WhereToFindMe(me.links)
                             }
                             Spacer(Modifier.height(12.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(onClick = { editing = true }) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(onClick = { editing = true }, modifier = Modifier.weight(1f)) {
                                     Icon(Icons.Outlined.Edit, null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Editar perfil")
+                                    FitText("Editar perfil")
                                 }
-                                OutlinedButton(onClick = { editingLinks = true }) {
+                                OutlinedButton(onClick = { editingLinks = true }, modifier = Modifier.weight(1f)) {
                                     Icon(Icons.Outlined.Place, null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Dónde encontrarme")
+                                    FitText("Dónde encontrarme")
                                 }
                             }
                         } else {
@@ -177,7 +178,7 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                                 Button(onClick = onLogin) {
                                     Icon(Icons.AutoMirrored.Outlined.Login, null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Iniciar sesión o registrarme")
+                                    FitText("Iniciar sesión o registrarme")
                                 }
                             }
                         }
@@ -373,9 +374,9 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                 }
             },
             confirmButton = {
-                Button(onClick = { vm.updateProfile(me.uid, name, bio); editing = false }) { Text("Guardar") }
+                Button(onClick = { vm.updateProfile(me.uid, name, bio); editing = false }) { FitText("Guardar") }
             },
-            dismissButton = { TextButton(onClick = { editing = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { editing = false }) { FitText("Cancelar") } }
         )
     }
 

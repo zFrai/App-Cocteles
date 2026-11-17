@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.social
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -202,7 +203,7 @@ fun SharedRecipeScreen(authorId: String, recipeId: String, onBack: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text(recipe?.name ?: "Receta", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { FitText(recipe?.name ?: "Receta") },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
             )
         },
@@ -210,7 +211,7 @@ fun SharedRecipeScreen(authorId: String, recipeId: String, onBack: () -> Unit) {
             if (recipe != null) ExtendedFloatingActionButton(
                 onClick = { vm.saveCopy(recipe) },
                 icon = { Icon(Icons.Outlined.SaveAlt, null) },
-                text = { Text("Guardar en mis recetas") }
+                text = { FitText("Guardar en mis recetas") }
             )
         }
     ) { padding ->

@@ -1,5 +1,6 @@
 package com.barcraft.app.ui.social
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -91,7 +92,7 @@ fun PostCard(
                     IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "Opciones") }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(
-                            text = { Text(if (isMine) "Eliminar" else "Eliminar (moderación)") },
+                            text = { FitText(if (isMine) "Eliminar" else "Eliminar (moderación)") },
                             leadingIcon = { Icon(Icons.Outlined.Delete, null) },
                             onClick = { menu = false; onDelete() }
                         )
@@ -156,19 +157,19 @@ fun PostCard(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(6.dp))
-                    Text("${post.likes.size}")
+                    FitText("${post.likes.size}")
                 }
                 TextButton(onClick = { onOpen?.invoke() }, enabled = onOpen != null) {
                     Icon(Icons.AutoMirrored.Outlined.Chat, "Comentarios", modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("${post.commentCount}")
+                    FitText("${post.commentCount}")
                 }
                 Spacer(Modifier.weight(1f))
                 if (!isMine && onMessage != null) {
                     TextButton(onClick = onMessage) {
                         Icon(Icons.AutoMirrored.Outlined.Send, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Mensaje")
+                        FitText("Mensaje")
                     }
                 }
             }

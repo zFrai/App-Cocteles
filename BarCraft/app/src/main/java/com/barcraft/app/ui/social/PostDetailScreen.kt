@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.social
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -66,7 +67,7 @@ fun PostDetailScreen(postId: String, onBack: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text("Publicación") },
+                title = { FitText("Publicación") },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
             )
         },

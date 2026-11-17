@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.chat
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -66,12 +67,12 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbar) },
-        topBar = { TopAppBar(title = { Text("Chats") }) },
+        topBar = { TopAppBar(title = { FitText("Chats") }) },
         floatingActionButton = {
             if (me != null) ExtendedFloatingActionButton(
                 onClick = onFindPeople,
                 icon = { Icon(Icons.Outlined.PersonSearch, null) },
-                text = { Text("Buscar personas") }
+                text = { FitText("Buscar personas") }
             )
         }
     ) { padding ->
@@ -86,15 +87,15 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
 
         Column(Modifier.fillMaxSize().padding(padding)) {
             ScrollableTabRow(selectedTabIndex = tab, edgePadding = 12.dp) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Chats") })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Seguidores (${people.followers.size})") })
-                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text("Siguiendo (${people.following.size})") })
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { FitText("Chats") })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { FitText("Seguidores (${people.followers.size})") })
+                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { FitText("Siguiendo (${people.following.size})") })
                 Tab(selected = tab == 3, onClick = { tab = 3 }, text = {
                     BadgedBox(badge = { if (people.incoming.isNotEmpty()) Badge { Text("${people.incoming.size}") } }) {
-                        Text("Solicitudes")
+                        FitText("Solicitudes")
                     }
                 })
-                Tab(selected = tab == 4, onClick = { tab = 4 }, text = { Text("Bloqueados") })
+                Tab(selected = tab == 4, onClick = { tab = 4 }, text = { FitText("Bloqueados") })
             }
 
             if (!people.loaded) { LoadingBox(); return@Column }
@@ -185,7 +186,7 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
                             headlineContent = { Text(p.profile.name) },
                             supportingContent = { Text("Bloqueado") },
                             trailingContent = {
-                                OutlinedButton(onClick = { vm.unblock(p.profile.uid, p.profile.name) }) { Text("Desbloquear") }
+                                OutlinedButton(onClick = { vm.unblock(p.profile.uid, p.profile.name) }) { FitText("Desbloquear") }
                             }
                         )
                     }
