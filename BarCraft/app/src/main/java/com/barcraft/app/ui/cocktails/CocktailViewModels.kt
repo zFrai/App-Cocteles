@@ -76,7 +76,12 @@ class CocktailListViewModel(private val repo: CocktailRepository) : ViewModel() 
 //  Detalle
 // ─────────────────────────────────────────────────────────────────────
 
-class CocktailDetailViewModel(private val repo: CocktailRepository, cocktailId: Long) : ViewModel() {
+class CocktailDetailViewModel(
+    private val repo: CocktailRepository,
+    cocktailId: Long,
+    /** Con cuenta: quita la copia de Comunidad al borrar la receta. Null sin cuenta. */
+    private val unshare: ((Long) -> Unit)? = null
+) : ViewModel() {
 
     val cocktail: StateFlow<CocktailWithDetails?> =
         repo.observe(cocktailId).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -97,6 +102,7 @@ class CocktailDetailViewModel(private val repo: CocktailRepository, cocktailId: 
         cocktail.value?.cocktail?.let {
             repo.delete(it)
             ImageUtils.deleteLocal(it.imageUri)
+            if (it.visibility != "private") unshare?.invoke(it.id)
         }
         onDone()
     }
@@ -106,7 +112,12 @@ class CocktailDetailViewModel(private val repo: CocktailRepository, cocktailId: 
 //  Editor
 // ─────────────────────────────────────────────────────────────────────
 
-class CocktailEditorViewModel(private val repo: CocktailRepository, private val cocktailId: Long) : ViewModel() {
+class CocktailEditorViewModel(
+    private val repo: CocktailRepository,
+    private val cocktailId: Long,
+    /** Con cuenta: sube/quita la copia en Comunidad según la visibilidad. Null sin cuenta. */
+    private val share: ((CocktailWithDetails) -> Unit)? = null
+) : ViewModel() {
 
     private val _draft = MutableStateFlow(CocktailDraft())
     val draft: StateFlow<CocktailDraft> = _draft.asStateFlow()
@@ -135,6 +146,7 @@ class CocktailEditorViewModel(private val repo: CocktailRepository, private val 
                     hasGarnish = c.hasGarnish,
                     garnishDescription = c.garnishDescription,
                     isFavorite = c.isFavorite,
+                    visibility = c.visibility,
                     ingredients = d.sortedIngredients.map { IngredientDraft(it.name, it.amount, it.type) },
                     steps = d.sortedSteps.map { it.instruction }
                 )
@@ -169,7 +181,11 @@ class CocktailEditorViewModel(private val repo: CocktailRepository, private val 
         when {
             d.name.isBlank() -> _errors.emit("El nombre es obligatorio")
             d.ingredients.isEmpty() -> _errors.emit("Añade al menos un ingrediente")
-            else -> onSaved(repo.save(d))
+            else -> {
+                val id = repo.save(d)
+                share?.let { publish -> repo.get(id)?.let(publish) }
+                onSaved(id)
+            }
         }
     }
 }

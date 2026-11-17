@@ -1,5 +1,7 @@
 package com.barcraft.app.ui.social
 
+import kotlinx.coroutines.flow.distinctUntilChanged
+import com.barcraft.app.model.SharedRecipe
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barcraft.app.data.local.entity.CocktailWithDetails
@@ -45,6 +47,19 @@ class FeedViewModel(
         combine(social.observeFeed(), container.friendsRepository.observeSettings(me.uid)) { posts, settings ->
             posts.filter { it.authorId !in settings.blocked }
         }.map<List<Post>, List<Post>?> { it }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Recetas compartidas: públicas + "Seguidores" de quien sigo, sin las de bloqueados (null = cargando). */
+    val recipes: StateFlow<List<SharedRecipe>?> =
+        combine(
+            container.recipeShareRepository.observeCommunity(
+                me.uid,
+                container.friendsRepository.observeFollowing(me.uid)
+                    .map { list -> list.filter { it.accepted }.map { it.followedId }.sorted() }
+                    .distinctUntilChanged()
+            ),
+            container.friendsRepository.observeSettings(me.uid)
+        ) { recipes, settings -> recipes?.filter { it.authorId !in settings.blocked } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val _messages = MutableSharedFlow<String>()

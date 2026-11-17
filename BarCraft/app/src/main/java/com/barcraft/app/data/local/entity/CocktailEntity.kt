@@ -1,5 +1,6 @@
 package com.barcraft.app.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -19,5 +20,7 @@ data class CocktailEntity(
     val isFavorite: Boolean = false,
     val averageRating: Float = 0f,
     val ratingCount: Int = 0,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    /** "private", "followers" o "public" (ver RecipeVisibility). Añadida en la versión 2 de la base de datos. */
+    @ColumnInfo(defaultValue = "private") val visibility: String = "private"
 )
