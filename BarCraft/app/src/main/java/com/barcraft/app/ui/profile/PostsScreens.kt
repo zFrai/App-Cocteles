@@ -40,11 +40,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.barcraft.app.AppContainer
+import com.barcraft.app.R
 import com.barcraft.app.model.Post
 import com.barcraft.app.model.SavedPost
 import com.barcraft.app.model.UserProfile
@@ -54,6 +56,7 @@ import com.barcraft.app.ui.navigation.LocalAppSession
 import com.barcraft.app.ui.social.EditPostDialog
 import com.barcraft.app.ui.social.PostCard
 import com.barcraft.app.ui.social.launchSafely
+import com.barcraft.app.utils.Txt
 import com.barcraft.app.utils.appViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -80,18 +83,18 @@ class MyPostsViewModel(private val container: AppContainer, private val me: User
     private val _messages = MutableSharedFlow<String>()
     val messages: SharedFlow<String> = _messages
 
-    fun edit(post: Post, text: String) = launchSafely(_messages, "No se pudo editar la publicación") {
+    fun edit(post: Post, text: String) = launchSafely(_messages, Txt.get(R.string.msg_post_edit_failed)) {
         social.editPost(post.id, text)
-        _messages.emit("Publicación actualizada")
+        _messages.emit(Txt.get(R.string.msg_post_updated))
     }
 
-    fun delete(post: Post) = launchSafely(_messages, "No se pudo borrar la publicación") {
+    fun delete(post: Post) = launchSafely(_messages, Txt.get(R.string.msg_post_delete_failed)) {
         social.deletePost(post.id)
         if (post.mediaId.isNotBlank()) container.mediaRepository.delete(post.mediaId)
-        _messages.emit("Publicación eliminada")
+        _messages.emit(Txt.get(R.string.msg_post_deleted))
     }
 
-    fun toggleLike(post: Post) = launchSafely(_messages, "No se pudo guardar el me gusta") {
+    fun toggleLike(post: Post) = launchSafely(_messages, Txt.get(R.string.msg_like_failed)) {
         social.setLiked(post.id, me.uid, !post.isLikedBy(me.uid))
     }
 }
@@ -111,8 +114,8 @@ fun MyPostsScreen(onBack: () -> Unit, onOpenPost: (String) -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text("Mis publicaciones") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
+                title = { Text(stringResource(R.string.my_posts_title)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } }
             )
         }
     ) { padding ->
@@ -120,8 +123,8 @@ fun MyPostsScreen(onBack: () -> Unit, onOpenPost: (String) -> Unit) {
         when {
             list == null -> LoadingBox(Modifier.padding(padding))
             list.isEmpty() -> EmptyState(
-                Icons.Outlined.Forum, "Aún no has publicado nada",
-                "Tus publicaciones de Comunidad aparecerán aquí para editarlas o borrarlas.",
+                Icons.Outlined.Forum, stringResource(R.string.my_posts_empty_title),
+                stringResource(R.string.my_posts_empty_message),
                 modifier = Modifier.padding(padding)
             )
             else -> LazyColumn(
@@ -151,14 +154,14 @@ fun MyPostsScreen(onBack: () -> Unit, onOpenPost: (String) -> Unit) {
     toDelete?.let { p ->
         AlertDialog(
             onDismissRequest = { toDelete = null },
-            title = { Text("¿Eliminar publicación?") },
-            text = { Text("Se borrará para todos.") },
+            title = { Text(stringResource(R.string.feed_delete_title)) },
+            text = { Text(stringResource(R.string.feed_delete_mine)) },
             confirmButton = {
                 TextButton(onClick = { vm.delete(p); toDelete = null }) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { toDelete = null }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 }
@@ -195,15 +198,15 @@ class SavedPostsViewModel(private val container: AppContainer, private val me: U
     /** Al abrirla, el aviso de "ha cambiado su post" desaparece. */
     fun open(entry: SavedEntry) {
         val post = entry.post ?: return
-        if (entry.editedSinceSeen) launchSafely(_messages, "No se pudo actualizar el aviso") { social.markEditSeen(me.uid, post) }
+        if (entry.editedSinceSeen) launchSafely(_messages, Txt.get(R.string.msg_notice_update_failed)) { social.markEditSeen(me.uid, post) }
     }
 
-    fun unsave(entry: SavedEntry) = launchSafely(_messages, "No se pudo quitar") {
+    fun unsave(entry: SavedEntry) = launchSafely(_messages, Txt.get(R.string.msg_unsave_failed)) {
         social.unsavePost(me.uid, entry.saved.postId)
-        _messages.emit("Quitada de Guardados")
+        _messages.emit(Txt.get(R.string.msg_post_unsaved))
     }
 
-    fun toggleLike(post: Post) = launchSafely(_messages, "No se pudo guardar el me gusta") {
+    fun toggleLike(post: Post) = launchSafely(_messages, Txt.get(R.string.msg_like_failed)) {
         social.setLiked(post.id, me.uid, !post.isLikedBy(me.uid))
     }
 
@@ -225,8 +228,8 @@ fun SavedPostsScreen(onBack: () -> Unit, onOpenPost: (String) -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text("Guardados") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
+                title = { Text(stringResource(R.string.saved_title)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } }
             )
         }
     ) { padding ->
@@ -234,8 +237,8 @@ fun SavedPostsScreen(onBack: () -> Unit, onOpenPost: (String) -> Unit) {
         when {
             list == null -> LoadingBox(Modifier.padding(padding))
             list.isEmpty() -> EmptyState(
-                Icons.Outlined.BookmarkBorder, "Nada guardado",
-                "En Comunidad, toca el marcador de una publicación para guardarla aquí.",
+                Icons.Outlined.BookmarkBorder, stringResource(R.string.saved_empty_title),
+                stringResource(R.string.saved_empty_message),
                 modifier = Modifier.padding(padding)
             )
             else -> LazyColumn(
@@ -246,16 +249,16 @@ fun SavedPostsScreen(onBack: () -> Unit, onOpenPost: (String) -> Unit) {
                 items(list, key = { it.saved.postId }) { entry ->
                     val post = entry.post
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (entry.editedSinceSeen && post != null) EditedNotice("${post.authorHandle} ha cambiado su post")
+                        if (entry.editedSinceSeen && post != null) EditedNotice(stringResource(R.string.saved_post_changed, post.authorHandle))
                         if (post == null) {
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    "Su autor ha borrado esta publicación.",
+                                    stringResource(R.string.saved_post_deleted),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.weight(1f)
                                 )
-                                TextButton(onClick = { vm.unsave(entry) }) { Text("Quitar") }
+                                TextButton(onClick = { vm.unsave(entry) }) { Text(stringResource(R.string.action_remove)) }
                             }
                         } else {
                             PostCard(

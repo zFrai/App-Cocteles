@@ -2,6 +2,8 @@
 
 package com.barcraft.app.ui.chat
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -59,12 +61,12 @@ fun GiphySheet(onDismiss: () -> Unit, onPick: (GiphyItem, GiphyRepository.Kind) 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().height(560.dp)) {
             PrimaryTabRow(selectedTabIndex = kind.ordinal) {
-                Tab(selected = kind == GiphyRepository.Kind.GIFS, onClick = { kind = GiphyRepository.Kind.GIFS }, text = { FitText("GIFs") })
-                Tab(selected = kind == GiphyRepository.Kind.STICKERS, onClick = { kind = GiphyRepository.Kind.STICKERS }, text = { FitText("Stickers") })
+                Tab(selected = kind == GiphyRepository.Kind.GIFS, onClick = { kind = GiphyRepository.Kind.GIFS }, text = { FitText(stringResource(R.string.giphy_tab_gifs)) })
+                Tab(selected = kind == GiphyRepository.Kind.STICKERS, onClick = { kind = GiphyRepository.Kind.STICKERS }, text = { FitText(stringResource(R.string.giphy_tab_stickers)) })
             }
             OutlinedTextField(
                 value = query, onValueChange = { query = it },
-                placeholder = { Text(if (kind == GiphyRepository.Kind.GIFS) "Buscar GIFs (cocktail, cheers…)" else "Buscar stickers") },
+                placeholder = { Text(if (kind == GiphyRepository.Kind.GIFS) stringResource(R.string.giphy_search_gifs) else stringResource(R.string.giphy_search_stickers)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null) },
                 singleLine = true,
                 shape = MaterialTheme.shapes.extraLarge,
@@ -95,7 +97,7 @@ fun GiphySheet(onDismiss: () -> Unit, onPick: (GiphyItem, GiphyRepository.Kind) 
                 }
             }
             Text(
-                "Powered by GIPHY",
+                stringResource(R.string.giphy_powered_by),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(8.dp)

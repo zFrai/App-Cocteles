@@ -1,5 +1,7 @@
 package com.barcraft.app.ui.qr
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import android.content.Context
 import android.graphics.Bitmap
@@ -65,9 +67,9 @@ object ProfileQr {
         GmsBarcodeScanning.getClient(context, options).startScan()
             .addOnSuccessListener { barcode ->
                 val uid = parse(barcode.rawValue)
-                if (uid != null) onUid(uid) else onError("Ese QR no es de un perfil de BarCraft")
+                if (uid != null) onUid(uid) else onError(context.getString(R.string.qr_not_barcraft))
             }
-            .addOnFailureListener { onError("No se pudo abrir el escáner de QR") }
+            .addOnFailureListener { onError(context.getString(R.string.qr_scanner_failed)) }
         // Si la persona cierra el escáner sin leer nada (cancelado) no se muestra nada.
     }
 }
@@ -78,23 +80,22 @@ fun MyQrDialog(me: UserProfile, onDismiss: () -> Unit) {
     val qr = remember(me.uid) { ProfileQr.bitmap(ProfileQr.contentFor(me.uid)) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Mi QR") },
+        title = { Text(stringResource(R.string.qr_my_title)) },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Image(
                     bitmap = qr,
-                    contentDescription = "Código QR de tu perfil",
+                    contentDescription = stringResource(R.string.qr_image_description),
                     modifier = Modifier.size(220.dp).background(Color.White).padding(8.dp)
                 )
                 if (me.handle.isNotBlank()) Text(me.handle, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                 Text(
-                    "Que lo escaneen desde la pestaña Buscar para seguirte" +
-                        if (me.privateAccount) " (te llegará una solicitud)." else ".",
+                    if (me.privateAccount) stringResource(R.string.qr_scan_hint_private) else stringResource(R.string.qr_scan_hint),
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center
                 )
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { FitText("Cerrar") } }
+        confirmButton = { TextButton(onClick = onDismiss) { FitText(stringResource(R.string.action_close)) } }
     )
 }

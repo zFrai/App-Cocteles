@@ -2,6 +2,10 @@
 
 package com.barcraft.app.ui.profile
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.BuildConfig
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
@@ -112,7 +116,7 @@ fun ProfileScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbar) },
-        topBar = { TopAppBar(title = { FitText("Perfil") }) }
+        topBar = { TopAppBar(title = { FitText(stringResource(R.string.profile_title)) }) }
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().padding(padding),
@@ -123,9 +127,9 @@ fun ProfileScreen(
             item {
                 SectionCard {
                     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                        UserAvatar(me?.name ?: "Invitado", size = 84.dp)
+                        UserAvatar(me?.name ?: stringResource(R.string.profile_guest), size = 84.dp)
                         Spacer(Modifier.height(12.dp))
-                        Text(me?.name ?: "Invitado", style = MaterialTheme.typography.headlineSmall)
+                        Text(me?.name ?: stringResource(R.string.profile_guest), style = MaterialTheme.typography.headlineSmall)
                         if (me != null) {
                             if (me.handle.isNotBlank()) {
                                 // Su identificador único: lo pueden usar otros para encontrarle en la pestaña Buscar.
@@ -141,10 +145,10 @@ fun ProfileScreen(
                                 TextButton(onClick = { showingQr = true }) {
                                     Icon(Icons.Outlined.QrCode2, null)
                                     Spacer(Modifier.width(6.dp))
-                                    FitText("Mi QR")
+                                    FitText(stringResource(R.string.profile_my_qr))
                                 }
                                 Text(
-                                    "Comparte tu @nombre #1234 o tu QR para que te encuentren (toca el nombre para copiarlo)",
+                                    stringResource(R.string.profile_share_handle),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -166,18 +170,18 @@ fun ProfileScreen(
                                 OutlinedButton(onClick = { editing = true }, modifier = Modifier.weight(1f)) {
                                     Icon(Icons.Outlined.Edit, null)
                                     Spacer(Modifier.width(8.dp))
-                                    FitText("Editar perfil")
+                                    FitText(stringResource(R.string.profile_edit))
                                 }
                                 OutlinedButton(onClick = { editingLinks = true }, modifier = Modifier.weight(1f)) {
                                     Icon(Icons.Outlined.Place, null)
                                     Spacer(Modifier.width(8.dp))
-                                    FitText("Dónde encontrarme")
+                                    FitText(stringResource(R.string.profile_where_to_find_me))
                                 }
                             }
                         } else {
                             Text(
-                                if (session.firebaseEnabled) "Modo sin cuenta: solo recetas en este móvil."
-                                else "Modo local: Firebase aún no está configurado.",
+                                if (session.firebaseEnabled) stringResource(R.string.profile_guest_mode)
+                                else stringResource(R.string.profile_local_mode),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
@@ -187,7 +191,7 @@ fun ProfileScreen(
                                 Button(onClick = onLogin) {
                                     Icon(Icons.AutoMirrored.Outlined.Login, null)
                                     Spacer(Modifier.width(8.dp))
-                                    FitText("Iniciar sesión o registrarme")
+                                    FitText(stringResource(R.string.profile_login))
                                 }
                             }
                         }
@@ -203,18 +207,18 @@ fun ProfileScreen(
                 SectionCard(contentPadding = PaddingValues(vertical = 4.dp)) {
                     Column {
                         ListItem(
-                            headlineContent = { Text("Mis publicaciones") },
-                            supportingContent = { Text("Ver, editar o borrar lo que has publicado") },
+                            headlineContent = { Text(stringResource(R.string.profile_my_posts)) },
+                            supportingContent = { Text(stringResource(R.string.profile_my_posts_desc)) },
                             leadingContent = { Icon(Icons.Outlined.Forum, null) },
                             colors = itemColors,
                             modifier = Modifier.clickable(onClick = onOpenMyPosts)
                         )
                         ListItem(
-                            headlineContent = { Text("Guardados") },
+                            headlineContent = { Text(stringResource(R.string.profile_saved)) },
                             supportingContent = {
                                 Text(
-                                    if (updated > 0) "$updated ${if (updated == 1) "publicación ha cambiado" else "publicaciones han cambiado"}"
-                                    else "Publicaciones de otros que has guardado"
+                                    if (updated > 0) pluralStringResource(R.plurals.profile_saved_updated, updated, updated)
+                                    else stringResource(R.string.profile_saved_desc)
                                 )
                             },
                             leadingContent = { Icon(Icons.Outlined.BookmarkBorder, null) },
@@ -230,15 +234,15 @@ fun ProfileScreen(
             if (me != null) item {
                 val itemColors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Configuración")
+                    SectionTitle(stringResource(R.string.profile_section_settings))
                     SectionCard(contentPadding = PaddingValues(vertical = 4.dp)) {
                         Column {
                             ListItem(
-                                headlineContent = { Text("Cuenta privada") },
+                                headlineContent = { Text(stringResource(R.string.profile_private_account)) },
                                 supportingContent = {
                                     Text(
-                                        if (me.privateAccount) "Para seguirte tendrán que enviarte una solicitud"
-                                        else "Cualquiera puede seguirte y ver tus publicaciones"
+                                        if (me.privateAccount) stringResource(R.string.profile_private_on)
+                                        else stringResource(R.string.profile_private_off)
                                     )
                                 },
                                 leadingContent = { Icon(if (me.privateAccount) Icons.Outlined.Lock else Icons.Outlined.Public, null) },
@@ -247,17 +251,17 @@ fun ProfileScreen(
                                 },
                                 colors = itemColors
                             )
-                            NotificationSwitch("Avisos de comentarios", prefs.comments, itemColors) {
+                            NotificationSwitch(stringResource(R.string.profile_notify_comments), prefs.comments, itemColors) {
                                 vm.setNotificationPref(me.uid, NotificationPrefs.COMMENTS, it)
                             }
-                            NotificationSwitch("Avisos de mensajes", prefs.messages, itemColors) {
+                            NotificationSwitch(stringResource(R.string.profile_notify_messages), prefs.messages, itemColors) {
                                 vm.setNotificationPref(me.uid, NotificationPrefs.MESSAGES, it)
                             }
-                            NotificationSwitch("Avisos de nuevos seguidores", prefs.followers, itemColors) {
+                            NotificationSwitch(stringResource(R.string.profile_notify_followers), prefs.followers, itemColors) {
                                 vm.setNotificationPref(me.uid, NotificationPrefs.FOLLOWERS, it)
                             }
                             Text(
-                                "Los avisos se guardan ya; las notificaciones en el móvil llegarán en una próxima versión.",
+                                stringResource(R.string.profile_notify_note),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -271,8 +275,8 @@ fun ProfileScreen(
             if (me?.isAdmin == true) item {
                 SectionCard(contentPadding = PaddingValues(vertical = 4.dp)) {
                     ListItem(
-                        headlineContent = { Text("Panel de Admin") },
-                        supportingContent = { Text("Usuarios, denuncias y moderación") },
+                        headlineContent = { Text(stringResource(R.string.profile_admin_panel)) },
+                        supportingContent = { Text(stringResource(R.string.profile_admin_panel_desc)) },
                         leadingContent = { Icon(Icons.Outlined.AdminPanelSettings, null) },
                         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                         modifier = Modifier.clickable(onClick = onOpenAdmin)
@@ -283,7 +287,7 @@ fun ProfileScreen(
             // ── Tema ──────────────────────────────────────────────────
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Tema del perfil")
+                    SectionTitle(stringResource(R.string.profile_section_theme))
                     AppTheme.entries.chunked(2).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             row.forEach { t ->
@@ -300,13 +304,13 @@ fun ProfileScreen(
                 var downloads by remember { mutableStateOf(vm.downloadsBytes()) }
                 val hasBiometric = remember { context.biometricAvailable() }
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Seguridad y almacenamiento")
+                    SectionTitle(stringResource(R.string.profile_section_security))
                     SectionCard(contentPadding = PaddingValues(vertical = 4.dp)) {
                         Column {
                             ListItem(
-                                headlineContent = { Text("Entrar con huella") },
+                                headlineContent = { Text(stringResource(R.string.profile_fingerprint)) },
                                 supportingContent = {
-                                    Text(if (hasBiometric) "Cada ${LockStore.PIN_EVERY} entradas se pide el PIN" else "Este móvil no tiene huella configurada")
+                                    Text(if (hasBiometric) stringResource(R.string.profile_fingerprint_desc, LockStore.PIN_EVERY) else stringResource(R.string.profile_fingerprint_unavailable))
                                 },
                                 leadingContent = { Icon(Icons.Outlined.Fingerprint, null) },
                                 trailingContent = {
@@ -318,20 +322,20 @@ fun ProfileScreen(
                                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                             )
                             ListItem(
-                                headlineContent = { Text("Cambiar PIN") },
+                                headlineContent = { Text(stringResource(R.string.profile_change_pin)) },
                                 leadingContent = { Icon(Icons.Outlined.Password, null) },
                                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                                 modifier = Modifier.clickable { vm.changePin(me.uid) }
                             )
                             ListItem(
-                                headlineContent = { Text("Bloquear ahora") },
+                                headlineContent = { Text(stringResource(R.string.profile_lock_now)) },
                                 leadingContent = { Icon(Icons.Outlined.Lock, null) },
                                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                                 modifier = Modifier.clickable { vm.lockNow() }
                             )
                             ListItem(
-                                headlineContent = { Text("Fotos y audios descargados") },
-                                supportingContent = { Text("Ocupan ${formatBytes(downloads)}. Pulsa para liberar espacio.") },
+                                headlineContent = { Text(stringResource(R.string.profile_downloads)) },
+                                supportingContent = { Text(stringResource(R.string.profile_downloads_desc, formatBytes(downloads))) },
                                 leadingContent = { Icon(Icons.Outlined.CleaningServices, null) },
                                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                                 modifier = Modifier.clickable { vm.clearDownloads(); downloads = vm.downloadsBytes() }
@@ -346,36 +350,36 @@ fun ProfileScreen(
                 SectionCard(contentPadding = PaddingValues(vertical = 4.dp)) {
                     Column {
                         ListItem(
-                            headlineContent = { Text("Exportar recetas (JSON)") },
-                            supportingContent = { Text("Copia de seguridad para compartir o guardar") },
+                            headlineContent = { Text(stringResource(R.string.profile_export)) },
+                            supportingContent = { Text(stringResource(R.string.profile_export_desc)) },
                             leadingContent = { Icon(Icons.Outlined.FileDownload, null) },
                             colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                             modifier = Modifier.clickable {
                                 vm.exportJson { json ->
                                     val send = Intent(Intent.ACTION_SEND).apply {
                                         type = "application/json"
-                                        putExtra(Intent.EXTRA_SUBJECT, "Recetas BarCraft")
+                                        putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.profile_export_subject))
                                         putExtra(Intent.EXTRA_TEXT, json)
                                     }
-                                    context.startActivity(Intent.createChooser(send, "Exportar recetas"))
+                                    context.startActivity(Intent.createChooser(send, context.getString(R.string.profile_export_chooser)))
                                 }
                             }
                         )
                         if (!session.firebaseEnabled) ListItem(
-                            headlineContent = { Text("Comunidad y chat desactivados") },
-                            supportingContent = { Text("Añade app/google-services.json siguiendo FIREBASE_SETUP.md") },
+                            headlineContent = { Text(stringResource(R.string.profile_firebase_off)) },
+                            supportingContent = { Text(stringResource(R.string.profile_firebase_off_desc)) },
                             leadingContent = { Icon(Icons.Outlined.CloudOff, null) },
                             colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                         )
                         if (me != null) {
                             ListItem(
-                                headlineContent = { Text("Miembro desde") },
+                                headlineContent = { Text(stringResource(R.string.profile_member_since)) },
                                 supportingContent = { Text(DateUtils.date(me.createdAt)) },
                                 leadingContent = { Icon(Icons.Outlined.Info, null) },
                                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                             )
                             ListItem(
-                                headlineContent = { Text("Cerrar sesión", color = MaterialTheme.colorScheme.error) },
+                                headlineContent = { Text(stringResource(R.string.profile_logout), color = MaterialTheme.colorScheme.error) },
                                 leadingContent = { Icon(Icons.AutoMirrored.Outlined.Logout, null, tint = MaterialTheme.colorScheme.error) },
                                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                                 modifier = Modifier.clickable(onClick = onLogout)
@@ -386,7 +390,7 @@ fun ProfileScreen(
             }
             item {
                 Text(
-                    "BarCraft 3.0",
+                    stringResource(R.string.profile_version, BuildConfig.VERSION_NAME),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -401,22 +405,22 @@ fun ProfileScreen(
         var bio by rememberSaveable { mutableStateOf(me.bio) }
         AlertDialog(
             onDismissRequest = { editing = false },
-            title = { Text("Editar perfil") },
+            title = { Text(stringResource(R.string.profile_edit_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(name, { name = it }, label = { Text("Nombre visible") }, singleLine = true)
+                    OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.profile_edit_name)) }, singleLine = true)
                     OutlinedTextField(
                         bio, { bio = it.take(UserProfile.BIO_MAX) },
-                        label = { Text("Descripción (opcional)") },
-                        supportingText = { Text("${bio.length}/${UserProfile.BIO_MAX}") },
+                        label = { Text(stringResource(R.string.profile_edit_bio)) },
+                        supportingText = { Text(stringResource(R.string.profile_edit_bio_counter, bio.length, UserProfile.BIO_MAX)) },
                         minLines = 3
                     )
                 }
             },
             confirmButton = {
-                Button(onClick = { vm.updateProfile(me.uid, name, bio); editing = false }) { FitText("Guardar") }
+                Button(onClick = { vm.updateProfile(me.uid, name, bio); editing = false }) { FitText(stringResource(R.string.action_save)) }
             },
-            dismissButton = { TextButton(onClick = { editing = false }) { FitText("Cancelar") } }
+            dismissButton = { TextButton(onClick = { editing = false }) { FitText(stringResource(R.string.action_cancel)) } }
         )
     }
 
@@ -463,8 +467,8 @@ private fun ThemeTile(theme: AppTheme, selected: Boolean, modifier: Modifier = M
             Text(theme.emoji, style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(theme.label, style = MaterialTheme.typography.titleSmall, color = scheme.primary)
-                Text(theme.description, style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
+                Text(stringResource(theme.labelRes), style = MaterialTheme.typography.titleSmall, color = scheme.primary)
+                Text(stringResource(theme.descriptionRes), style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
             }
             if (selected) Icon(Icons.Outlined.CheckCircle, null, tint = scheme.primary)
         }

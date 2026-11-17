@@ -2,6 +2,8 @@
 
 package com.barcraft.app.ui.admin
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -90,12 +92,12 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } },
                 title = {
                     Column {
-                        FitText("Panel de Admin")
+                        FitText(stringResource(R.string.admin_title))
                         FitText(
-                            "Gestiona usuarios y modera la comunidad",
+                            stringResource(R.string.admin_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -112,20 +114,20 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                StatTile("Barmans", list.count { it.role == Role.BARMAN }, Modifier.weight(1f))
-                StatTile("Comensales", list.count { it.role == Role.CLIENTE }, Modifier.weight(1f))
-                StatTile("Admins", list.count { it.isAdmin }, Modifier.weight(1f))
-                StatTile("Bloq.", list.count { it.banned }, Modifier.weight(1f))
+                StatTile(stringResource(R.string.admin_stat_barmans), list.count { it.role == Role.BARMAN }, Modifier.weight(1f))
+                StatTile(stringResource(R.string.admin_stat_clients), list.count { it.role == Role.CLIENTE }, Modifier.weight(1f))
+                StatTile(stringResource(R.string.admin_stat_admins), list.count { it.isAdmin }, Modifier.weight(1f))
+                StatTile(stringResource(R.string.admin_stat_banned), list.count { it.banned }, Modifier.weight(1f))
             }
             PrimaryTabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { FitText("Usuarios") })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { FitText("Publicaciones") })
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { FitText(stringResource(R.string.admin_tab_users)) })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { FitText(stringResource(R.string.admin_tab_posts)) })
                 val pending = openReports?.size ?: 0
                 Tab(
                     selected = tab == 2, onClick = { tab = 2 },
                     text = {
                         FitText(
-                            if (pending > 0) "Denuncias ($pending)" else "Denuncias",
+                            if (pending > 0) stringResource(R.string.admin_tab_reports_count, pending) else stringResource(R.string.admin_tab_reports),
                             color = if (pending > 0) MaterialTheme.colorScheme.error else androidx.compose.ui.graphics.Color.Unspecified
                         )
                     }
@@ -136,8 +138,8 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
                 when {
                     pending == null -> LoadingBox()
                     pending.isEmpty() -> EmptyState(
-                        Icons.Outlined.Flag, "Sin denuncias pendientes",
-                        "Cuando alguien denuncie a otra persona desde un chat aparecerá aquí."
+                        Icons.Outlined.Flag, stringResource(R.string.admin_no_reports_title),
+                        stringResource(R.string.admin_no_reports_message)
                     )
                     else -> LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                         items(pending, key = { it.id }) { report ->
@@ -154,7 +156,7 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
             } else if (tab == 0) {
                 OutlinedTextField(
                     value = query, onValueChange = { query = it },
-                    placeholder = { Text("Buscar nombre, @usuario o email") },
+                    placeholder = { Text(stringResource(R.string.admin_search_hint)) },
                     leadingIcon = { Icon(Icons.Filled.Search, null) },
                     singleLine = true,
                     shape = MaterialTheme.shapes.extraLarge,
@@ -180,18 +182,18 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
                             leadingContent = { UserAvatar(post.authorName, size = 36.dp) },
                             headlineContent = {
                                 Text(
-                                    post.text.ifBlank { post.cocktailName.ifBlank { "(sin texto)" } },
+                                    post.text.ifBlank { post.cocktailName.ifBlank { stringResource(R.string.admin_post_no_text) } },
                                     maxLines = 2, overflow = TextOverflow.Ellipsis
                                 )
                             },
                             supportingContent = {
-                                Text("${post.authorName} · ${DateUtils.relative(post.createdAt)} · ${post.likes.size} ♥ · ${post.commentCount} coment.")
+                                Text(stringResource(R.string.admin_post_summary, post.authorName, DateUtils.relative(post.createdAt), post.likes.size, post.commentCount))
                             },
                             trailingContent = {
                                 Row {
-                                    TextButton(onClick = { onOpenPost(post.id) }) { FitText("Ver") }
+                                    TextButton(onClick = { onOpenPost(post.id) }) { FitText(stringResource(R.string.admin_view)) }
                                     TextButton(onClick = { postToDelete = post }) {
-                                        FitText("Borrar", color = MaterialTheme.colorScheme.error)
+                                        FitText(stringResource(R.string.action_delete_short), color = MaterialTheme.colorScheme.error)
                                     }
                                 }
                             }
@@ -205,28 +207,28 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
     reportToBan?.let { r ->
         AlertDialog(
             onDismissRequest = { reportToBan = null },
-            title = { Text("¿Bloquear a ${r.reportedName}?") },
-            text = { Text("No podrá volver a entrar en BarCraft hasta que lo desbloquees desde Usuarios. La denuncia quedará como revisada.") },
+            title = { Text(stringResource(R.string.admin_ban_title, r.reportedName)) },
+            text = { Text(stringResource(R.string.admin_ban_message)) },
             confirmButton = {
                 TextButton(onClick = { vm.banReported(r); reportToBan = null }) {
-                    FitText("Bloquear", color = MaterialTheme.colorScheme.error)
+                    FitText(stringResource(R.string.admin_block), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { reportToBan = null }) { FitText("Cancelar") } }
+            dismissButton = { TextButton(onClick = { reportToBan = null }) { FitText(stringResource(R.string.action_cancel)) } }
         )
     }
 
     postToDelete?.let { p ->
         AlertDialog(
             onDismissRequest = { postToDelete = null },
-            title = { Text("¿Borrar publicación?") },
-            text = { Text("Se eliminará la publicación de ${p.authorName} para todos.") },
+            title = { Text(stringResource(R.string.admin_delete_post_title)) },
+            text = { Text(stringResource(R.string.admin_delete_post_message, p.authorName)) },
             confirmButton = {
                 TextButton(onClick = { vm.deletePost(p); postToDelete = null }) {
-                    FitText("Borrar", color = MaterialTheme.colorScheme.error)
+                    FitText(stringResource(R.string.action_delete_short), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { postToDelete = null }) { FitText("Cancelar") } }
+            dismissButton = { TextButton(onClick = { postToDelete = null }) { FitText(stringResource(R.string.action_cancel)) } }
         )
     }
 }
@@ -251,7 +253,7 @@ private fun ReportRow(
                 Column(Modifier.weight(1f)) {
                     Text(report.reportedName, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
-                        report.reason.label,
+                        stringResource(report.reason.labelRes),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -265,7 +267,7 @@ private fun ReportRow(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 ) {
                     Text(
-                        "Mensaje: \u201C${report.messageText}\u201D",
+                        stringResource(R.string.admin_report_message, report.messageText),
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 4, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(8.dp)
@@ -276,17 +278,17 @@ private fun ReportRow(
                 Text(report.details, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
             }
             Text(
-                "Denunciado por ${report.reporterName}" + if (reportedIsBanned) " · cuenta ya bloqueada" else "",
+                stringResource(R.string.admin_reported_by, report.reporterName) + if (reportedIsBanned) stringResource(R.string.admin_already_banned_suffix) else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 6.dp)
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 // weight(fill = false): cada botón ocupa lo que necesita y solo encoge si no caben.
-                TextButton(onClick = onDismiss, modifier = Modifier.weight(1f, fill = false)) { FitText("Descartar") }
-                TextButton(onClick = onResolve, modifier = Modifier.weight(1f, fill = false)) { FitText("Revisada") }
+                TextButton(onClick = onDismiss, modifier = Modifier.weight(1f, fill = false)) { FitText(stringResource(R.string.admin_dismiss)) }
+                TextButton(onClick = onResolve, modifier = Modifier.weight(1f, fill = false)) { FitText(stringResource(R.string.admin_resolve)) }
                 if (!reportedIsBanned) TextButton(onClick = onBan, modifier = Modifier.weight(1f, fill = false)) {
-                    FitText("Bloquear cuenta", color = MaterialTheme.colorScheme.error)
+                    FitText(stringResource(R.string.admin_ban_account), color = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -316,14 +318,14 @@ private fun UserAdminRow(
         leadingContent = { UserAvatar(user.name) },
         headlineContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(user.name + if (isMe) " (tú)" else "", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(user.name + if (isMe) stringResource(R.string.admin_you_suffix) else "", maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.width(6.dp))
                 RoleBadge(user.role, showUser = true)
             }
         },
         supportingContent = {
             Text(
-                listOf(if (user.banned) "Bloqueado" else "", user.handle, user.email)
+                listOf(if (user.banned) stringResource(R.string.admin_banned_label) else "", user.handle, user.email)
                     .filter { it.isNotBlank() }.joinToString(" · "),
                 color = if (user.banned) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis
@@ -331,11 +333,11 @@ private fun UserAdminRow(
         },
         trailingContent = {
             if (!isMe) Box {
-                IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "Acciones") }
+                IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.admin_actions)) }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     Role.entries.filter { it != user.role }.forEach { r ->
                         DropdownMenuItem(
-                            text = { FitText("Cambiar a ${r.label}") },
+                            text = { FitText(stringResource(R.string.admin_change_role, stringResource(r.labelRes))) },
                             leadingIcon = {
                                 Icon(if (r == Role.ADMIN) Icons.Outlined.Shield else Icons.Outlined.PersonOff, null)
                             },
@@ -343,11 +345,11 @@ private fun UserAdminRow(
                         )
                     }
                     if (user.banned) DropdownMenuItem(
-                        text = { FitText("Desbloquear") },
+                        text = { FitText(stringResource(R.string.admin_unban)) },
                         leadingIcon = { Icon(Icons.Outlined.CheckCircle, null) },
                         onClick = { menu = false; onBan(false) }
                     ) else DropdownMenuItem(
-                        text = { FitText("Bloquear cuenta") },
+                        text = { FitText(stringResource(R.string.admin_ban_account)) },
                         leadingIcon = { Icon(Icons.Outlined.Block, null) },
                         onClick = { menu = false; onBan(true) }
                     )

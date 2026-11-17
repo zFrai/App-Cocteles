@@ -2,6 +2,8 @@
 
 package com.barcraft.app.ui.auth
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
@@ -100,8 +102,8 @@ fun AuthFlow(onContinueAsGuest: () -> Unit) {
         val cipher = vm.cipherToSaveFingerprint() ?: return@login
         showCryptoBiometricPrompt(
             activity, cipher,
-            title = "Activar entrada con huella",
-            subtitle = "Pon el dedo para guardar el acceso en este móvil",
+            title = context.getString(R.string.auth_fingerprint_enable_title),
+            subtitle = context.getString(R.string.auth_fingerprint_enable_subtitle),
             onSuccess = { vm.login(email, password, it) },
             onError = { message -> message?.let(vm::showError) }
         )
@@ -113,7 +115,7 @@ fun AuthFlow(onContinueAsGuest: () -> Unit) {
         val cipher = vm.cipherToLoginWithFingerprint() ?: return@fingerprint
         showCryptoBiometricPrompt(
             activity, cipher,
-            title = "Iniciar sesión en BarCraft",
+            title = context.getString(R.string.auth_fingerprint_login_title),
             subtitle = state.fingerprintEmail.orEmpty(),
             onSuccess = vm::loginWithFingerprint,
             onError = { message -> message?.let(vm::showError) }
@@ -182,7 +184,7 @@ fun AuthFlow(onContinueAsGuest: () -> Unit) {
             }
             Spacer(Modifier.height(16.dp))
             TextButton(onClick = onContinueAsGuest) {
-                FitText("Entrar como comensal sin cuenta")
+                FitText(stringResource(R.string.auth_continue_as_guest))
             }
         }
     }
@@ -196,9 +198,9 @@ private fun BrandHeader() {
         }
     }
     Spacer(Modifier.height(16.dp))
-    Text("BarCraft", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.onSurface)
+    Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.onSurface)
     Text(
-        "Tu recetario de coctelería y su comunidad",
+        stringResource(R.string.auth_tagline),
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center
@@ -222,7 +224,7 @@ private fun LoginForm(
     var rememberFingerprint by rememberSaveable { mutableStateOf(false) }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Iniciar sesión", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.auth_login_title), style = MaterialTheme.typography.headlineSmall)
         if (fingerprintEmail != null) {
             FilledTonalButton(
                 onClick = onFingerprintLogin,
@@ -231,7 +233,7 @@ private fun LoginForm(
             ) {
                 Icon(Icons.Outlined.Fingerprint, null)
                 Spacer(Modifier.width(8.dp))
-                FitText("Entrar con huella")
+                FitText(stringResource(R.string.auth_login_with_fingerprint))
             }
             Text(
                 fingerprintEmail,
@@ -242,30 +244,30 @@ private fun LoginForm(
             )
             OrDivider()
         }
-        AuthField(email, { email = it }, "Email", Icons.Outlined.Email, KeyboardType.Email)
-        PasswordField(password, { password = it }, "Contraseña", ImeAction.Done) {
+        AuthField(email, { email = it }, stringResource(R.string.auth_email), Icons.Outlined.Email, KeyboardType.Email)
+        PasswordField(password, { password = it }, stringResource(R.string.auth_password), ImeAction.Done) {
             onLogin(email, password, rememberFingerprint)
         }
         TextButton(onClick = { onForgot(email) }, modifier = Modifier.align(Alignment.End)) {
-            FitText("¿Olvidaste tu contraseña?")
+            FitText(stringResource(R.string.auth_forgot_password))
         }
         if (fingerprintAvailable) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = rememberFingerprint, onCheckedChange = { rememberFingerprint = it })
                 Text(
-                    if (fingerprintEmail == null) "Entrar con huella la próxima vez" else "Usar esta cuenta con la huella",
+                    if (fingerprintEmail == null) stringResource(R.string.auth_remember_fingerprint) else stringResource(R.string.auth_use_account_with_fingerprint),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
-        PrimaryAction("Entrar", loading) { onLogin(email, password, rememberFingerprint) }
+        PrimaryAction(stringResource(R.string.auth_login_button), loading) { onLogin(email, password, rememberFingerprint) }
         GoogleButton(loading, onGoogle)
         OutlinedButton(onClick = onGoRegister, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-            FitText("Crear una cuenta")
+            FitText(stringResource(R.string.auth_go_to_register))
         }
         if (fingerprintEmail != null) {
             TextButton(onClick = onForgetFingerprint, modifier = Modifier.fillMaxWidth()) {
-                FitText("Quitar la huella de este móvil")
+                FitText(stringResource(R.string.auth_forget_fingerprint))
             }
         }
     }
@@ -276,7 +278,7 @@ private fun OrDivider() {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         HorizontalDivider(Modifier.weight(1f))
         Text(
-            "  o  ",
+            stringResource(R.string.auth_or_divider),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -291,7 +293,7 @@ private fun GoogleButton(loading: Boolean, onClick: () -> Unit) {
         enabled = !loading,
         modifier = Modifier.fillMaxWidth().height(52.dp)
     ) {
-        FitText("Continuar con Google")
+        FitText(stringResource(R.string.auth_continue_with_google))
     }
 }
 
@@ -309,35 +311,35 @@ private fun RegisterForm(
     var role by rememberSaveable { mutableStateOf(Role.BARMAN) }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Crear cuenta", style = MaterialTheme.typography.headlineSmall)
-        Text("¿Cómo vas a usar BarCraft?", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.auth_register_title), style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.auth_register_role_question), style = MaterialTheme.typography.labelLarge)
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
             Role.selfAssignable.forEachIndexed { i, r ->
                 SegmentedButton(
                     selected = role == r,
                     onClick = { role = r },
                     shape = SegmentedButtonDefaults.itemShape(i, Role.selfAssignable.size),
-                    label = { FitText(r.label) }
+                    label = { FitText(stringResource(r.labelRes)) }
                 )
             }
         }
         Text(
-            role.description + ". El rol de Admin solo lo puede dar otro Admin.",
+            stringResource(R.string.auth_register_role_hint, stringResource(role.descriptionRes)),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        AuthField(name, { name = it }, "Nombre visible", Icons.Outlined.Person, KeyboardType.Text)
-        AuthField(email, { email = it }, "Email", Icons.Outlined.Email, KeyboardType.Email)
-        PasswordField(password, { password = it }, "Contraseña (mín. 6)", ImeAction.Next)
-        PasswordField(confirm, { confirm = it }, "Repite la contraseña", ImeAction.Done) {
+        AuthField(name, { name = it }, stringResource(R.string.auth_display_name), Icons.Outlined.Person, KeyboardType.Text)
+        AuthField(email, { email = it }, stringResource(R.string.auth_email), Icons.Outlined.Email, KeyboardType.Email)
+        PasswordField(password, { password = it }, stringResource(R.string.auth_password_min), ImeAction.Next)
+        PasswordField(confirm, { confirm = it }, stringResource(R.string.auth_password_repeat), ImeAction.Done) {
             onRegister(name, email, password, confirm, role)
         }
-        PrimaryAction("Registrarme", loading) { onRegister(name, email, password, confirm, role) }
+        PrimaryAction(stringResource(R.string.auth_register_button), loading) { onRegister(name, email, password, confirm, role) }
         OrDivider()
         // Con Google no hace falta nombre ni contraseña: se usan los de la cuenta de Google y el rol elegido arriba.
         GoogleButton(loading) { onGoogle(role) }
         TextButton(onClick = onGoLogin, modifier = Modifier.fillMaxWidth()) {
-            FitText("Ya tengo cuenta")
+            FitText(stringResource(R.string.auth_go_to_login))
         }
     }
 }
@@ -379,7 +381,7 @@ private fun PasswordField(
             IconButton(onClick = { visible = !visible }) {
                 Icon(
                     if (visible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                    contentDescription = if (visible) "Ocultar contraseña" else "Mostrar contraseña"
+                    contentDescription = if (visible) stringResource(R.string.auth_hide_password) else stringResource(R.string.auth_show_password)
                 )
             }
         },
@@ -420,9 +422,9 @@ fun SessionLoadingScreen(onLogout: () -> Unit) {
     ) {
         CircularProgressIndicator()
         Spacer(Modifier.height(16.dp))
-        Text("Preparando la barra…", style = MaterialTheme.typography.bodyLarge)
+        Text(stringResource(R.string.auth_loading), style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(24.dp))
-        TextButton(onClick = onLogout) { FitText("Cerrar sesión") }
+        TextButton(onClick = onLogout) { FitText(stringResource(R.string.auth_logout)) }
     }
 }
 
@@ -436,14 +438,14 @@ fun BannedScreen(profile: UserProfile, onLogout: () -> Unit) {
     ) {
         Icon(Icons.Filled.Block, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(64.dp))
         Spacer(Modifier.height(16.dp))
-        Text("Cuenta bloqueada", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.auth_banned_title), style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(8.dp))
         Text(
-            "${profile.name}, un administrador ha bloqueado tu cuenta. Si crees que es un error, contacta con el equipo de BarCraft.",
+            stringResource(R.string.auth_banned_message, profile.name),
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(24.dp))
-        Button(onClick = onLogout) { FitText("Cerrar sesión") }
+        Button(onClick = onLogout) { FitText(stringResource(R.string.auth_logout)) }
     }
 }

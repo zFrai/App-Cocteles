@@ -35,12 +35,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import com.barcraft.app.R
 import com.barcraft.app.model.Role
 
 /** Mensaje centrado para listas vacías. */
@@ -133,7 +136,7 @@ fun RoleBadge(role: Role, showUser: Boolean = false) {
         Row(Modifier.padding(horizontal = 8.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, modifier = Modifier.size(12.dp))
             Spacer(Modifier.width(4.dp))
-            Text(role.label, style = MaterialTheme.typography.labelSmall)
+            Text(stringResource(role.labelRes), style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -152,7 +155,7 @@ fun StarRating(
             val filled = i + 1 <= value + 0.25f
             Icon(
                 imageVector = if (filled) Icons.Filled.Star else Icons.Outlined.StarOutline,
-                contentDescription = if (onRate != null) "${i + 1} estrellas" else null,
+                contentDescription = if (onRate != null) pluralStringResource(R.plurals.rating_stars, i + 1, i + 1) else null,
                 tint = if (filled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                 modifier = Modifier
                     .size(starSize)

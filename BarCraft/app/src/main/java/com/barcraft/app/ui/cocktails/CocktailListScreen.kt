@@ -2,6 +2,9 @@
 
 package com.barcraft.app.ui.cocktails
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -90,10 +93,10 @@ fun CocktailListScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        FitText("Mis cócteles")
+                        FitText(stringResource(R.string.recipes_title))
                         if (state.all.isNotEmpty() && scroll.state.collapsedFraction < 0.5f) {
                             FitText(
-                                "${state.all.size} recetas en tu barra",
+                                pluralStringResource(R.plurals.recipes_count, state.all.size, state.all.size),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -104,7 +107,7 @@ fun CocktailListScreen(
                     IconButton(onClick = vm::toggleFavoritesOnly) {
                         Icon(
                             if (state.favoritesOnly) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Solo favoritos",
+                            contentDescription = stringResource(R.string.recipes_only_favorites),
                             tint = if (state.favoritesOnly) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -117,7 +120,7 @@ fun CocktailListScreen(
             ExtendedFloatingActionButton(
                 onClick = onCreate,
                 icon = { Icon(Icons.Filled.Add, null) },
-                text = { FitText("Nuevo cóctel") }
+                text = { FitText(stringResource(R.string.recipes_new)) }
             )
         }
     ) { padding ->
@@ -125,11 +128,11 @@ fun CocktailListScreen(
             OutlinedTextField(
                 value = state.query,
                 onValueChange = vm::setQuery,
-                placeholder = { Text("Buscar por nombre o ingrediente") },
+                placeholder = { Text(stringResource(R.string.recipes_search_hint)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null) },
                 trailingIcon = {
                     if (state.query.isNotEmpty()) IconButton(onClick = { vm.setQuery("") }) {
-                        Icon(Icons.Filled.Close, contentDescription = "Borrar búsqueda")
+                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.recipes_clear_search))
                     }
                 },
                 singleLine = true,
@@ -144,7 +147,7 @@ fun CocktailListScreen(
                     FilterChip(
                         selected = state.category == null,
                         onClick = { vm.setCategory(null) },
-                        label = { FitText("Todas") }
+                        label = { FitText(stringResource(R.string.recipes_filter_all)) }
                     )
                 }
                 items(CocktailCatalog.categories) { cat ->
@@ -161,15 +164,15 @@ fun CocktailListScreen(
                 !state.loaded -> LoadingBox()
                 state.all.isEmpty() -> EmptyState(
                     icon = Icons.Filled.LocalBar,
-                    title = "Empieza tu recetario",
-                    message = "Guarda tus cócteles con ingredientes, pasos, humo y garnish. Todo se queda en el móvil y funciona sin conexión.",
-                    actionLabel = "Crear mi primer cóctel",
+                    title = stringResource(R.string.recipes_empty_title),
+                    message = stringResource(R.string.recipes_empty_message),
+                    actionLabel = stringResource(R.string.recipes_empty_action),
                     onAction = onCreate
                 )
                 state.visible.isEmpty() -> EmptyState(
                     icon = Icons.Outlined.SearchOff,
-                    title = "Sin resultados",
-                    message = "Prueba con otra búsqueda o quita los filtros."
+                    title = stringResource(R.string.recipes_no_results_title),
+                    message = stringResource(R.string.recipes_no_results_message)
                 )
                 else -> LazyColumn(
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp),
@@ -193,14 +196,14 @@ fun CocktailListScreen(
         AlertDialog(
             onDismissRequest = { toDelete = null },
             icon = { Icon(Icons.Outlined.Delete, null) },
-            title = { Text("¿Eliminar ${c.name}?") },
-            text = { Text("Se borrarán también sus ingredientes, pasos y valoraciones.") },
+            title = { Text(stringResource(R.string.recipes_delete_title, c.name)) },
+            text = { Text(stringResource(R.string.recipes_delete_message)) },
             confirmButton = {
                 TextButton(onClick = { vm.delete(c); toDelete = null }) {
-                    FitText("Eliminar", color = MaterialTheme.colorScheme.error)
+                    FitText(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { toDelete = null }) { FitText("Cancelar") } }
+            dismissButton = { TextButton(onClick = { toDelete = null }) { FitText(stringResource(R.string.action_cancel)) } }
         )
     }
 }
@@ -228,11 +231,11 @@ private fun CocktailCard(
             Column(Modifier.weight(1f)) {
                 Text(c.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    buildString {
-                        append(c.category)
-                        if (c.hasSmoke) append(" · Humo")
-                        if (c.hasGarnish) append(" · Garnish")
-                    },
+                    listOfNotNull(
+                        c.category,
+                        if (c.hasSmoke) stringResource(R.string.cocktail_tag_smoke) else null,
+                        if (c.hasGarnish) stringResource(R.string.cocktail_tag_garnish) else null
+                    ).joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -242,7 +245,7 @@ private fun CocktailCard(
                         StarRating(c.averageRating, starSize = 14.dp)
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            "%.1f (%d)".format(c.averageRating, c.ratingCount),
+                            stringResource(R.string.cocktail_rating_summary, c.averageRating, c.ratingCount),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -258,7 +261,7 @@ private fun CocktailCard(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        " ${c.prepTimeMinutes} min · ${item.ingredients.size} ingr.",
+                        stringResource(R.string.cocktail_time_and_ingredients, c.prepTimeMinutes, item.ingredients.size),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -268,14 +271,14 @@ private fun CocktailCard(
                 IconButton(onClick = onFavorite) {
                     Icon(
                         if (c.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorito",
+                        contentDescription = stringResource(R.string.cocktail_favorite),
                         tint = if (c.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                        contentDescription = if (expanded) "Contraer" else "Expandir"
+                        contentDescription = if (expanded) stringResource(R.string.action_collapse) else stringResource(R.string.action_expand)
                     )
                 }
             }
@@ -290,24 +293,24 @@ private fun CocktailCard(
                 }
                 item.sortedIngredients.take(6).forEach {
                     Text(
-                        "• ${it.amount} ${it.name}".replace("  ", " "),
+                        stringResource(R.string.cocktail_ingredient_bullet, it.amount, it.name).replace("  ", " "),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 if (item.ingredients.size > 6) {
-                    Text("+${item.ingredients.size - 6} más", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.cocktail_more_ingredients, item.ingredients.size - 6), style = MaterialTheme.typography.labelSmall)
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = onDelete) {
                         Icon(Icons.Outlined.Delete, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        FitText("Eliminar")
+                        FitText(stringResource(R.string.action_delete))
                     }
                     TextButton(onClick = onEdit) {
                         Icon(Icons.Outlined.Edit, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        FitText("Editar")
+                        FitText(stringResource(R.string.action_edit))
                     }
                 }
             }

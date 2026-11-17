@@ -2,6 +2,9 @@
 
 package com.barcraft.app.ui.social
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,6 +64,7 @@ import com.barcraft.app.ui.components.LoadingBox
 import com.barcraft.app.ui.components.SectionCard
 import com.barcraft.app.ui.components.SectionTitle
 import com.barcraft.app.ui.components.UserAvatar
+import com.barcraft.app.utils.Txt
 import com.barcraft.app.utils.appViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -101,8 +105,8 @@ fun SharedRecipeCard(recipe: SharedRecipe, onOpen: () -> Unit) {
                 Text(recipe.category, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 DifficultyDots(recipe.difficulty)
                 Icon(Icons.Outlined.Timer, null, Modifier.size(16.dp))
-                Text("${recipe.prepTimeMinutes} min", style = MaterialTheme.typography.labelMedium)
-                Text("${recipe.ingredients.size} ingredientes", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.shared_minutes, recipe.prepTimeMinutes), style = MaterialTheme.typography.labelMedium)
+                Text(pluralStringResource(R.plurals.shared_ingredients_count, recipe.ingredients.size, recipe.ingredients.size), style = MaterialTheme.typography.labelMedium)
             }
         }
     }
@@ -114,7 +118,7 @@ private fun VisibilityLabel(visibility: RecipeVisibility) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.width(4.dp))
-        Text(visibility.label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(visibility.labelRes), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -125,9 +129,8 @@ fun SharedRecipeList(recipes: List<SharedRecipe>?, onOpen: (SharedRecipe) -> Uni
         recipes == null -> LoadingBox(modifier)
         recipes.isEmpty() -> EmptyState(
             icon = Icons.Outlined.LocalBar,
-            title = "Todavía no hay recetas",
-            message = "Aquí salen las recetas públicas y las que comparten con sus seguidores las cuentas que sigues. " +
-                "Para compartir una tuya, edítala y elige Seguidores o Pública.",
+            title = stringResource(R.string.shared_empty_title),
+            message = stringResource(R.string.shared_empty_message),
             modifier = modifier
         )
         else -> LazyColumn(
@@ -165,14 +168,17 @@ class SharedRecipeViewModel(
     val messages: SharedFlow<String> = _messages
 
     /** Copia la receta a "Mis recetas" (en el móvil, como Privada). */
-    fun saveCopy(r: SharedRecipe) = launchSafely(_messages, "No se pudo guardar la receta") {
+    fun saveCopy(r: SharedRecipe) = launchSafely(_messages, Txt.get(R.string.msg_recipe_save_failed)) {
         container.cocktailRepository.save(
             CocktailDraft(
                 name = r.name,
                 description = buildString {
                     append(r.description)
                     if (isNotEmpty()) append("\n\n")
-                    append("Receta de ${r.authorName}${if (r.authorHandle.isNotBlank()) " (${r.authorHandle})" else ""}.")
+                    append(
+                        if (r.authorHandle.isNotBlank()) Txt.get(R.string.shared_copy_credit_handle, r.authorName, r.authorHandle)
+                        else Txt.get(R.string.shared_copy_credit, r.authorName)
+                    )
                 },
                 imageUri = r.imageUrl,
                 category = r.category,
@@ -186,7 +192,7 @@ class SharedRecipeViewModel(
                 steps = r.steps
             )
         )
-        _messages.emit("Guardada en tus recetas")
+        _messages.emit(Txt.get(R.string.msg_recipe_saved))
     }
 }
 
@@ -203,23 +209,23 @@ fun SharedRecipeScreen(authorId: String, recipeId: String, onBack: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { FitText(recipe?.name ?: "Receta") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
+                title = { FitText(recipe?.name ?: stringResource(R.string.shared_recipe_fallback)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } }
             )
         },
         floatingActionButton = {
             if (recipe != null) ExtendedFloatingActionButton(
                 onClick = { vm.saveCopy(recipe) },
                 icon = { Icon(Icons.Outlined.SaveAlt, null) },
-                text = { FitText("Guardar en mis recetas") }
+                text = { FitText(stringResource(R.string.shared_save_copy)) }
             )
         }
     ) { padding ->
         when {
             state == null -> LoadingBox(Modifier.padding(padding))
             recipe == null -> EmptyState(
-                Icons.Outlined.LocalBar, "Receta no disponible",
-                "Su autor la ha borrado o la ha hecho privada.",
+                Icons.Outlined.LocalBar, stringResource(R.string.shared_unavailable_title),
+                stringResource(R.string.shared_unavailable_message),
                 modifier = Modifier.padding(padding)
             )
             else -> LazyColumn(
@@ -231,7 +237,7 @@ fun SharedRecipeScreen(authorId: String, recipeId: String, onBack: () -> Unit) {
                 item {
                     SectionCard {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            SectionTitle("Ingredientes")
+                            SectionTitle(stringResource(R.string.shared_ingredients))
                             recipe.ingredients.forEach { ing ->
                                 Row {
                                     Text(ing.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
@@ -239,12 +245,12 @@ fun SharedRecipeScreen(authorId: String, recipeId: String, onBack: () -> Unit) {
                                 }
                             }
                             if (recipe.garnishDescription.isNotBlank()) Text(
-                                "Garnish: ${recipe.garnishDescription}",
+                                stringResource(R.string.shared_garnish, recipe.garnishDescription),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             if (recipe.hasSmoke) Text(
-                                "Con efecto humo",
+                                stringResource(R.string.shared_smoke),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -254,9 +260,9 @@ fun SharedRecipeScreen(authorId: String, recipeId: String, onBack: () -> Unit) {
                 if (recipe.steps.isNotEmpty()) item {
                     SectionCard {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            SectionTitle("Procedimiento")
+                            SectionTitle(stringResource(R.string.shared_steps))
                             recipe.steps.forEachIndexed { i, step ->
-                                Text("${i + 1}. $step", style = MaterialTheme.typography.bodyLarge)
+                                Text(stringResource(R.string.shared_step, i + 1, step), style = MaterialTheme.typography.bodyLarge)
                             }
                         }
                     }
