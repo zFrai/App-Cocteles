@@ -1,5 +1,6 @@
 package com.barcraft.app.ui.navigation
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -87,7 +88,7 @@ private fun MainScaffold(session: AppSession, onLogin: () -> Unit, onLogout: () 
                                 selected = selected,
                                 onClick = { nav.navigateToTab(tab.route) },
                                 icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
-                                label = { Text(tab.label) }
+                                label = { FitText(tab.label) }
                             )
                         }
                     }

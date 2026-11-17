@@ -1,5 +1,6 @@
 package com.barcraft.app.ui.qr
 
+import com.barcraft.app.ui.components.FitText
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
@@ -94,6 +95,6 @@ fun MyQrDialog(me: UserProfile, onDismiss: () -> Unit) {
                 )
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } }
+        confirmButton = { TextButton(onClick = onDismiss) { FitText("Cerrar") } }
     )
 }

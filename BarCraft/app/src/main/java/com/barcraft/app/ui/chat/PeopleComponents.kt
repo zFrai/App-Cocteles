@@ -1,5 +1,6 @@
 package com.barcraft.app.ui.chat
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -86,44 +87,44 @@ fun PersonRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (showPrimaryAction) when {
                     person.followsMe == FollowState.REQUESTED ->
-                        FilledTonalButton(onClick = { vm.acceptFollower(person) }) { Text("Aceptar") }
+                        FilledTonalButton(onClick = { vm.acceptFollower(person) }) { FitText("Aceptar") }
                     person.iFollow == FollowState.NONE -> OutlinedButton(onClick = { vm.follow(person) }) {
                         Icon(Icons.Outlined.PersonAdd, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp))
-                        Text(if (p.privateAccount) "Solicitar" else "Seguir")
+                        FitText(if (p.privateAccount) "Solicitar" else "Seguir")
                     }
-                    person.iFollow == FollowState.REQUESTED -> OutlinedButton(onClick = { vm.unfollow(person) }) { Text("Cancelar") }
+                    person.iFollow == FollowState.REQUESTED -> OutlinedButton(onClick = { vm.unfollow(person) }) { FitText("Cancelar") }
                     person.canChat -> IconButton(onClick = openChat) { Icon(Icons.AutoMirrored.Outlined.Chat, "Escribir") }
                 }
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "Más opciones") }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         if (person.canChat) DropdownMenuItem(
-                            text = { Text("Enviar mensaje") },
+                            text = { FitText("Enviar mensaje") },
                             leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Chat, null) },
                             onClick = { menu = false; openChat() }
                         )
                         DropdownMenuItem(
-                            text = { Text(if (person.favorite) "Quitar de favoritos" else "Añadir a favoritos") },
+                            text = { FitText(if (person.favorite) "Quitar de favoritos" else "Añadir a favoritos") },
                             leadingIcon = { Icon(if (person.favorite) Icons.Filled.Star else Icons.Outlined.StarOutline, null) },
                             onClick = { menu = false; vm.toggleFavorite(person) }
                         )
                         if (person.iFollow == FollowState.FOLLOWING) DropdownMenuItem(
-                            text = { Text("Dejar de seguir") },
+                            text = { FitText("Dejar de seguir") },
                             leadingIcon = { Icon(Icons.Outlined.PersonRemove, null) },
                             onClick = { menu = false; vm.unfollow(person) }
                         )
                         if (person.followsMe == FollowState.FOLLOWING) DropdownMenuItem(
-                            text = { Text("Quitar de mis seguidores") },
+                            text = { FitText("Quitar de mis seguidores") },
                             leadingIcon = { Icon(Icons.Outlined.PersonRemove, null) },
                             onClick = { menu = false; vm.removeFollower(person) }
                         )
                         if (person.followsMe == FollowState.REQUESTED) DropdownMenuItem(
-                            text = { Text("Rechazar solicitud") },
+                            text = { FitText("Rechazar solicitud") },
                             leadingIcon = { Icon(Icons.Outlined.PersonRemove, null) },
                             onClick = { menu = false; vm.removeFollower(person) }
                         )
                         DropdownMenuItem(
-                            text = { Text("Bloquear", color = MaterialTheme.colorScheme.error) },
+                            text = { FitText("Bloquear", color = MaterialTheme.colorScheme.error) },
                             leadingIcon = { Icon(Icons.Outlined.Block, null, tint = MaterialTheme.colorScheme.error) },
                             onClick = { menu = false; vm.block(person) }
                         )

@@ -1,5 +1,6 @@
 package com.barcraft.app.ui.lock
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -144,8 +145,8 @@ private fun PinSetupScreen(message: String?, onCreate: (String, Boolean) -> Unit
                 }
             },
             modifier = Modifier.fillMaxWidth().height(52.dp)
-        ) { Text(if (first == null) "Continuar" else "Guardar PIN") }
-        TextButton(onClick = onLogout) { Text("Cerrar sesión") }
+        ) { FitText(if (first == null) "Continuar" else "Guardar PIN") }
+        TextButton(onClick = onLogout) { FitText("Cerrar sesión") }
     }
 }
 
@@ -210,14 +211,14 @@ private fun LockScreen(profile: UserProfile, vm: LockViewModel, state: LockUiSta
                 OutlinedButton(onClick = vm::retryBiometric) {
                     Icon(Icons.Outlined.Fingerprint, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Usar huella")
+                    FitText("Usar huella")
                 }
             }
         } else {
-            Button(onClick = vm::onBiometricDismissed) { Text("Usar PIN") }
+            Button(onClick = vm::onBiometricDismissed) { FitText("Usar PIN") }
         }
-        TextButton(onClick = { forgot = true }) { Text("He olvidado el PIN") }
-        TextButton(onClick = onLogout) { Text("Cerrar sesión") }
+        TextButton(onClick = { forgot = true }) { FitText("He olvidado el PIN") }
+        TextButton(onClick = onLogout) { FitText("Cerrar sesión") }
     }
 
     if (forgot && vm.recoversWithGoogle) {
@@ -238,9 +239,9 @@ private fun LockScreen(profile: UserProfile, vm: LockViewModel, state: LockUiSta
                         scope.launch { vm.onGoogleRecoverResult(requestGoogleIdToken(context)) }
                     },
                     enabled = !state.checkingPassword
-                ) { Text("Continuar con Google") }
+                ) { FitText("Continuar con Google") }
             },
-            dismissButton = { TextButton(onClick = { forgot = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { forgot = false }) { FitText("Cancelar") } }
         )
     } else if (forgot) {
         var password by rememberSaveable { mutableStateOf("") }
@@ -262,10 +263,10 @@ private fun LockScreen(profile: UserProfile, vm: LockViewModel, state: LockUiSta
             },
             confirmButton = {
                 Button(onClick = { vm.recoverWithPassword(password) }, enabled = password.isNotEmpty() && !state.checkingPassword) {
-                    Text("Comprobar")
+                    FitText("Comprobar")
                 }
             },
-            dismissButton = { TextButton(onClick = { forgot = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { forgot = false }) { FitText("Cancelar") } }
         )
     }
 }

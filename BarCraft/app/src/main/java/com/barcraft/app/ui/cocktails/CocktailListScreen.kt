@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.cocktails
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
@@ -89,9 +90,9 @@ fun CocktailListScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Mis cócteles")
+                        FitText("Mis cócteles")
                         if (state.all.isNotEmpty() && scroll.state.collapsedFraction < 0.5f) {
-                            Text(
+                            FitText(
                                 "${state.all.size} recetas en tu barra",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -116,7 +117,7 @@ fun CocktailListScreen(
             ExtendedFloatingActionButton(
                 onClick = onCreate,
                 icon = { Icon(Icons.Filled.Add, null) },
-                text = { Text("Nuevo cóctel") }
+                text = { FitText("Nuevo cóctel") }
             )
         }
     ) { padding ->
@@ -143,14 +144,14 @@ fun CocktailListScreen(
                     FilterChip(
                         selected = state.category == null,
                         onClick = { vm.setCategory(null) },
-                        label = { Text("Todas") }
+                        label = { FitText("Todas") }
                     )
                 }
                 items(CocktailCatalog.categories) { cat ->
                     FilterChip(
                         selected = state.category == cat,
                         onClick = { vm.setCategory(if (state.category == cat) null else cat) },
-                        label = { Text(cat) },
+                        label = { FitText(cat) },
                         colors = FilterChipDefaults.filterChipColors()
                     )
                 }
@@ -196,10 +197,10 @@ fun CocktailListScreen(
             text = { Text("Se borrarán también sus ingredientes, pasos y valoraciones.") },
             confirmButton = {
                 TextButton(onClick = { vm.delete(c); toDelete = null }) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    FitText("Eliminar", color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { toDelete = null }) { FitText("Cancelar") } }
         )
     }
 }
@@ -301,12 +302,12 @@ private fun CocktailCard(
                     TextButton(onClick = onDelete) {
                         Icon(Icons.Outlined.Delete, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Eliminar")
+                        FitText("Eliminar")
                     }
                     TextButton(onClick = onEdit) {
                         Icon(Icons.Outlined.Edit, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Editar")
+                        FitText("Editar")
                     }
                 }
             }

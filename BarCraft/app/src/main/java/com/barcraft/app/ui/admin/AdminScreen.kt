@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.admin
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -92,8 +93,8 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } },
                 title = {
                     Column {
-                        Text("Panel de Admin")
-                        Text(
+                        FitText("Panel de Admin")
+                        FitText(
                             "Gestiona usuarios y modera la comunidad",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -117,13 +118,13 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
                 StatTile("Bloq.", list.count { it.banned }, Modifier.weight(1f))
             }
             PrimaryTabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Usuarios") })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Publicaciones") })
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { FitText("Usuarios") })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { FitText("Publicaciones") })
                 val pending = openReports?.size ?: 0
                 Tab(
                     selected = tab == 2, onClick = { tab = 2 },
                     text = {
-                        Text(
+                        FitText(
                             if (pending > 0) "Denuncias ($pending)" else "Denuncias",
                             color = if (pending > 0) MaterialTheme.colorScheme.error else androidx.compose.ui.graphics.Color.Unspecified
                         )
@@ -188,9 +189,9 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
                             },
                             trailingContent = {
                                 Row {
-                                    TextButton(onClick = { onOpenPost(post.id) }) { Text("Ver") }
+                                    TextButton(onClick = { onOpenPost(post.id) }) { FitText("Ver") }
                                     TextButton(onClick = { postToDelete = post }) {
-                                        Text("Borrar", color = MaterialTheme.colorScheme.error)
+                                        FitText("Borrar", color = MaterialTheme.colorScheme.error)
                                     }
                                 }
                             }
@@ -208,10 +209,10 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
             text = { Text("No podrá volver a entrar en BarCraft hasta que lo desbloquees desde Usuarios. La denuncia quedará como revisada.") },
             confirmButton = {
                 TextButton(onClick = { vm.banReported(r); reportToBan = null }) {
-                    Text("Bloquear", color = MaterialTheme.colorScheme.error)
+                    FitText("Bloquear", color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { reportToBan = null }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { reportToBan = null }) { FitText("Cancelar") } }
         )
     }
 
@@ -222,10 +223,10 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
             text = { Text("Se eliminará la publicación de ${p.authorName} para todos.") },
             confirmButton = {
                 TextButton(onClick = { vm.deletePost(p); postToDelete = null }) {
-                    Text("Borrar", color = MaterialTheme.colorScheme.error)
+                    FitText("Borrar", color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { postToDelete = null }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { postToDelete = null }) { FitText("Cancelar") } }
         )
     }
 }
@@ -281,10 +282,11 @@ private fun ReportRow(
                 modifier = Modifier.padding(top = 6.dp)
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onDismiss) { Text("Descartar") }
-                TextButton(onClick = onResolve) { Text("Revisada") }
-                if (!reportedIsBanned) TextButton(onClick = onBan) {
-                    Text("Bloquear cuenta", color = MaterialTheme.colorScheme.error)
+                // weight(fill = false): cada botón ocupa lo que necesita y solo encoge si no caben.
+                TextButton(onClick = onDismiss, modifier = Modifier.weight(1f, fill = false)) { FitText("Descartar") }
+                TextButton(onClick = onResolve, modifier = Modifier.weight(1f, fill = false)) { FitText("Revisada") }
+                if (!reportedIsBanned) TextButton(onClick = onBan, modifier = Modifier.weight(1f, fill = false)) {
+                    FitText("Bloquear cuenta", color = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -333,7 +335,7 @@ private fun UserAdminRow(
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     Role.entries.filter { it != user.role }.forEach { r ->
                         DropdownMenuItem(
-                            text = { Text("Cambiar a ${r.label}") },
+                            text = { FitText("Cambiar a ${r.label}") },
                             leadingIcon = {
                                 Icon(if (r == Role.ADMIN) Icons.Outlined.Shield else Icons.Outlined.PersonOff, null)
                             },
@@ -341,11 +343,11 @@ private fun UserAdminRow(
                         )
                     }
                     if (user.banned) DropdownMenuItem(
-                        text = { Text("Desbloquear") },
+                        text = { FitText("Desbloquear") },
                         leadingIcon = { Icon(Icons.Outlined.CheckCircle, null) },
                         onClick = { menu = false; onBan(false) }
                     ) else DropdownMenuItem(
-                        text = { Text("Bloquear cuenta") },
+                        text = { FitText("Bloquear cuenta") },
                         leadingIcon = { Icon(Icons.Outlined.Block, null) },
                         onClick = { menu = false; onBan(true) }
                     )

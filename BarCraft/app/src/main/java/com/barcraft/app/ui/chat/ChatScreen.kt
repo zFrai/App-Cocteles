@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.chat
 
+import com.barcraft.app.ui.components.FitText
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -136,7 +137,7 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         UserAvatar(otherName.ifBlank { "?" }, size = 36.dp)
                         Spacer(Modifier.width(12.dp))
-                        Text(otherName)
+                        FitText(otherName)
                     }
                 },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } },
@@ -145,7 +146,7 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
                         IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, "Más opciones") }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(
-                                text = { Text("Denunciar a $otherName") },
+                                text = { FitText("Denunciar a $otherName") },
                                 leadingIcon = { Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.error) },
                                 onClick = { menuOpen = false; reporting = ReportDraft(message = null) }
                             )
@@ -251,16 +252,16 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { selected = null }) { Text("Cerrar") } },
+            confirmButton = { TextButton(onClick = { selected = null }) { FitText("Cerrar") } },
             dismissButton = {
                 if (msg.senderId == me.uid) TextButton(onClick = { vm.delete(msg); selected = null }) {
                     Icon(Icons.Outlined.Delete, null, tint = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.width(6.dp))
-                    Text("Borrar para todos", color = MaterialTheme.colorScheme.error)
+                    FitText("Borrar para todos", color = MaterialTheme.colorScheme.error)
                 } else TextButton(onClick = { reporting = ReportDraft(message = msg); selected = null }) {
                     Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.width(6.dp))
-                    Text("Denunciar mensaje", color = MaterialTheme.colorScheme.error)
+                    FitText("Denunciar mensaje", color = MaterialTheme.colorScheme.error)
                 }
             }
         )
@@ -353,10 +354,10 @@ private fun ReportDialog(
         },
         confirmButton = {
             TextButton(enabled = reason != null, onClick = { reason?.let { onSend(it, details) } }) {
-                Text("Enviar denuncia", color = if (reason != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                FitText("Enviar denuncia", color = if (reason != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { FitText("Cancelar") } }
     )
 }
 

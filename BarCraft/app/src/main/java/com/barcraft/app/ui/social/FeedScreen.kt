@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.social
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -58,8 +59,8 @@ fun FeedScreen(
         topBar = {
             TopAppBar(title = {
                 Column {
-                    Text("Comunidad")
-                    Text(
+                    FitText("Comunidad")
+                    FitText(
                         "Barmans y comensales de BarCraft",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -71,7 +72,7 @@ fun FeedScreen(
             if (me != null && Permissions.canPublishPosts(me.role)) ExtendedFloatingActionButton(
                 onClick = onCompose,
                 icon = { Icon(Icons.Outlined.Edit, null) },
-                text = { Text("Publicar") }
+                text = { FitText("Publicar") }
             )
         }
     ) { padding ->
@@ -123,10 +124,10 @@ fun FeedScreen(
                 text = { Text(if (p.authorId == me.uid) "Se borrará para todos." else "Vas a borrar la publicación de ${p.authorName} como Admin.") },
                 confirmButton = {
                     TextButton(onClick = { vm.delete(p); toDelete = null }) {
-                        Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                        FitText("Eliminar", color = MaterialTheme.colorScheme.error)
                     }
                 },
-                dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancelar") } }
+                dismissButton = { TextButton(onClick = { toDelete = null }) { FitText("Cancelar") } }
             )
         }
     }

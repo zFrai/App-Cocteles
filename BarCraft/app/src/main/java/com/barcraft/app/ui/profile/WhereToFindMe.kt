@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.profile
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -67,7 +68,7 @@ fun WhereToFindMe(links: ProfileLinks, modifier: Modifier = Modifier) {
 private fun LinkChip(icon: ImageVector, label: String, onClick: () -> Unit) {
     AssistChip(
         onClick = onClick,
-        label = { Text(label, maxLines = 1) },
+        label = { FitText(label) },
         leadingIcon = { Icon(icon, null) }
     )
 }
@@ -107,8 +108,8 @@ fun EditLinksDialog(initial: ProfileLinks, onDismiss: () -> Unit, onSave: (Profi
         confirmButton = {
             Button(onClick = {
                 onSave(ProfileLinks(instagram, tiktok, x, web, placeName, placeAddress))
-            }) { Text("Guardar") }
+            }) { FitText("Guardar") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { FitText("Cancelar") } }
     )
 }

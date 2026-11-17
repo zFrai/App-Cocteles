@@ -91,7 +91,7 @@ fun rememberPhotoPicker(onPicked: (Uri) -> Unit): PhotoPickerState {
                 }
             },
             confirmButton = {},
-            dismissButton = { TextButton(onClick = { chooser = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { chooser = false }) { FitText("Cancelar") } }
         )
     }
     return state

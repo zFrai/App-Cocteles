@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.cocktails
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -105,7 +106,7 @@ fun CocktailDetailScreen(
         contentWindowInsets = WindowInsets(0),
         topBar = {
             TopAppBar(
-                title = { Text(data?.cocktail?.name ?: "") },
+                title = { FitText(data?.cocktail?.name ?: "") },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") }
                 },
@@ -124,12 +125,12 @@ fun CocktailDetailScreen(
                             IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, "Más") }
                             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                                 if (Permissions.canPublishPosts(session.profile?.role)) DropdownMenuItem(
-                                    text = { Text("Compartir en la comunidad") },
+                                    text = { FitText("Compartir en la comunidad") },
                                     leadingIcon = { Icon(Icons.Outlined.Share, null) },
                                     onClick = { menuOpen = false; onShare(c.id) }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Eliminar") },
+                                    text = { FitText("Eliminar") },
                                     leadingIcon = { Icon(Icons.Outlined.Delete, null) },
                                     onClick = { menuOpen = false; confirmDelete = true }
                                 )
@@ -144,7 +145,7 @@ fun CocktailDetailScreen(
             if (data != null && tab == 2) ExtendedFloatingActionButton(
                 onClick = { ratingDialog = true },
                 icon = { Icon(Icons.Filled.Star, null) },
-                text = { Text("Valorar") }
+                text = { FitText("Valorar") }
             )
         }
     ) { padding ->
@@ -162,7 +163,7 @@ fun CocktailDetailScreen(
                 Column {
                     PrimaryTabRow(selectedTabIndex = tab) {
                         listOf("Ingredientes", "Preparación", "Valoraciones").forEachIndexed { i, label ->
-                            Tab(selected = tab == i, onClick = { tab = i }, text = { Text(label) })
+                            Tab(selected = tab == i, onClick = { tab = i }, text = { FitText(label) })
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -203,10 +204,10 @@ fun CocktailDetailScreen(
             text = { Text("Esta acción no se puede deshacer.") },
             confirmButton = {
                 TextButton(onClick = { confirmDelete = false; vm.delete(onBack) }) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    FitText("Eliminar", color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { FitText("Cancelar") } }
         )
     }
 
@@ -217,10 +218,10 @@ fun CocktailDetailScreen(
             text = { Text("Se eliminará el voto de ${r.voterName}. No se puede deshacer.") },
             confirmButton = {
                 TextButton(onClick = { vm.deleteRating(r.id); ratingToDelete = null }) {
-                    Text("Borrar", color = MaterialTheme.colorScheme.error)
+                    FitText("Borrar", color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { ratingToDelete = null }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { ratingToDelete = null }) { FitText("Cancelar") } }
         )
     }
 
@@ -259,23 +260,23 @@ private fun DetailHeader(d: CocktailWithDetails) {
         }
         Spacer(Modifier.height(10.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(onClick = {}, label = { Text(c.category) })
+            AssistChip(onClick = {}, label = { FitText(c.category) })
             AssistChip(
                 onClick = {},
-                label = { Text("${c.prepTimeMinutes} min") },
+                label = { FitText("${c.prepTimeMinutes} min") },
                 leadingIcon = { Icon(Icons.Outlined.Schedule, null, Modifier.size(18.dp)) }
             )
             AssistChip(onClick = {}, label = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Dificultad "); DifficultyDots(c.difficulty)
+                    FitText("Dificultad "); DifficultyDots(c.difficulty)
                 }
             })
             if (c.hasSmoke) AssistChip(
-                onClick = {}, label = { Text("Humo") },
+                onClick = {}, label = { FitText("Humo") },
                 leadingIcon = { Icon(Icons.Outlined.Cloud, null, Modifier.size(18.dp)) }
             )
             if (c.hasGarnish) AssistChip(
-                onClick = {}, label = { Text("Garnish") },
+                onClick = {}, label = { FitText("Garnish") },
                 leadingIcon = { Icon(Icons.Outlined.Spa, null, Modifier.size(18.dp)) }
             )
         }
@@ -406,9 +407,9 @@ private fun AddRatingDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onSubmit(name, stars, comment) }, enabled = name.isNotBlank()) { Text("Guardar") }
+            Button(onClick = { onSubmit(name, stars, comment) }, enabled = name.isNotBlank()) { FitText("Guardar") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { FitText("Cancelar") } }
     )
 }
 
