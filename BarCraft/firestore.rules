@@ -88,6 +88,11 @@ service cloud.firestore {
         allow read, write: if signedIn() && request.auth.uid == uid;
       }
 
+      // Publicaciones guardadas: privadas, solo su dueño.
+      match /saved/{postId} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+
       // Recetas compartidas (ver RecipeShareRepository). Las privadas no se suben.
       match /recipes/{recipeId} {
         allow read: if signedIn()
@@ -234,9 +239,12 @@ service cloud.firestore {
       allow create: if canPublish() && request.resource.data.authorId == request.auth.uid
                     && request.resource.data.likes.size() == 0
                     && request.resource.data.commentCount == 0;
-      // Cualquiera activo puede dar "me gusta" o sumar comentarios; el autor puede editar el resto.
+      // Cualquiera activo puede dar "me gusta" o sumar comentarios; el autor solo puede editar el texto
+      // (y editedAt, que avisa a quien la tenga guardada).
       allow update: if active() && (changed().hasOnly(['likes', 'commentCount'])
-                                    || resource.data.authorId == request.auth.uid);
+                                    || (resource.data.authorId == request.auth.uid
+                                        && changed().hasOnly(['text', 'editedAt', 'likes', 'commentCount'])
+                                        && request.resource.data.text.size() <= 2000));
       allow delete: if signedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
 
       match /comments/{commentId} {

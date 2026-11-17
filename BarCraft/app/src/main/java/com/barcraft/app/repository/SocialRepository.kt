@@ -4,12 +4,15 @@ import com.barcraft.app.data.remote.Collections
 import com.barcraft.app.data.remote.snapshotFlow
 import com.barcraft.app.data.remote.toComment
 import com.barcraft.app.data.remote.toPost
+import com.barcraft.app.data.remote.toSavedPost
 import com.barcraft.app.model.Comment
 import com.barcraft.app.model.Post
+import com.barcraft.app.model.SavedPost
 import com.barcraft.app.model.UserProfile
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -46,6 +49,7 @@ class SocialRepository(private val db: FirebaseFirestore) {
                 "authorId" to me.uid,
                 "authorName" to me.name,
                 "authorRole" to me.role.id,
+                "authorTag" to me.tag,
                 "text" to text.trim(),
                 "imageUrl" to imageUrl.trim(),
                 "mediaId" to mediaId,
@@ -56,6 +60,40 @@ class SocialRepository(private val db: FirebaseFirestore) {
                 "createdAt" to FieldValue.serverTimestamp()
             )
         ).await()
+    }
+
+    /** Mis publicaciones (sin orderBy para no necesitar índice compuesto; se ordenan aquí). */
+    fun observeByAuthor(uid: String): Flow<List<Post>> =
+        posts.whereEqualTo("authorId", uid).snapshotFlow()
+            .map { snap -> snap.documents.map { it.toPost() }.sortedByDescending { it.createdAt } }
+
+    /** Solo el autor (lo exigen las reglas). Marca editedAt para avisar a quien la tenga guardada. */
+    suspend fun editPost(postId: String, text: String) {
+        posts.document(postId).update(
+            mapOf("text" to text.trim(), "editedAt" to FieldValue.serverTimestamp())
+        ).await()
+    }
+
+    // ── Guardados (privados de cada uno) ──────────────────────────────
+    private fun saved(uid: String) =
+        db.collection(Collections.USERS).document(uid).collection(Collections.SAVED)
+
+    fun observeSaved(uid: String): Flow<List<SavedPost>> =
+        saved(uid).snapshotFlow().map { snap -> snap.documents.map { it.toSavedPost() }.sortedByDescending { it.savedAt } }
+
+    suspend fun savePost(uid: String, post: Post) {
+        saved(uid).document(post.id).set(
+            mapOf("savedAt" to FieldValue.serverTimestamp(), "seenEditAt" to post.editedAt)
+        ).await()
+    }
+
+    suspend fun unsavePost(uid: String, postId: String) {
+        saved(uid).document(postId).delete().await()
+    }
+
+    /** Ya he visto la última edición: quita el aviso "ha cambiado su post". */
+    suspend fun markEditSeen(uid: String, post: Post) {
+        saved(uid).document(post.id).set(mapOf("seenEditAt" to post.editedAt), SetOptions.merge()).await()
     }
 
     suspend fun setLiked(postId: String, uid: String, liked: Boolean) {

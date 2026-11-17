@@ -22,7 +22,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.AdminPanelSettings
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Lock
@@ -38,6 +40,7 @@ import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.automirrored.outlined.Login
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -83,7 +86,13 @@ import com.barcraft.app.utils.appViewModel
 import kotlinx.coroutines.flow.flowOf
 
 @Composable
-fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> Unit) {
+fun ProfileScreen(
+    onLogin: () -> Unit,
+    onLogout: () -> Unit,
+    onOpenAdmin: () -> Unit,
+    onOpenMyPosts: () -> Unit,
+    onOpenSaved: () -> Unit
+) {
     val session = LocalAppSession.current
     val me = session.profile
     val vm = appViewModel { ProfileViewModel(it) }
@@ -181,6 +190,37 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // ── Mis publicaciones y Guardados ─────────────────────────
+            if (me != null) item {
+                val savedVm = appViewModel(key = "saved_${me.uid}") { SavedPostsViewModel(it, me) }
+                val updated by savedVm.updatedCount.collectAsStateWithLifecycle()
+                val itemColors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                SectionCard(contentPadding = PaddingValues(vertical = 4.dp)) {
+                    Column {
+                        ListItem(
+                            headlineContent = { Text("Mis publicaciones") },
+                            supportingContent = { Text("Ver, editar o borrar lo que has publicado") },
+                            leadingContent = { Icon(Icons.Outlined.Forum, null) },
+                            colors = itemColors,
+                            modifier = Modifier.clickable(onClick = onOpenMyPosts)
+                        )
+                        ListItem(
+                            headlineContent = { Text("Guardados") },
+                            supportingContent = {
+                                Text(
+                                    if (updated > 0) "$updated ${if (updated == 1) "publicación ha cambiado" else "publicaciones han cambiado"}"
+                                    else "Publicaciones de otros que has guardado"
+                                )
+                            },
+                            leadingContent = { Icon(Icons.Outlined.BookmarkBorder, null) },
+                            trailingContent = { if (updated > 0) Badge { Text("$updated") } },
+                            colors = itemColors,
+                            modifier = Modifier.clickable(onClick = onOpenSaved)
+                        )
                     }
                 }
             }

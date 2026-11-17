@@ -121,3 +121,8 @@ Comunidad > Recetas, en Logcat (filtro `BarCraft`) aparecerá un error de Firest
 Ábrelo, pulsa **Crear índice** y espera unos minutos. También puedes crearlo a mano en
 Firestore Database > Índices > **Exenciones de campo único**: colección `recipes`, campo `visibility`,
 ámbito **Grupo de colecciones**, ascendente activado.
+
+## Mis publicaciones y Guardados
+En **Perfil > Mis publicaciones** puedes editar el texto o borrar lo que has publicado. En Comunidad,
+el marcador de una publicación la guarda en **Perfil > Guardados** (`users/{uid}/saved`, privado).
+Si su autor la edita, en Guardados aparece "@nombre #1234 ha cambiado su post" hasta que la abres.
