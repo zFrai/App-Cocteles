@@ -17,8 +17,25 @@ data class Friendship(
 /** Ajustes privados de cada usuario (`users/{uid}/private/settings`): solo los ve él. */
 data class PrivateSettings(
     val favorites: List<String> = emptyList(),
-    val blocked: List<String> = emptyList()
+    val blocked: List<String> = emptyList(),
+    val notifications: NotificationPrefs = NotificationPrefs()
 )
+
+/**
+ * Qué avisos quiere recibir cada uno. Se guardan ya en `users/{uid}/private/settings`; los avisos
+ * push reales necesitan Cloud Functions (plan Blaze de Firebase) y llegarán más adelante.
+ */
+data class NotificationPrefs(
+    val comments: Boolean = true,
+    val messages: Boolean = true,
+    val followers: Boolean = true
+) {
+    companion object {
+        const val COMMENTS = "notifyComments"
+        const val MESSAGES = "notifyMessages"
+        const val FOLLOWERS = "notifyFollowers"
+    }
+}
 
 /** Estado de la relación con otra persona, para pintar botones. */
 enum class FriendState { NONE, REQUEST_SENT, REQUEST_RECEIVED, FRIENDS }

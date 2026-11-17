@@ -31,6 +31,10 @@ import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.automirrored.outlined.Login
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -63,6 +67,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.barcraft.app.data.local.LockStore
+import com.barcraft.app.model.NotificationPrefs
+import com.barcraft.app.model.UserProfile
 import com.barcraft.app.ui.components.RoleBadge
 import com.barcraft.app.ui.lock.biometricAvailable
 import com.barcraft.app.ui.components.SectionCard
@@ -72,6 +78,7 @@ import com.barcraft.app.ui.navigation.LocalAppSession
 import com.barcraft.app.ui.theme.AppTheme
 import com.barcraft.app.utils.DateUtils
 import com.barcraft.app.utils.appViewModel
+import kotlinx.coroutines.flow.flowOf
 
 @Composable
 fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> Unit) {
@@ -82,6 +89,10 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
     var editing by remember { mutableStateOf(false) }
+    var editingLinks by remember { mutableStateOf(false) }
+    // Fuera de la lista: así el listener de Firestore no se crea de nuevo cada vez que el bloque entra en pantalla.
+    val prefs by remember(me?.uid) { me?.let { vm.notificationPrefs(it.uid) } ?: flowOf(NotificationPrefs()) }
+        .collectAsStateWithLifecycle(NotificationPrefs())
 
     LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
 
@@ -128,11 +139,22 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                                 Spacer(Modifier.height(8.dp))
                                 Text(me.bio, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium)
                             }
+                            if (!me.links.isEmpty) {
+                                Spacer(Modifier.height(12.dp))
+                                WhereToFindMe(me.links)
+                            }
                             Spacer(Modifier.height(12.dp))
-                            OutlinedButton(onClick = { editing = true }) {
-                                Icon(Icons.Outlined.Edit, null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Editar perfil")
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(onClick = { editing = true }) {
+                                    Icon(Icons.Outlined.Edit, null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Editar perfil")
+                                }
+                                OutlinedButton(onClick = { editingLinks = true }) {
+                                    Icon(Icons.Outlined.Place, null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Dónde encontrarme")
+                                }
                             }
                         } else {
                             Text(
@@ -155,6 +177,47 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                 }
             }
 
+            // ── Configuración: privacidad y avisos ────────────────────
+            if (me != null) item {
+                val itemColors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionTitle("Configuración")
+                    SectionCard(contentPadding = PaddingValues(vertical = 4.dp)) {
+                        Column {
+                            ListItem(
+                                headlineContent = { Text("Cuenta privada") },
+                                supportingContent = {
+                                    Text(
+                                        if (me.privateAccount) "Para seguirte tendrán que enviarte una solicitud"
+                                        else "Cualquiera puede seguirte y ver tus publicaciones"
+                                    )
+                                },
+                                leadingContent = { Icon(if (me.privateAccount) Icons.Outlined.Lock else Icons.Outlined.Public, null) },
+                                trailingContent = {
+                                    Switch(checked = me.privateAccount, onCheckedChange = { vm.setPrivateAccount(me.uid, it) })
+                                },
+                                colors = itemColors
+                            )
+                            NotificationSwitch("Avisos de comentarios", prefs.comments, itemColors) {
+                                vm.setNotificationPref(me.uid, NotificationPrefs.COMMENTS, it)
+                            }
+                            NotificationSwitch("Avisos de mensajes", prefs.messages, itemColors) {
+                                vm.setNotificationPref(me.uid, NotificationPrefs.MESSAGES, it)
+                            }
+                            NotificationSwitch("Avisos de nuevos seguidores", prefs.followers, itemColors) {
+                                vm.setNotificationPref(me.uid, NotificationPrefs.FOLLOWERS, it)
+                            }
+                            Text(
+                                "Los avisos se guardan ya; las notificaciones en el móvil llegarán en una próxima versión.",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
             // ── Administración (solo Admin; antes era una pestaña) ────
             if (me?.isAdmin == true) item {
                 SectionCard(contentPadding = PaddingValues(vertical = 4.dp)) {
@@ -171,7 +234,7 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
             // ── Tema ──────────────────────────────────────────────────
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Tema visual")
+                    SectionTitle("Tema del perfil")
                     AppTheme.entries.chunked(2).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             row.forEach { t ->
@@ -293,7 +356,12 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(name, { name = it }, label = { Text("Nombre visible") }, singleLine = true)
-                    OutlinedTextField(bio, { bio = it.take(140) }, label = { Text("Sobre mí (opcional)") }, minLines = 2)
+                    OutlinedTextField(
+                        bio, { bio = it.take(UserProfile.BIO_MAX) },
+                        label = { Text("Descripción (opcional)") },
+                        supportingText = { Text("${bio.length}/${UserProfile.BIO_MAX}") },
+                        minLines = 3
+                    )
                 }
             },
             confirmButton = {
@@ -302,6 +370,29 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
             dismissButton = { TextButton(onClick = { editing = false }) { Text("Cancelar") } }
         )
     }
+
+    if (editingLinks && me != null) {
+        EditLinksDialog(
+            initial = me.links,
+            onDismiss = { editingLinks = false },
+            onSave = { vm.updateLinks(me.uid, it); editingLinks = false }
+        )
+    }
+}
+
+@Composable
+private fun NotificationSwitch(
+    title: String,
+    checked: Boolean,
+    colors: androidx.compose.material3.ListItemColors,
+    onChange: (Boolean) -> Unit
+) {
+    ListItem(
+        headlineContent = { Text(title) },
+        leadingContent = { Icon(if (checked) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff, null) },
+        trailingContent = { Switch(checked = checked, onCheckedChange = onChange) },
+        colors = colors
+    )
 }
 
 @Composable

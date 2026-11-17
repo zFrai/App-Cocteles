@@ -2,11 +2,15 @@ package com.barcraft.app.repository
 
 import com.barcraft.app.data.remote.Collections
 import com.barcraft.app.data.remote.snapshotFlow
+import com.barcraft.app.data.remote.toPrivateSettings
 import com.barcraft.app.data.remote.toUserProfile
+import com.barcraft.app.model.NotificationPrefs
+import com.barcraft.app.model.ProfileLinks
 import com.barcraft.app.model.Role
 import com.barcraft.app.model.UserProfile
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -27,7 +31,43 @@ class UserRepository(private val db: FirebaseFirestore) {
         }
 
     suspend fun updateProfile(uid: String, name: String, bio: String) {
-        users.document(uid).update(mapOf("name" to name.trim(), "bio" to bio.trim())).await()
+        users.document(uid).update(mapOf("name" to name.trim(), "bio" to bio.trim().take(UserProfile.BIO_MAX))).await()
+    }
+
+    /**
+     * Guarda el email de la cuenta en `emails/{uid}` (solo lo leen su dueño y los Admins).
+     * Las cuentas antiguas lo tenían también en el perfil público, que lee cualquiera: si [publicCopy]
+     * es true se borra de ahí, siempre después de haberlo guardado aparte.
+     */
+    suspend fun syncPrivateEmail(uid: String, email: String, publicCopy: Boolean) {
+        if (email.isNotBlank()) db.collection(Collections.EMAILS).document(uid).set(mapOf("email" to email)).await()
+        if (publicCopy) users.document(uid).update("email", FieldValue.delete()).await()
+    }
+
+    /** uid -> email de todas las cuentas. Solo funciona para Admins (lo exigen las reglas). */
+    fun observeEmails(): Flow<Map<String, String>> =
+        db.collection(Collections.EMAILS).snapshotFlow().map { snap ->
+            snap.documents.associate { it.id to it.getString("email").orEmpty() }
+        }
+
+    /** Guarda "Dónde encontrarme" entero (los campos vacíos lo borran). */
+    suspend fun updateLinks(uid: String, links: ProfileLinks) {
+        users.document(uid).update("links", links.cleaned().toMap()).await()
+    }
+
+    suspend fun setPrivateAccount(uid: String, private: Boolean) {
+        users.document(uid).update("privateAccount", private).await()
+    }
+
+    private fun settingsDoc(uid: String) =
+        users.document(uid).collection(Collections.PRIVATE).document(Collections.SETTINGS_DOC)
+
+    fun observeNotificationPrefs(uid: String): Flow<NotificationPrefs> =
+        settingsDoc(uid).snapshotFlow().map { it.toPrivateSettings().notifications }
+
+    /** [key] es una de las constantes de [NotificationPrefs]. */
+    suspend fun setNotificationPref(uid: String, key: String, enabled: Boolean) {
+        settingsDoc(uid).set(mapOf(key to enabled), SetOptions.merge()).await()
     }
 
     /**
@@ -41,14 +81,14 @@ class UserRepository(private val db: FirebaseFirestore) {
     suspend fun ensureTag(uid: String, name: String): String {
         val base = tagBase(name)
         repeat(MAX_TAG_ATTEMPTS) { attempt ->
-            // Primero 4 cifras; si hay mala suerte varias veces seguidas, 6.
-            val digits = if (attempt < 5) Random.nextInt(1000, 10000) else Random.nextInt(100000, 1000000)
+            // Siempre 4 cifras: así "@nombre #1234" se separa sin ambigüedad aunque el nombre acabe en número.
+            val digits = Random.nextInt(1000, 10000)
             val candidate = "$base$digits"
             val assigned: String? = db.runTransaction { tx ->
                 val userRef = users.document(uid)
                 val current = tx.get(userRef).getString("tag")
                 if (!current.isNullOrBlank()) return@runTransaction current
-                val tagRef = db.collection(Collections.TAGS).document(candidate)
+                val tagRef = db.collection(Collections.TAGS).document(tagKey(candidate))
                 if (tx.get(tagRef).exists()) return@runTransaction null
                 tx.set(tagRef, mapOf("uid" to uid, "createdAt" to FieldValue.serverTimestamp()))
                 tx.update(userRef, "tag", candidate)
@@ -72,14 +112,22 @@ class UserRepository(private val db: FirebaseFirestore) {
     private companion object {
         const val MAX_TAG_ATTEMPTS = 8
 
-        /** "Laura Gómez" -> "lauragomez". Solo a-z y 0-9, máx. 12 letras. Debe cumplir la regla de firestore.rules. */
+        /**
+         * "Láura_Bar 2" -> "láura_bar2". Se quedan letras (con tildes: á à â ä…), números y los símbolos
+         * _ - . / \ |; se quitan espacios y lo demás. En minúsculas y máx. [TAG_BASE_MAX] caracteres.
+         * Debe cumplir la regla `tagFormatOk` de firestore.rules.
+         */
         fun tagBase(name: String): String {
-            val plain = Normalizer.normalize(name, Normalizer.Form.NFD)
-                .replace(Regex("\\p{M}+"), "")
+            val plain = Normalizer.normalize(name, Normalizer.Form.NFC)
                 .lowercase()
-                .replace(Regex("[^a-z0-9]"), "")
-                .take(12)
-            return if (plain.length >= 3) plain else "barcraft"
+                .replace(Regex("[^\\p{L}0-9_.|/\\\\-]"), "")
+                .take(TAG_BASE_MAX)
+            return plain.ifEmpty { "barcraft" }
         }
+
+        /** Id del documento en `tags/`: Firestore no admite "/" en un id. Debe coincidir con firestore.rules. */
+        fun tagKey(tag: String): String = tag.replace("/", "%2F")
+
+        const val TAG_BASE_MAX = 16
     }
 }

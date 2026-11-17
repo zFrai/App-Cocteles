@@ -5,8 +5,10 @@ import com.barcraft.app.model.ChatRoom
 import com.barcraft.app.model.Comment
 import com.barcraft.app.model.Friendship
 import com.barcraft.app.model.MessageType
+import com.barcraft.app.model.NotificationPrefs
 import com.barcraft.app.model.PrivateSettings
 import com.barcraft.app.model.Post
+import com.barcraft.app.model.ProfileLinks
 import com.barcraft.app.model.Report
 import com.barcraft.app.model.ReportReason
 import com.barcraft.app.model.ReportStatus
@@ -40,7 +42,9 @@ fun DocumentSnapshot.toUserProfile(): UserProfile? {
         banned = getBoolean("banned") ?: false,
         bio = getString("bio").orEmpty(),
         createdAt = millis("createdAt"),
-        tag = getString("tag").orEmpty()
+        tag = getString("tag").orEmpty(),
+        links = ProfileLinks.fromMap(stringMap("links")),
+        privateAccount = getBoolean("privateAccount") ?: false
     )
 }
 
@@ -78,7 +82,15 @@ fun DocumentSnapshot.toFriendship(): Friendship = Friendship(
 
 fun DocumentSnapshot.toPrivateSettings(): PrivateSettings =
     if (!exists()) PrivateSettings()
-    else PrivateSettings(favorites = stringList("favorites"), blocked = stringList("blocked"))
+    else PrivateSettings(
+        favorites = stringList("favorites"),
+        blocked = stringList("blocked"),
+        notifications = NotificationPrefs(
+            comments = getBoolean(NotificationPrefs.COMMENTS) ?: true,
+            messages = getBoolean(NotificationPrefs.MESSAGES) ?: true,
+            followers = getBoolean(NotificationPrefs.FOLLOWERS) ?: true
+        )
+    )
 
 fun DocumentSnapshot.toPost(): Post = Post(
     id = id,
