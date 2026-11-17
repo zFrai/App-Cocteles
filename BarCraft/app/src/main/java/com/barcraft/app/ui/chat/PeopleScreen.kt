@@ -42,9 +42,12 @@ import com.barcraft.app.ui.components.LoadingBox
 import com.barcraft.app.ui.navigation.LocalAppSession
 import com.barcraft.app.utils.appViewModel
 
-/** Directorio de personas: buscar, añadir amigos, favoritos, bloquear y escribir. */
+/**
+ * Pestaña Buscar: directorio de personas para buscar, añadir, marcar favoritos, bloquear y escribir.
+ * [onBack] es null cuando se muestra como pestaña de la barra inferior.
+ */
 @Composable
-fun PeopleScreen(onBack: () -> Unit, onRoomReady: (String) -> Unit) {
+fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
     val me = LocalAppSession.current.profile ?: return
     val vm = appViewModel(key = "people_dir_${me.uid}") { PeopleViewModel(it, me) }
     val people by vm.state.collectAsStateWithLifecycle()
@@ -59,7 +62,9 @@ fun PeopleScreen(onBack: () -> Unit, onRoomReady: (String) -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text("Buscar personas") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
+                navigationIcon = {
+                    if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") }
+                }
             )
         }
     ) { padding ->

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.AdminPanelSettings
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Fingerprint
@@ -73,7 +74,7 @@ import com.barcraft.app.utils.DateUtils
 import com.barcraft.app.utils.appViewModel
 
 @Composable
-fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit) {
+fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> Unit) {
     val session = LocalAppSession.current
     val me = session.profile
     val vm = appViewModel { ProfileViewModel(it) }
@@ -103,7 +104,7 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit) {
                         Text(me?.name ?: "Invitado", style = MaterialTheme.typography.headlineSmall)
                         if (me != null) {
                             if (me.handle.isNotBlank()) {
-                                // Su identificador único: lo pueden usar otros para encontrarle en Chats > Buscar personas.
+                                // Su identificador único: lo pueden usar otros para encontrarle en la pestaña Buscar.
                                 val clipboard = LocalClipboardManager.current
                                 Text(
                                     me.handle,
@@ -151,6 +152,19 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit) {
                             }
                         }
                     }
+                }
+            }
+
+            // ── Administración (solo Admin; antes era una pestaña) ────
+            if (me?.isAdmin == true) item {
+                SectionCard(contentPadding = PaddingValues(vertical = 4.dp)) {
+                    ListItem(
+                        headlineContent = { Text("Panel de Admin") },
+                        supportingContent = { Text("Usuarios, denuncias y moderación") },
+                        leadingContent = { Icon(Icons.Outlined.AdminPanelSettings, null) },
+                        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                        modifier = Modifier.clickable(onClick = onOpenAdmin)
+                    )
                 }
             }
 

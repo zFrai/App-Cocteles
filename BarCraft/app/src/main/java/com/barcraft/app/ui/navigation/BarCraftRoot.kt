@@ -31,6 +31,7 @@ import com.barcraft.app.ui.auth.SessionLoadingScreen
 import com.barcraft.app.ui.chat.ChatListScreen
 import com.barcraft.app.ui.chat.ChatScreen
 import com.barcraft.app.ui.chat.PeopleScreen
+import com.barcraft.app.ui.components.AccountRequiredState
 import com.barcraft.app.ui.cocktails.CocktailDetailScreen
 import com.barcraft.app.ui.cocktails.CocktailEditorScreen
 import com.barcraft.app.ui.cocktails.CocktailListScreen
@@ -72,7 +73,7 @@ private fun MainScaffold(session: AppSession, onLogin: () -> Unit, onLogout: () 
     val backStack by nav.currentBackStackEntryAsState()
     val current = backStack?.destination
 
-    val tabs = TopDestination.entries.filter { it != TopDestination.ADMIN || session.isAdmin }
+    val tabs = TopDestination.entries
     val showBottomBar = tabs.any { tab -> current?.hierarchy?.any { it.route == tab.route } == true }
 
     CompositionLocalProvider(LocalAppSession provides session) {
@@ -181,13 +182,7 @@ private fun AppNavHost(
             ChatListScreen(
                 onLogin = onLogin,
                 onOpenRoom = { nav.navigate(Routes.chat(it)) },
-                onFindPeople = { nav.navigate(Routes.PEOPLE) }
-            )
-        }
-        composable(Routes.PEOPLE) {
-            PeopleScreen(
-                onBack = { nav.popBackStack() },
-                onRoomReady = { roomId -> nav.navigate(Routes.chat(roomId)) }
+                onFindPeople = { nav.navigateToTab(Routes.SEARCH) }
             )
         }
         composable(Routes.CHAT, arguments = listOf(navArgument("roomId") { type = NavType.StringType })) { entry ->
@@ -197,12 +192,31 @@ private fun AppNavHost(
             )
         }
 
-        // ── Admin y perfil ────────────────────────────────────────────
-        composable(Routes.ADMIN) {
-            if (session.isAdmin) AdminScreen(onOpenPost = { nav.navigate(Routes.post(it)) })
+        // ── Buscar personas ───────────────────────────────────────────
+        composable(Routes.SEARCH) {
+            if (session.profile == null) {
+                AccountRequiredState(session, "Buscar personas", onLogin)
+            } else {
+                PeopleScreen(
+                    onBack = null,
+                    onRoomReady = { roomId -> nav.navigate(Routes.chat(roomId)) }
+                )
+            }
         }
+
+        // ── Perfil (el panel de Admin cuelga de aquí) ─────────────────
         composable(Routes.PROFILE) {
-            ProfileScreen(onLogin = onLogin, onLogout = onLogout)
+            ProfileScreen(
+                onLogin = onLogin,
+                onLogout = onLogout,
+                onOpenAdmin = { nav.navigate(Routes.ADMIN) }
+            )
+        }
+        composable(Routes.ADMIN) {
+            if (session.isAdmin) AdminScreen(
+                onOpenPost = { nav.navigate(Routes.post(it)) },
+                onBack = { nav.popBackStack() }
+            )
         }
     }
 }
