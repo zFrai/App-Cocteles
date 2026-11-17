@@ -90,6 +90,8 @@ fun FeedScreen(
         val posts by vm.posts.collectAsStateWithLifecycle()
         val recipes by vm.recipes.collectAsStateWithLifecycle()
         var toDelete by remember { mutableStateOf<Post?>(null) }
+        var toEdit by remember { mutableStateOf<Post?>(null) }
+        val savedIds by vm.savedIds.collectAsStateWithLifecycle()
         var tab by rememberSaveable { mutableIntStateOf(0) }
         LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
 
@@ -128,11 +130,18 @@ fun FeedScreen(
                             onOpen = { onOpenPost(post.id) },
                             onLike = { vm.toggleLike(post, me.uid) },
                             onDelete = { toDelete = post },
-                            onMessage = { vm.messageAuthor(me, post, onMessageUser) }
+                            onMessage = { vm.messageAuthor(me, post, onMessageUser) },
+                            saved = post.id in savedIds,
+                            onToggleSave = { vm.toggleSave(post) },
+                            onEdit = { toEdit = post }
                         )
                     }
                 }
             }
+        }
+
+        toEdit?.let { p ->
+            EditPostDialog(p, onDismiss = { toEdit = null }, onSave = { vm.edit(p, it); toEdit = null })
         }
 
         toDelete?.let { p ->

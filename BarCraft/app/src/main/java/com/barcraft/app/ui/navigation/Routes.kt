@@ -20,6 +20,8 @@ object Routes {
     const val SEARCH = "search"
     const val ADMIN = "admin"
     const val PROFILE = "profile"
+    const val MY_POSTS = "profile/posts"
+    const val SAVED = "profile/saved"
 
     const val COCKTAIL = "cocktail/{id}"
     fun cocktail(id: Long) = "cocktail/$id"

@@ -35,6 +35,8 @@ object Collections {
     const val FOLLOWS = "follows"
     /** Recetas compartidas: `users/{uid}/recipes/{idLocal}` (consulta de grupo para las públicas). */
     const val RECIPES = "recipes"
+    /** Publicaciones guardadas: `users/{uid}/saved/{postId}` (privado). */
+    const val SAVED = "saved"
     const val MEDIA = "media"
     const val REPORTS = "reports"
     const val PRIVATE = "private"

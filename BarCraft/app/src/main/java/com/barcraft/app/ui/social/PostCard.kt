@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.automirrored.outlined.Send
@@ -56,7 +59,12 @@ fun PostCard(
     onDelete: () -> Unit,
     onMessage: (() -> Unit)?,
     modifier: Modifier = Modifier,
-    expandedText: Boolean = false
+    expandedText: Boolean = false,
+    /** Guardar en "Guardados" (solo publicaciones de otros). Null = no se muestra. */
+    saved: Boolean = false,
+    onToggleSave: (() -> Unit)? = null,
+    /** Editar el texto (solo el autor). Null = no se ofrece. */
+    onEdit: (() -> Unit)? = null
 ) {
     var menu by remember { mutableStateOf(false) }
     val isMine = post.authorId == myUid
@@ -83,7 +91,7 @@ fun PostCard(
                         RoleBadge(post.authorRole)
                     }
                     Text(
-                        DateUtils.relative(post.createdAt),
+                        DateUtils.relative(post.createdAt) + if (post.editedAt > 0) " · editado" else "",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -91,6 +99,11 @@ fun PostCard(
                 if (isMine || canModerate) Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "Opciones") }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        if (isMine && onEdit != null) DropdownMenuItem(
+                            text = { Text("Editar") },
+                            leadingIcon = { Icon(Icons.Outlined.Edit, null) },
+                            onClick = { menu = false; onEdit() }
+                        )
                         DropdownMenuItem(
                             text = { FitText(if (isMine) "Eliminar" else "Eliminar (moderación)") },
                             leadingIcon = { Icon(Icons.Outlined.Delete, null) },
@@ -165,6 +178,15 @@ fun PostCard(
                     FitText("${post.commentCount}")
                 }
                 Spacer(Modifier.weight(1f))
+                if (!isMine && onToggleSave != null) {
+                    IconButton(onClick = onToggleSave) {
+                        Icon(
+                            if (saved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                            if (saved) "Quitar de guardados" else "Guardar",
+                            tint = if (saved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 if (!isMine && onMessage != null) {
                     TextButton(onClick = onMessage) {
                         Icon(Icons.AutoMirrored.Outlined.Send, null, modifier = Modifier.size(18.dp))
@@ -175,4 +197,34 @@ fun PostCard(
             }
         }
     }
+}
+
+/** Diálogo para editar el texto de una publicación propia. */
+@Composable
+fun EditPostDialog(post: Post, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var text by androidx.compose.runtime.saveable.rememberSaveable(post.id) { mutableStateOf(post.text) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar publicación") },
+        text = {
+            Column {
+                androidx.compose.material3.OutlinedTextField(
+                    value = text, onValueChange = { text = it.take(2000) },
+                    minLines = 4, modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Quien la tenga en Guardados verá que la has cambiado.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.Button(onClick = { onSave(text) }, enabled = text.isNotBlank() && text.trim() != post.text) {
+                Text("Guardar cambios")
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
 }
