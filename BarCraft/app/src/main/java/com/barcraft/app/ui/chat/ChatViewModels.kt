@@ -131,6 +131,20 @@ class PeopleViewModel(private val container: AppContainer, private val me: UserP
         )
     }
 
+    /** QR escaneado en Buscar: sigue a esa cuenta, o le envía solicitud si es privada. */
+    fun followFromQr(uid: String) {
+        val p = state.value.byUid(uid)
+        val notice = when {
+            uid == me.uid -> "Ese es tu propio QR"
+            p == null -> "No se ha encontrado esa cuenta"
+            p.blocked -> "Has bloqueado a ${p.profile.name}. Desbloquéalo en Chats > Bloqueados."
+            p.iFollow == FollowState.FOLLOWING -> "Ya sigues a ${p.profile.name}"
+            p.iFollow == FollowState.REQUESTED -> "Ya enviaste una solicitud a ${p.profile.name}"
+            else -> null
+        }
+        if (notice != null) viewModelScope.launch { _messages.emit(notice) } else follow(p!!)
+    }
+
     /** Dejar de seguir o cancelar la solicitud enviada. */
     fun unfollow(p: Person) = launchSafely(_messages, "No se pudo completar") {
         friends.unfollow(me.uid, p.profile.uid)
