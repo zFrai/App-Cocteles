@@ -41,6 +41,7 @@ import com.barcraft.app.ui.profile.ProfileScreen
 import com.barcraft.app.ui.social.ComposePostScreen
 import com.barcraft.app.ui.social.FeedScreen
 import com.barcraft.app.ui.social.PostDetailScreen
+import com.barcraft.app.ui.social.SharedRecipeScreen
 import com.barcraft.app.utils.appViewModel
 
 /** Punto de entrada de la interfaz: decide entre login, bloqueo o la app. */
@@ -155,7 +156,21 @@ private fun AppNavHost(
                 onLogin = onLogin,
                 onOpenPost = { nav.navigate(Routes.post(it)) },
                 onCompose = { nav.navigate(Routes.compose()) },
-                onMessageUser = { roomId -> nav.navigate(Routes.chat(roomId)) }
+                onMessageUser = { roomId -> nav.navigate(Routes.chat(roomId)) },
+                onOpenRecipe = { authorId, recipeId -> nav.navigate(Routes.sharedRecipe(authorId, recipeId)) }
+            )
+        }
+        composable(
+            Routes.SHARED_RECIPE,
+            arguments = listOf(
+                navArgument("authorId") { type = NavType.StringType },
+                navArgument("recipeId") { type = NavType.StringType }
+            )
+        ) { entry ->
+            SharedRecipeScreen(
+                authorId = entry.arguments?.getString("authorId").orEmpty(),
+                recipeId = entry.arguments?.getString("recipeId").orEmpty(),
+                onBack = { nav.popBackStack() }
             )
         }
         composable(Routes.POST, arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->

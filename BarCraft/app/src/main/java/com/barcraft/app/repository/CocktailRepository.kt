@@ -25,6 +25,8 @@ data class CocktailDraft(
     val hasGarnish: Boolean = false,
     val garnishDescription: String = "",
     val isFavorite: Boolean = false,
+    /** "private", "followers" o "public" (ver RecipeVisibility). */
+    val visibility: String = "private",
     val ingredients: List<IngredientDraft> = emptyList(),
     val steps: List<String> = emptyList()
 )
@@ -56,7 +58,8 @@ class CocktailRepository(private val db: AppDatabase) {
             hasSmoke = draft.hasSmoke,
             hasGarnish = draft.hasGarnish,
             garnishDescription = if (draft.hasGarnish) draft.garnishDescription.trim() else "",
-            isFavorite = draft.isFavorite
+            isFavorite = draft.isFavorite,
+            visibility = draft.visibility
         )
         val id = if (existing != null) {
             dao.updateCocktail(entity); entity.id

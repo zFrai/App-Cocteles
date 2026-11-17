@@ -91,9 +91,15 @@ fun CocktailDetailScreen(
     onEdit: (Long) -> Unit,
     onShare: (Long) -> Unit
 ) {
-    val vm = appViewModel(key = "detail_$cocktailId") { CocktailDetailViewModel(it.cocktailRepository, cocktailId) }
-    val data by vm.cocktail.collectAsStateWithLifecycle()
     val session = LocalAppSession.current
+    val me = session.profile
+    val vm = appViewModel(key = "detail_$cocktailId") { c ->
+        CocktailDetailViewModel(
+            c.cocktailRepository, cocktailId,
+            unshare = me?.let { p -> { id: Long -> c.recipeShareRepository.unshare(p.uid, id) } }
+        )
+    }
+    val data by vm.cocktail.collectAsStateWithLifecycle()
 
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var menuOpen by remember { mutableStateOf(false) }

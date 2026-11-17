@@ -68,20 +68,29 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.barcraft.app.data.local.entity.CocktailWithDetails
 import com.barcraft.app.model.CocktailCatalog
+import com.barcraft.app.model.RecipeVisibility
 import com.barcraft.app.repository.IngredientDraft
 import com.barcraft.app.ui.components.CocktailImage
 import com.barcraft.app.ui.components.LoadingBox
 import com.barcraft.app.ui.components.SectionCard
 import com.barcraft.app.ui.components.SectionTitle
 import com.barcraft.app.ui.components.rememberPhotoPicker
+import com.barcraft.app.ui.navigation.LocalAppSession
 import com.barcraft.app.utils.ImageUtils
 import com.barcraft.app.utils.appViewModel
 import kotlin.math.roundToInt
 
 @Composable
 fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
-    val vm = appViewModel(key = "editor_$cocktailId") { CocktailEditorViewModel(it.cocktailRepository, cocktailId) }
+    val me = LocalAppSession.current.profile
+    val vm = appViewModel(key = "editor_$cocktailId") { c ->
+        CocktailEditorViewModel(
+            c.cocktailRepository, cocktailId,
+            share = me?.let { p -> { recipe: CocktailWithDetails -> c.recipeShareRepository.sync(p, recipe) } }
+        )
+    }
     val draft by vm.draft.collectAsStateWithLifecycle()
     val loading by vm.loading.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -207,6 +216,37 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
                         ToggleItem("Favorito", "Aparece al filtrar por favoritos", draft.isFavorite) {
                             vm.update { copy(isFavorite = it) }
                         }
+                    }
+                }
+            }
+
+            // ── Quién puede verla ─────────────────────────────────────
+            item {
+                SectionCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SectionTitle("Quién puede verla")
+                        val current = RecipeVisibility.from(draft.visibility)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            RecipeVisibility.entries.forEach { v ->
+                                FilterChip(
+                                    selected = current == v,
+                                    enabled = me != null || v == RecipeVisibility.PRIVATE,
+                                    onClick = { vm.update { copy(visibility = v.id) } },
+                                    label = { FitText(v.label) }
+                                )
+                            }
+                        }
+                        Text(
+                            if (me == null) "Inicia sesión para compartirla en Comunidad. Sin cuenta, tus recetas son privadas."
+                            else current.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (me != null && current != RecipeVisibility.PRIVATE && draft.imageUri.startsWith("file:")) Text(
+                            "La foto está guardada en tu móvil y no se comparte; en Comunidad saldrá sin foto.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
