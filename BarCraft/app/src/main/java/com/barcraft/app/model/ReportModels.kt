@@ -1,12 +1,19 @@
 package com.barcraft.app.model
 
+import androidx.annotation.StringRes
+import com.barcraft.app.R
+import com.barcraft.app.utils.Txt
+
 /** Motivo de una denuncia. Se guarda como texto en Firestore (campo `reason`). */
-enum class ReportReason(val id: String, val label: String) {
-    SPAM("spam", "Spam o publicidad"),
-    HARASSMENT("harassment", "Acoso o insultos"),
-    INAPPROPRIATE("inappropriate", "Contenido inapropiado"),
-    IMPERSONATION("impersonation", "Se hace pasar por otra persona"),
-    OTHER("other", "Otro motivo");
+enum class ReportReason(val id: String, @StringRes val labelRes: Int) {
+    SPAM("spam", R.string.report_reason_spam),
+    HARASSMENT("harassment", R.string.report_reason_harassment),
+    INAPPROPRIATE("inappropriate", R.string.report_reason_inappropriate),
+    IMPERSONATION("impersonation", R.string.report_reason_impersonation),
+    OTHER("other", R.string.report_reason_other);
+
+    /** Nombre visible (sale de strings.xml). */
+    val label: String get() = Txt.get(labelRes)
 
     companion object {
         fun from(id: String?): ReportReason = entries.firstOrNull { it.id == id } ?: OTHER

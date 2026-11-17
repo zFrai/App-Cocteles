@@ -1,5 +1,6 @@
 package com.barcraft.app.utils
 
+import com.barcraft.app.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -14,11 +15,11 @@ object DateUtils {
         val hours = minutes / 60
         val days = hours / 24
         return when {
-            minutes < 1 -> "ahora"
-            minutes < 60 -> "hace $minutes min"
-            hours < 24 -> "hace $hours h"
-            days < 2 -> "ayer"
-            days < 7 -> "hace $days días"
+            minutes < 1 -> Txt.get(R.string.time_now)
+            minutes < 60 -> Txt.plural(R.plurals.time_minutes_ago, minutes.toInt())
+            hours < 24 -> Txt.plural(R.plurals.time_hours_ago, hours.toInt())
+            days < 2 -> Txt.get(R.string.time_yesterday)
+            days < 7 -> Txt.plural(R.plurals.time_days_ago, days.toInt())
             else -> SimpleDateFormat("d MMM", spanish).format(Date(millis))
         }
     }
