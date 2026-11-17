@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -69,7 +70,7 @@ import com.barcraft.app.utils.DateUtils
 import com.barcraft.app.utils.appViewModel
 
 @Composable
-fun AdminScreen(onOpenPost: (String) -> Unit) {
+fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
     val me = LocalAppSession.current.profile ?: return
     val vm = appViewModel { AdminViewModel(it.userRepository, it.socialRepository, it.reportRepository, me.uid) }
     val openReports by vm.openReports.collectAsStateWithLifecycle()
@@ -87,16 +88,19 @@ fun AdminScreen(onOpenPost: (String) -> Unit) {
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(title = {
-                Column {
-                    Text("Panel de Admin")
-                    Text(
-                        "Gestiona usuarios y modera la comunidad",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            TopAppBar(
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } },
+                title = {
+                    Column {
+                        Text("Panel de Admin")
+                        Text(
+                            "Gestiona usuarios y modera la comunidad",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-            })
+            )
         }
     ) { padding ->
         val list = users
