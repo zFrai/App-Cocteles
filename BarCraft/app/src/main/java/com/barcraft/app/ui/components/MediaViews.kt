@@ -32,8 +32,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.barcraft.app.R
 import com.barcraft.app.utils.appContainer
 import kotlinx.coroutines.delay
 import java.io.File
@@ -62,7 +64,7 @@ fun RemoteImage(mediaId: String, modifier: Modifier = Modifier, contentScale: Co
             MediaLoad.Loading -> CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 2.dp)
             MediaLoad.Unavailable -> Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(12.dp)) {
                 Icon(Icons.Outlined.CloudOff, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Conéctate para descargar", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.media_connect_to_download), style = MaterialTheme.typography.labelSmall)
             }
             is MediaLoad.Ready -> AsyncImage(
                 model = s.file,
@@ -99,7 +101,7 @@ fun AudioPlayer(mediaId: String, durationMs: Long, modifier: Modifier = Modifier
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
             }
             MediaLoad.Unavailable -> Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
-                Icon(Icons.Outlined.CloudOff, "Sin conexión")
+                Icon(Icons.Outlined.CloudOff, stringResource(R.string.media_offline))
             }
             is MediaLoad.Ready -> IconButton(onClick = {
                 val current = player ?: MediaPlayer().apply {
@@ -109,7 +111,7 @@ fun AudioPlayer(mediaId: String, durationMs: Long, modifier: Modifier = Modifier
                 }.also { player = it }
                 if (playing) { current.pause(); playing = false } else { current.start(); playing = true }
             }) {
-                Icon(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (playing) "Pausar" else "Reproducir")
+                Icon(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (playing) stringResource(R.string.media_pause) else stringResource(R.string.media_play))
             }
         }
         Column(Modifier.width(150.dp)) {

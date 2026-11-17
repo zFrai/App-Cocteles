@@ -2,6 +2,9 @@
 
 package com.barcraft.app.ui.chat
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -15,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.PersonSearch
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -31,26 +35,35 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.barcraft.app.model.Role
 import com.barcraft.app.ui.components.EmptyState
 import com.barcraft.app.ui.components.LoadingBox
 import com.barcraft.app.ui.navigation.LocalAppSession
+import com.barcraft.app.ui.qr.ProfileQr
 import com.barcraft.app.utils.appViewModel
+import kotlinx.coroutines.launch
 
-/** Directorio de personas: buscar, añadir amigos, favoritos, bloquear y escribir. */
+/**
+ * Pestaña Buscar: directorio de personas para buscar, añadir, marcar favoritos, bloquear y escribir.
+ * [onBack] es null cuando se muestra como pestaña de la barra inferior.
+ */
 @Composable
-fun PeopleScreen(onBack: () -> Unit, onRoomReady: (String) -> Unit) {
+fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
     val me = LocalAppSession.current.profile ?: return
     val vm = appViewModel(key = "people_dir_${me.uid}") { PeopleViewModel(it, me) }
     val people by vm.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     var query by rememberSaveable { mutableStateOf("") }
     var roleFilter by rememberSaveable { mutableStateOf<Role?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
 
     Scaffold(
@@ -58,24 +71,39 @@ fun PeopleScreen(onBack: () -> Unit, onRoomReady: (String) -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text("Buscar personas") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
+                title = { FitText(stringResource(R.string.people_title)) },
+                navigationIcon = {
+                    if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) }
+                },
+                actions = {
+                    // Escanear el QR de otro perfil: le sigue (o le envía solicitud) automáticamente.
+                    IconButton(onClick = {
+                        ProfileQr.scan(
+                            context,
+                            onUid = { uid ->
+                                people.byUid(uid)?.let { query = it.profile.name }
+                                vm.followFromQr(uid)
+                            },
+                            onError = { msg -> scope.launch { snackbar.showSnackbar(msg) } }
+                        )
+                    }) { Icon(Icons.Outlined.QrCodeScanner, stringResource(R.string.people_scan_qr)) }
+                }
             )
         }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             OutlinedTextField(
                 value = query, onValueChange = { query = it },
-                placeholder = { Text("Nombre o @usuario") },
+                placeholder = { Text(stringResource(R.string.people_search_hint)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null) },
                 singleLine = true,
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
             )
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                item { FilterChip(selected = roleFilter == null, onClick = { roleFilter = null }, label = { Text("Todos") }) }
+                item { FilterChip(selected = roleFilter == null, onClick = { roleFilter = null }, label = { FitText(stringResource(R.string.people_filter_all)) }) }
                 items(Role.entries) { r ->
-                    FilterChip(selected = roleFilter == r, onClick = { roleFilter = if (roleFilter == r) null else r }, label = { Text(r.label) })
+                    FilterChip(selected = roleFilter == r, onClick = { roleFilter = if (roleFilter == r) null else r }, label = { FitText(stringResource(r.labelRes)) })
                 }
             }
             val list = people.everyone.filter {
@@ -87,8 +115,8 @@ fun PeopleScreen(onBack: () -> Unit, onRoomReady: (String) -> Unit) {
             when {
                 !people.loaded -> LoadingBox()
                 list.isEmpty() -> EmptyState(
-                    Icons.Outlined.PersonSearch, "No hay nadie",
-                    if (query.isBlank()) "Cuando otras personas se registren aparecerán aquí." else "Nadie coincide con \"$query\"."
+                    Icons.Outlined.PersonSearch, stringResource(R.string.people_empty_title),
+                    if (query.isBlank()) stringResource(R.string.people_empty_message) else stringResource(R.string.people_no_match, query)
                 )
                 else -> LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                     items(list, key = { it.profile.uid }) { person ->

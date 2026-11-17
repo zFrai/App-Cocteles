@@ -2,6 +2,9 @@
 
 package com.barcraft.app.ui.cocktails
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,20 +70,29 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.barcraft.app.data.local.entity.CocktailWithDetails
 import com.barcraft.app.model.CocktailCatalog
+import com.barcraft.app.model.RecipeVisibility
 import com.barcraft.app.repository.IngredientDraft
 import com.barcraft.app.ui.components.CocktailImage
 import com.barcraft.app.ui.components.LoadingBox
 import com.barcraft.app.ui.components.SectionCard
 import com.barcraft.app.ui.components.SectionTitle
 import com.barcraft.app.ui.components.rememberPhotoPicker
+import com.barcraft.app.ui.navigation.LocalAppSession
 import com.barcraft.app.utils.ImageUtils
 import com.barcraft.app.utils.appViewModel
 import kotlin.math.roundToInt
 
 @Composable
 fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
-    val vm = appViewModel(key = "editor_$cocktailId") { CocktailEditorViewModel(it.cocktailRepository, cocktailId) }
+    val me = LocalAppSession.current.profile
+    val vm = appViewModel(key = "editor_$cocktailId") { c ->
+        CocktailEditorViewModel(
+            c.cocktailRepository, cocktailId,
+            share = me?.let { p -> { recipe: CocktailWithDetails -> c.recipeShareRepository.sync(p, recipe) } }
+        )
+    }
     val draft by vm.draft.collectAsStateWithLifecycle()
     val loading by vm.loading.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -99,11 +111,11 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text(if (vm.isEditing) "Editar cóctel" else "Nuevo cóctel") },
-                navigationIcon = { IconButton(onClick = onDone) { Icon(Icons.Filled.Close, "Cerrar") } },
+                title = { FitText(if (vm.isEditing) stringResource(R.string.editor_title_edit) else stringResource(R.string.editor_title_new)) },
+                navigationIcon = { IconButton(onClick = onDone) { Icon(Icons.Filled.Close, stringResource(R.string.action_close)) } },
                 actions = {
                     Button(onClick = { vm.save { onDone() } }, modifier = Modifier.padding(end = 8.dp)) {
-                        Text("Guardar")
+                        FitText(stringResource(R.string.action_save))
                     }
                 }
             )
@@ -135,7 +147,7 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
                         Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Outlined.AddPhotoAlternate, null, Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text(if (draft.imageUri.isBlank()) "Elegir foto" else "Cambiar foto", style = MaterialTheme.typography.labelLarge)
+                            Text(if (draft.imageUri.isBlank()) stringResource(R.string.editor_choose_photo) else stringResource(R.string.editor_change_photo), style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
@@ -149,7 +161,7 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
                         urlText = it
                         if (ImageUtils.isRemote(it.trim())) vm.update { copy(imageUri = it.trim()) }
                     },
-                    label = { Text("…o pega la URL de una imagen") },
+                    label = { Text(stringResource(R.string.editor_image_url)) },
                     leadingIcon = { Icon(Icons.Outlined.Link, null) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -161,23 +173,23 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
             item {
                 SectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        SectionTitle("Datos básicos")
+                        SectionTitle(stringResource(R.string.editor_section_basic))
                         OutlinedTextField(
                             value = draft.name, onValueChange = { vm.update { copy(name = it) } },
-                            label = { Text("Nombre *") }, singleLine = true, modifier = Modifier.fillMaxWidth()
+                            label = { Text(stringResource(R.string.editor_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth()
                         )
                         OutlinedTextField(
                             value = draft.description, onValueChange = { vm.update { copy(description = it) } },
-                            label = { Text("Descripción") }, minLines = 3, modifier = Modifier.fillMaxWidth()
+                            label = { Text(stringResource(R.string.editor_description)) }, minLines = 3, modifier = Modifier.fillMaxWidth()
                         )
                         CategoryPicker(draft.category) { vm.update { copy(category = it) } }
-                        Text("Dificultad: ${draft.difficulty}/5", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.editor_difficulty, draft.difficulty, CocktailCatalog.MAX_DIFFICULTY), style = MaterialTheme.typography.labelLarge)
                         Slider(
                             value = draft.difficulty.toFloat(),
                             onValueChange = { vm.update { copy(difficulty = it.roundToInt()) } },
                             valueRange = 1f..5f, steps = 3
                         )
-                        Text("Tiempo de preparación: ${draft.prepTimeMinutes} min", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.editor_prep_time, draft.prepTimeMinutes), style = MaterialTheme.typography.labelLarge)
                         Slider(
                             value = draft.prepTimeMinutes.toFloat(),
                             onValueChange = { vm.update { copy(prepTimeMinutes = it.roundToInt()) } },
@@ -191,21 +203,53 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
             item {
                 SectionCard(contentPadding = PaddingValues(vertical = 8.dp)) {
                     Column {
-                        ToggleItem("Efecto humo", "Ahumado con madera, campana o pistola", draft.hasSmoke) {
+                        ToggleItem(stringResource(R.string.editor_smoke), stringResource(R.string.editor_smoke_desc), draft.hasSmoke) {
                             vm.update { copy(hasSmoke = it) }
                         }
-                        ToggleItem("Garnish", "Decoración del cóctel", draft.hasGarnish) {
+                        ToggleItem(stringResource(R.string.editor_garnish), stringResource(R.string.editor_garnish_desc), draft.hasGarnish) {
                             vm.update { copy(hasGarnish = it) }
                         }
                         if (draft.hasGarnish) OutlinedTextField(
                             value = draft.garnishDescription,
                             onValueChange = { vm.update { copy(garnishDescription = it) } },
-                            label = { Text("Descripción del garnish") },
+                            label = { Text(stringResource(R.string.editor_garnish_detail)) },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
                         )
-                        ToggleItem("Favorito", "Aparece al filtrar por favoritos", draft.isFavorite) {
+                        ToggleItem(stringResource(R.string.editor_favorite), stringResource(R.string.editor_favorite_desc), draft.isFavorite) {
                             vm.update { copy(isFavorite = it) }
                         }
+                    }
+                }
+            }
+
+            // ── Quién puede verla ─────────────────────────────────────
+            item {
+                SectionCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SectionTitle(stringResource(R.string.editor_section_visibility))
+                        val current = RecipeVisibility.from(draft.visibility)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            RecipeVisibility.entries.forEach { v ->
+                                FilterChip(
+                                    modifier = Modifier.weight(1f),
+                                    selected = current == v,
+                                    enabled = me != null || v == RecipeVisibility.PRIVATE,
+                                    onClick = { vm.update { copy(visibility = v.id) } },
+                                    label = { FitText(stringResource(v.labelRes)) }
+                                )
+                            }
+                        }
+                        Text(
+                            if (me == null) stringResource(R.string.editor_visibility_login)
+                            else stringResource(current.descriptionRes),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (me != null && current != RecipeVisibility.PRIVATE && draft.imageUri.startsWith("file:")) Text(
+                            stringResource(R.string.editor_visibility_local_photo),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -214,16 +258,16 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
             item {
                 SectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        SectionTitle("Ingredientes (${draft.ingredients.size})")
+                        SectionTitle(stringResource(R.string.editor_section_ingredients, draft.ingredients.size))
                         draft.ingredients.forEachIndexed { i, ing ->
                             ListItem(
                                 headlineContent = { Text(ing.name) },
-                                supportingContent = { Text("${ing.amount} · ${ing.type}") },
+                                supportingContent = { Text(stringResource(R.string.editor_ingredient_detail, ing.amount, ing.type)) },
                                 leadingContent = {
                                     Surface(shape = CircleShape, color = typeColor(ing.type), modifier = Modifier.size(10.dp)) {}
                                 },
                                 trailingContent = {
-                                    IconButton(onClick = { vm.removeIngredient(i) }) { Icon(Icons.Outlined.Delete, "Quitar") }
+                                    IconButton(onClick = { vm.removeIngredient(i) }) { Icon(Icons.Outlined.Delete, stringResource(R.string.action_remove)) }
                                 },
                                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                                 modifier = Modifier.clickable { ingredientDialog = i }
@@ -232,7 +276,7 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
                         FilledTonalButton(onClick = { ingredientDialog = -1 }, modifier = Modifier.fillMaxWidth()) {
                             Icon(Icons.Outlined.PlaylistAdd, null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Añadir ingrediente")
+                            FitText(stringResource(R.string.editor_add_ingredient))
                         }
                     }
                 }
@@ -242,10 +286,10 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
             item {
                 SectionCard {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SectionTitle("Procedimiento")
+                        SectionTitle(stringResource(R.string.editor_section_steps))
                         draft.steps.forEachIndexed { i, step ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("${i + 1}.", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Text(stringResource(R.string.editor_step_number, i + 1), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                 Spacer(Modifier.width(8.dp))
                                 OutlinedTextField(
                                     value = step, onValueChange = { vm.updateStep(i, it) },
@@ -253,26 +297,26 @@ fun CocktailEditorScreen(cocktailId: Long, onDone: () -> Unit) {
                                 )
                                 Column {
                                     IconButton(onClick = { vm.moveStep(i, i - 1) }, enabled = i > 0, modifier = Modifier.size(32.dp)) {
-                                        Icon(Icons.Outlined.ArrowUpward, "Subir", Modifier.size(18.dp))
+                                        Icon(Icons.Outlined.ArrowUpward, stringResource(R.string.action_move_up), Modifier.size(18.dp))
                                     }
                                     IconButton(onClick = { vm.moveStep(i, i + 1) }, enabled = i < draft.steps.lastIndex, modifier = Modifier.size(32.dp)) {
-                                        Icon(Icons.Outlined.ArrowDownward, "Bajar", Modifier.size(18.dp))
+                                        Icon(Icons.Outlined.ArrowDownward, stringResource(R.string.action_move_down), Modifier.size(18.dp))
                                     }
                                 }
-                                IconButton(onClick = { vm.removeStep(i) }) { Icon(Icons.Outlined.Delete, "Quitar paso") }
+                                IconButton(onClick = { vm.removeStep(i) }) { Icon(Icons.Outlined.Delete, stringResource(R.string.editor_remove_step)) }
                             }
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             OutlinedTextField(
                                 value = newStep, onValueChange = { newStep = it },
-                                label = { Text("Paso ${draft.steps.size + 1}") },
+                                label = { Text(stringResource(R.string.editor_step_hint, draft.steps.size + 1)) },
                                 modifier = Modifier.weight(1f)
                             )
                             Spacer(Modifier.width(8.dp))
                             FilledTonalButton(
                                 onClick = { vm.addStep(newStep.trim()); newStep = "" },
                                 enabled = newStep.isNotBlank()
-                            ) { Text("Añadir") }
+                            ) { FitText(stringResource(R.string.action_add)) }
                         }
                     }
                 }
@@ -299,13 +343,13 @@ private fun CategoryPicker(selected: String, onSelect: (String) -> Unit) {
     ExposedDropdownMenuBox(expanded = open, onExpandedChange = { open = it }) {
         OutlinedTextField(
             value = selected, onValueChange = {}, readOnly = true,
-            label = { Text("Categoría") },
+            label = { Text(stringResource(R.string.editor_category)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(open) },
             modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable)
         )
         ExposedDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             CocktailCatalog.categories.forEach { cat ->
-                DropdownMenuItem(text = { Text(cat) }, onClick = { onSelect(cat); open = false })
+                DropdownMenuItem(text = { FitText(cat) }, onClick = { onSelect(cat); open = false })
             }
         }
     }
@@ -334,21 +378,21 @@ private fun IngredientDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initial == null) "Nuevo ingrediente" else "Editar ingrediente") },
+        title = { Text(if (initial == null) stringResource(R.string.ingredient_new) else stringResource(R.string.ingredient_edit)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name, onValueChange = { name = it },
-                    label = { Text("Ingrediente") }, singleLine = true, modifier = Modifier.fillMaxWidth()
+                    label = { Text(stringResource(R.string.ingredient_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = amount, onValueChange = { amount = it },
-                    label = { Text("Cantidad (ej. 45 ml)") }, singleLine = true, modifier = Modifier.fillMaxWidth()
+                    label = { Text(stringResource(R.string.ingredient_amount)) }, singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
-                Text("Tipo", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.ingredient_type), style = MaterialTheme.typography.labelLarge)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(CocktailCatalog.ingredientTypes) { t ->
-                        FilterChip(selected = type == t, onClick = { type = t }, label = { Text(t) })
+                        FilterChip(selected = type == t, onClick = { type = t }, label = { FitText(t) })
                     }
                 }
             }
@@ -357,8 +401,8 @@ private fun IngredientDialog(
             Button(
                 onClick = { onSave(IngredientDraft(name.trim(), amount.trim(), type)) },
                 enabled = name.isNotBlank()
-            ) { Text("Guardar") }
+            ) { FitText(stringResource(R.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { FitText(stringResource(R.string.action_cancel)) } }
     )
 }

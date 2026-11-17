@@ -1,26 +1,80 @@
 package com.barcraft.app.ui.theme
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import com.barcraft.app.R
+import com.barcraft.app.utils.Txt
 
 /** Temas visuales que el usuario puede elegir en Perfil. */
-enum class AppTheme(val label: String, val description: String, val emoji: String, val isLight: Boolean) {
-    DELUXE("Deluxe", "Negro y dorado", "🥃", false),
-    VOLCAN("Volcán", "Brasas y ámbar", "🌋", false),
-    ABISAL("Abisal", "Azul profundo", "🌊", false),
-    CIELO("Cielo", "Claro y fresco", "☀️", true);
+enum class AppTheme(@StringRes val labelRes: Int, @StringRes val descriptionRes: Int, val emoji: String, val isLight: Boolean) {
+    DELUXE(R.string.theme_deluxe, R.string.theme_deluxe_desc, "🥃", false),
+    CHAMPAN(R.string.theme_champan, R.string.theme_champan_desc, "🍾", true),
+    VOLCAN(R.string.theme_volcan, R.string.theme_volcan_desc, "🌋", false),
+    TERRACOTA(R.string.theme_terracota, R.string.theme_terracota_desc, "🏺", true),
+    ABISAL(R.string.theme_abisal, R.string.theme_abisal_desc, "🌊", false),
+    LAGUNA(R.string.theme_laguna, R.string.theme_laguna_desc, "🏝️", true),
+    CIELO(R.string.theme_cielo, R.string.theme_cielo_desc, "☀️", true),
+    TORMENTA(R.string.theme_tormenta, R.string.theme_tormenta_desc, "⛈️", false),
+    ABSENTA(R.string.theme_absenta, R.string.theme_absenta_desc, "🌿", false),
+    MENTA(R.string.theme_menta, R.string.theme_menta_desc, "🍃", true),
+    GRANADINA(R.string.theme_granadina, R.string.theme_granadina_desc, "🍒", false),
+    FRESA(R.string.theme_fresa, R.string.theme_fresa_desc, "🍓", true),
+    MEDIANOCHE(R.string.theme_medianoche, R.string.theme_medianoche_desc, "🌙", false),
+    LAVANDA(R.string.theme_lavanda, R.string.theme_lavanda_desc, "💜", true),
+    NEGRONI(R.string.theme_negroni, R.string.theme_negroni_desc, "🍊", false),
+    SPRITZ(R.string.theme_spritz, R.string.theme_spritz_desc, "🥂", true),
+    ESPRESSO(R.string.theme_espresso, R.string.theme_espresso_desc, "☕", false),
+    CREMA(R.string.theme_crema, R.string.theme_crema_desc, "🥛", true);
+
+    /** Nombre visible (sale de strings.xml). */
+    val label: String get() = Txt.get(labelRes)
+    val description: String get() = Txt.get(descriptionRes)
 
     val colorScheme: ColorScheme
         get() = when (this) {
             DELUXE -> DeluxeScheme
+            CHAMPAN -> ChampanScheme
             VOLCAN -> VolcanScheme
+            TERRACOTA -> TerracotaScheme
             ABISAL -> AbisalScheme
+            LAGUNA -> LagunaScheme
             CIELO -> CieloScheme
+            TORMENTA -> TormentaScheme
+            ABSENTA -> AbsentaScheme
+            MENTA -> MentaScheme
+            GRANADINA -> GranadinaScheme
+            FRESA -> FresaScheme
+            MEDIANOCHE -> MedianocheScheme
+            LAVANDA -> LavandaScheme
+            NEGRONI -> NegroniScheme
+            SPRITZ -> SpritzScheme
+            ESPRESSO -> EspressoScheme
+            CREMA -> CremaScheme
         }
+}
+
+/** Fichas del selector: cada una junta la versión oscura y la clara de un mismo tema. */
+enum class ThemePair(val dark: AppTheme, val light: AppTheme) {
+    DELUXE(AppTheme.DELUXE, AppTheme.CHAMPAN),
+    VOLCAN(AppTheme.VOLCAN, AppTheme.TERRACOTA),
+    ABISAL(AppTheme.ABISAL, AppTheme.LAGUNA),
+    CIELO(AppTheme.TORMENTA, AppTheme.CIELO),
+    ABSENTA(AppTheme.ABSENTA, AppTheme.MENTA),
+    GRANADINA(AppTheme.GRANADINA, AppTheme.FRESA),
+    MEDIANOCHE(AppTheme.MEDIANOCHE, AppTheme.LAVANDA),
+    NEGRONI(AppTheme.NEGRONI, AppTheme.SPRITZ),
+    ESPRESSO(AppTheme.ESPRESSO, AppTheme.CREMA);
+
+    operator fun contains(theme: AppTheme): Boolean = theme == dark || theme == light
+
+    companion object {
+        fun of(theme: AppTheme): ThemePair = entries.first { theme in it }
+    }
 }
 
 private val BarCraftShapes = Shapes(

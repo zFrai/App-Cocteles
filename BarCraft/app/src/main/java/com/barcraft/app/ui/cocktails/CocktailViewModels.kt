@@ -4,12 +4,14 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.barcraft.app.R
 import com.barcraft.app.data.local.entity.CocktailEntity
 import com.barcraft.app.data.local.entity.CocktailWithDetails
 import com.barcraft.app.repository.CocktailDraft
 import com.barcraft.app.repository.CocktailRepository
 import com.barcraft.app.repository.IngredientDraft
 import com.barcraft.app.utils.ImageUtils
+import com.barcraft.app.utils.Txt
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -76,7 +78,12 @@ class CocktailListViewModel(private val repo: CocktailRepository) : ViewModel() 
 //  Detalle
 // ─────────────────────────────────────────────────────────────────────
 
-class CocktailDetailViewModel(private val repo: CocktailRepository, cocktailId: Long) : ViewModel() {
+class CocktailDetailViewModel(
+    private val repo: CocktailRepository,
+    cocktailId: Long,
+    /** Con cuenta: quita la copia de Comunidad al borrar la receta. Null sin cuenta. */
+    private val unshare: ((Long) -> Unit)? = null
+) : ViewModel() {
 
     val cocktail: StateFlow<CocktailWithDetails?> =
         repo.observe(cocktailId).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -97,6 +104,7 @@ class CocktailDetailViewModel(private val repo: CocktailRepository, cocktailId: 
         cocktail.value?.cocktail?.let {
             repo.delete(it)
             ImageUtils.deleteLocal(it.imageUri)
+            if (it.visibility != "private") unshare?.invoke(it.id)
         }
         onDone()
     }
@@ -106,7 +114,12 @@ class CocktailDetailViewModel(private val repo: CocktailRepository, cocktailId: 
 //  Editor
 // ─────────────────────────────────────────────────────────────────────
 
-class CocktailEditorViewModel(private val repo: CocktailRepository, private val cocktailId: Long) : ViewModel() {
+class CocktailEditorViewModel(
+    private val repo: CocktailRepository,
+    private val cocktailId: Long,
+    /** Con cuenta: sube/quita la copia en Comunidad según la visibilidad. Null sin cuenta. */
+    private val share: ((CocktailWithDetails) -> Unit)? = null
+) : ViewModel() {
 
     private val _draft = MutableStateFlow(CocktailDraft())
     val draft: StateFlow<CocktailDraft> = _draft.asStateFlow()
@@ -135,6 +148,7 @@ class CocktailEditorViewModel(private val repo: CocktailRepository, private val 
                     hasGarnish = c.hasGarnish,
                     garnishDescription = c.garnishDescription,
                     isFavorite = c.isFavorite,
+                    visibility = c.visibility,
                     ingredients = d.sortedIngredients.map { IngredientDraft(it.name, it.amount, it.type) },
                     steps = d.sortedSteps.map { it.instruction }
                 )
@@ -161,15 +175,19 @@ class CocktailEditorViewModel(private val repo: CocktailRepository, private val 
 
     fun pickImage(context: Context, uri: Uri) = viewModelScope.launch {
         val stored = ImageUtils.copyToAppStorage(context, uri)
-        if (stored == null) _errors.emit("No se pudo copiar la imagen") else update { copy(imageUri = stored) }
+        if (stored == null) _errors.emit(Txt.get(R.string.editor_error_copy_image)) else update { copy(imageUri = stored) }
     }
 
     fun save(onSaved: (Long) -> Unit) = viewModelScope.launch {
         val d = _draft.value
         when {
-            d.name.isBlank() -> _errors.emit("El nombre es obligatorio")
-            d.ingredients.isEmpty() -> _errors.emit("Añade al menos un ingrediente")
-            else -> onSaved(repo.save(d))
+            d.name.isBlank() -> _errors.emit(Txt.get(R.string.editor_error_name_required))
+            d.ingredients.isEmpty() -> _errors.emit(Txt.get(R.string.editor_error_ingredient_required))
+            else -> {
+                val id = repo.save(d)
+                share?.let { publish -> repo.get(id)?.let(publish) }
+                onSaved(id)
+            }
         }
     }
 }

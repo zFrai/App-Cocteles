@@ -20,6 +20,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BarCraft">
 
+        <!-- Descarga el escáner de QR de Google Play services al instalar la app (pestaña Buscar). -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode_ui" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

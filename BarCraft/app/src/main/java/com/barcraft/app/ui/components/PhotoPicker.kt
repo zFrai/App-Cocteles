@@ -25,7 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.FileProvider
+import com.barcraft.app.R
 import java.io.File
 
 /** Abre la cámara o la galería y devuelve la foto elegida. */
@@ -73,17 +75,17 @@ fun rememberPhotoPicker(onPicked: (Uri) -> Unit): PhotoPickerState {
     if (chooser) {
         AlertDialog(
             onDismissRequest = { chooser = false },
-            title = { Text("Añadir foto") },
+            title = { Text(stringResource(R.string.photo_add_title)) },
             text = {
                 Column {
                     ListItem(
-                        headlineContent = { Text("Hacer foto") },
+                        headlineContent = { Text(stringResource(R.string.photo_take)) },
                         leadingContent = { Icon(Icons.Outlined.PhotoCamera, null) },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         modifier = Modifier.clickable { chooser = false; state.camera() }
                     )
                     ListItem(
-                        headlineContent = { Text("Elegir de la galería") },
+                        headlineContent = { Text(stringResource(R.string.photo_from_gallery)) },
                         leadingContent = { Icon(Icons.Outlined.PhotoLibrary, null) },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         modifier = Modifier.clickable { chooser = false; state.gallery() }
@@ -91,7 +93,7 @@ fun rememberPhotoPicker(onPicked: (Uri) -> Unit): PhotoPickerState {
                 }
             },
             confirmButton = {},
-            dismissButton = { TextButton(onClick = { chooser = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { chooser = false }) { FitText(stringResource(R.string.action_cancel)) } }
         )
     }
     return state

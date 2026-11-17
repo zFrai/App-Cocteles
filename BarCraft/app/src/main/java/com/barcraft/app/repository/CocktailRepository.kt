@@ -1,12 +1,14 @@
 package com.barcraft.app.repository
 
 import androidx.room.withTransaction
+import com.barcraft.app.R
 import com.barcraft.app.data.local.AppDatabase
 import com.barcraft.app.data.local.entity.CocktailEntity
 import com.barcraft.app.data.local.entity.CocktailWithDetails
 import com.barcraft.app.data.local.entity.IngredientEntity
 import com.barcraft.app.data.local.entity.RatingEntity
 import com.barcraft.app.data.local.entity.StepEntity
+import com.barcraft.app.utils.Txt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
@@ -25,6 +27,8 @@ data class CocktailDraft(
     val hasGarnish: Boolean = false,
     val garnishDescription: String = "",
     val isFavorite: Boolean = false,
+    /** "private", "followers" o "public" (ver RecipeVisibility). */
+    val visibility: String = "private",
     val ingredients: List<IngredientDraft> = emptyList(),
     val steps: List<String> = emptyList()
 )
@@ -56,7 +60,8 @@ class CocktailRepository(private val db: AppDatabase) {
             hasSmoke = draft.hasSmoke,
             hasGarnish = draft.hasGarnish,
             garnishDescription = if (draft.hasGarnish) draft.garnishDescription.trim() else "",
-            isFavorite = draft.isFavorite
+            isFavorite = draft.isFavorite,
+            visibility = draft.visibility
         )
         val id = if (existing != null) {
             dao.updateCocktail(entity); entity.id
@@ -84,7 +89,7 @@ class CocktailRepository(private val db: AppDatabase) {
             dao.insertRating(
                 RatingEntity(
                     cocktailId = cocktailId,
-                    voterName = voterName.trim().ifBlank { "Anónimo" },
+                    voterName = voterName.trim().ifBlank { Txt.get(R.string.rating_anonymous_voter) },
                     stars = stars.coerceIn(1, 6),
                     comment = comment.trim()
                 )

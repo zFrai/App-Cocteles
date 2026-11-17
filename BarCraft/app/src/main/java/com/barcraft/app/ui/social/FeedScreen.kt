@@ -2,6 +2,13 @@
 
 package com.barcraft.app.ui.social
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
+import com.barcraft.app.ui.components.FitText
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Tab
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,7 +53,8 @@ fun FeedScreen(
     onLogin: () -> Unit,
     onOpenPost: (String) -> Unit,
     onCompose: () -> Unit,
-    onMessageUser: (String) -> Unit
+    onMessageUser: (String) -> Unit,
+    onOpenRecipe: (authorId: String, recipeId: String) -> Unit
 ) {
     val session = LocalAppSession.current
     val me = session.profile
@@ -58,9 +66,9 @@ fun FeedScreen(
         topBar = {
             TopAppBar(title = {
                 Column {
-                    Text("Comunidad")
-                    Text(
-                        "Barmans y comensales de BarCraft",
+                    FitText(stringResource(R.string.feed_title))
+                    FitText(
+                        stringResource(R.string.feed_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -71,62 +79,84 @@ fun FeedScreen(
             if (me != null && Permissions.canPublishPosts(me.role)) ExtendedFloatingActionButton(
                 onClick = onCompose,
                 icon = { Icon(Icons.Outlined.Edit, null) },
-                text = { Text("Publicar") }
+                text = { FitText(stringResource(R.string.feed_publish)) }
             )
         }
     ) { padding ->
         if (me == null) {
-            AccountRequiredState(session, "La comunidad", onLogin)
+            AccountRequiredState(session, stringResource(R.string.feature_community), onLogin)
             return@Scaffold
         }
         val vm = appViewModel(key = "feed_${me.uid}") { FeedViewModel(it, me) }
         val canPublish = Permissions.canPublishPosts(me.role)
         val posts by vm.posts.collectAsStateWithLifecycle()
+        val recipes by vm.recipes.collectAsStateWithLifecycle()
         var toDelete by remember { mutableStateOf<Post?>(null) }
+        var toEdit by remember { mutableStateOf<Post?>(null) }
+        val savedIds by vm.savedIds.collectAsStateWithLifecycle()
+        var tab by rememberSaveable { mutableIntStateOf(0) }
         LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
 
-        val list = posts
-        when {
-            list == null -> LoadingBox(Modifier.padding(padding))
-            list.isEmpty() -> EmptyState(
-                icon = Icons.Outlined.Public,
-                title = "Todavía no hay publicaciones",
-                message = if (canPublish) "Sé el primero en compartir un cóctel con la comunidad."
-                else "Cuando los barmans compartan sus cócteles los verás aquí.",
-                actionLabel = if (canPublish) "Crear publicación" else null,
-                onAction = if (canPublish) onCompose else null,
-                modifier = Modifier.padding(padding)
-            )
-            else -> LazyColumn(
-                Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(list, key = { it.id }) { post ->
-                    PostCard(
-                        post = post,
-                        myUid = me.uid,
-                        canModerate = session.isAdmin,
-                        onOpen = { onOpenPost(post.id) },
-                        onLike = { vm.toggleLike(post, me.uid) },
-                        onDelete = { toDelete = post },
-                        onMessage = { vm.messageAuthor(me, post, onMessageUser) }
-                    )
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            TabRow(selectedTabIndex = tab) {
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { FitText(stringResource(R.string.feed_tab_recipes)) })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { FitText(stringResource(R.string.feed_tab_posts)) })
+            }
+            // Recetas: públicas + las de "Seguidores" de las cuentas que sigo.
+            if (tab == 0) {
+                SharedRecipeList(recipes, onOpen = { onOpenRecipe(it.authorId, it.id) })
+                return@Column
+            }
+
+            val list = posts
+            when {
+                list == null -> LoadingBox()
+                list.isEmpty() -> EmptyState(
+                    icon = Icons.Outlined.Public,
+                    title = stringResource(R.string.feed_empty_title),
+                    message = if (canPublish) stringResource(R.string.feed_empty_can_publish)
+                    else stringResource(R.string.feed_empty_cannot_publish),
+                    actionLabel = if (canPublish) stringResource(R.string.feed_empty_action) else null,
+                    onAction = if (canPublish) onCompose else null
+                )
+                else -> LazyColumn(
+                    Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(list, key = { it.id }) { post ->
+                        PostCard(
+                            post = post,
+                            myUid = me.uid,
+                            canModerate = session.isAdmin,
+                            onOpen = { onOpenPost(post.id) },
+                            onLike = { vm.toggleLike(post, me.uid) },
+                            onDelete = { toDelete = post },
+                            onMessage = { vm.messageAuthor(me, post, onMessageUser) },
+                            saved = post.id in savedIds,
+                            onToggleSave = { vm.toggleSave(post) },
+                            onEdit = { toEdit = post }
+                        )
+                    }
                 }
             }
+        }
+
+        toEdit?.let { p ->
+            EditPostDialog(p, onDismiss = { toEdit = null }, onSave = { vm.edit(p, it); toEdit = null })
         }
 
         toDelete?.let { p ->
             AlertDialog(
                 onDismissRequest = { toDelete = null },
-                title = { Text("¿Eliminar publicación?") },
-                text = { Text(if (p.authorId == me.uid) "Se borrará para todos." else "Vas a borrar la publicación de ${p.authorName} como Admin.") },
+                title = { Text(stringResource(R.string.feed_delete_title)) },
+                text = { Text(if (p.authorId == me.uid) stringResource(R.string.feed_delete_mine) else stringResource(R.string.feed_delete_as_admin, p.authorName)) },
                 confirmButton = {
                     TextButton(onClick = { vm.delete(p); toDelete = null }) {
-                        Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                        FitText(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                     }
                 },
-                dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancelar") } }
+                dismissButton = { TextButton(onClick = { toDelete = null }) { FitText(stringResource(R.string.action_cancel)) } }
             )
         }
     }

@@ -1,5 +1,8 @@
 package com.barcraft.app.ui.navigation
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -31,14 +34,18 @@ import com.barcraft.app.ui.auth.SessionLoadingScreen
 import com.barcraft.app.ui.chat.ChatListScreen
 import com.barcraft.app.ui.chat.ChatScreen
 import com.barcraft.app.ui.chat.PeopleScreen
+import com.barcraft.app.ui.components.AccountRequiredState
 import com.barcraft.app.ui.cocktails.CocktailDetailScreen
 import com.barcraft.app.ui.cocktails.CocktailEditorScreen
 import com.barcraft.app.ui.cocktails.CocktailListScreen
 import com.barcraft.app.ui.lock.LockGate
+import com.barcraft.app.ui.profile.MyPostsScreen
 import com.barcraft.app.ui.profile.ProfileScreen
+import com.barcraft.app.ui.profile.SavedPostsScreen
 import com.barcraft.app.ui.social.ComposePostScreen
 import com.barcraft.app.ui.social.FeedScreen
 import com.barcraft.app.ui.social.PostDetailScreen
+import com.barcraft.app.ui.social.SharedRecipeScreen
 import com.barcraft.app.utils.appViewModel
 
 /** Punto de entrada de la interfaz: decide entre login, bloqueo o la app. */
@@ -72,7 +79,7 @@ private fun MainScaffold(session: AppSession, onLogin: () -> Unit, onLogout: () 
     val backStack by nav.currentBackStackEntryAsState()
     val current = backStack?.destination
 
-    val tabs = TopDestination.entries.filter { it != TopDestination.ADMIN || session.isAdmin }
+    val tabs = TopDestination.entries
     val showBottomBar = tabs.any { tab -> current?.hierarchy?.any { it.route == tab.route } == true }
 
     CompositionLocalProvider(LocalAppSession provides session) {
@@ -86,7 +93,7 @@ private fun MainScaffold(session: AppSession, onLogin: () -> Unit, onLogout: () 
                                 selected = selected,
                                 onClick = { nav.navigateToTab(tab.route) },
                                 icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
-                                label = { Text(tab.label) }
+                                label = { FitText(stringResource(tab.labelRes)) }
                             )
                         }
                     }
@@ -153,7 +160,21 @@ private fun AppNavHost(
                 onLogin = onLogin,
                 onOpenPost = { nav.navigate(Routes.post(it)) },
                 onCompose = { nav.navigate(Routes.compose()) },
-                onMessageUser = { roomId -> nav.navigate(Routes.chat(roomId)) }
+                onMessageUser = { roomId -> nav.navigate(Routes.chat(roomId)) },
+                onOpenRecipe = { authorId, recipeId -> nav.navigate(Routes.sharedRecipe(authorId, recipeId)) }
+            )
+        }
+        composable(
+            Routes.SHARED_RECIPE,
+            arguments = listOf(
+                navArgument("authorId") { type = NavType.StringType },
+                navArgument("recipeId") { type = NavType.StringType }
+            )
+        ) { entry ->
+            SharedRecipeScreen(
+                authorId = entry.arguments?.getString("authorId").orEmpty(),
+                recipeId = entry.arguments?.getString("recipeId").orEmpty(),
+                onBack = { nav.popBackStack() }
             )
         }
         composable(Routes.POST, arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
@@ -181,13 +202,7 @@ private fun AppNavHost(
             ChatListScreen(
                 onLogin = onLogin,
                 onOpenRoom = { nav.navigate(Routes.chat(it)) },
-                onFindPeople = { nav.navigate(Routes.PEOPLE) }
-            )
-        }
-        composable(Routes.PEOPLE) {
-            PeopleScreen(
-                onBack = { nav.popBackStack() },
-                onRoomReady = { roomId -> nav.navigate(Routes.chat(roomId)) }
+                onFindPeople = { nav.navigateToTab(Routes.SEARCH) }
             )
         }
         composable(Routes.CHAT, arguments = listOf(navArgument("roomId") { type = NavType.StringType })) { entry ->
@@ -197,12 +212,39 @@ private fun AppNavHost(
             )
         }
 
-        // ── Admin y perfil ────────────────────────────────────────────
-        composable(Routes.ADMIN) {
-            if (session.isAdmin) AdminScreen(onOpenPost = { nav.navigate(Routes.post(it)) })
+        // ── Buscar personas ───────────────────────────────────────────
+        composable(Routes.SEARCH) {
+            if (session.profile == null) {
+                AccountRequiredState(session, stringResource(R.string.feature_search_people), onLogin)
+            } else {
+                PeopleScreen(
+                    onBack = null,
+                    onRoomReady = { roomId -> nav.navigate(Routes.chat(roomId)) }
+                )
+            }
         }
+
+        // ── Perfil (el panel de Admin cuelga de aquí) ─────────────────
         composable(Routes.PROFILE) {
-            ProfileScreen(onLogin = onLogin, onLogout = onLogout)
+            ProfileScreen(
+                onLogin = onLogin,
+                onLogout = onLogout,
+                onOpenAdmin = { nav.navigate(Routes.ADMIN) },
+                onOpenMyPosts = { nav.navigate(Routes.MY_POSTS) },
+                onOpenSaved = { nav.navigate(Routes.SAVED) }
+            )
+        }
+        composable(Routes.MY_POSTS) {
+            MyPostsScreen(onBack = { nav.popBackStack() }, onOpenPost = { nav.navigate(Routes.post(it)) })
+        }
+        composable(Routes.SAVED) {
+            SavedPostsScreen(onBack = { nav.popBackStack() }, onOpenPost = { nav.navigate(Routes.post(it)) })
+        }
+        composable(Routes.ADMIN) {
+            if (session.isAdmin) AdminScreen(
+                onOpenPost = { nav.navigate(Routes.post(it)) },
+                onBack = { nav.popBackStack() }
+            )
         }
     }
 }

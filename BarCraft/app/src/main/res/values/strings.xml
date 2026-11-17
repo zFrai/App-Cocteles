@@ -1,3 +1,674 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Todos los textos que ve el usuario. Para cambiar un texto basta con editarlo aquí.
+    - No cambies el name="...": es lo que usa el código.
+    - %1$s, %2$d... son huecos que rellena la app (un nombre, un número...). Mantenlos.
+    - <plurals>: "one" es el texto para 1 y "other" para el resto.
+-->
 <resources>
     <string name="app_name">BarCraft</string>
+
+    <!-- ===== Comunes y modelos ===== -->
+    <!-- Roles -->
+    <string name="role_barman">Barman</string>
+    <string name="role_barman_desc">Creo cócteles y los comparto</string>
+    <string name="role_cliente">Comensal</string>
+    <string name="role_cliente_desc">Descubro, valoro y pregunto</string>
+    <string name="role_admin">Admin</string>
+    <string name="role_admin_desc">Administro BarCraft</string>
+    <!-- Visibilidad de recetas -->
+    <string name="visibility_private">Privada</string>
+    <string name="visibility_private_desc">Solo tú, en este móvil</string>
+    <string name="visibility_followers">Seguidores</string>
+    <string name="visibility_followers_desc">Tus seguidores la ven en Comunidad</string>
+    <string name="visibility_public">Pública</string>
+    <string name="visibility_public_desc">Cualquiera la ve en Comunidad</string>
+    <!-- Motivos de denuncia -->
+    <string name="report_reason_spam">Spam o publicidad</string>
+    <string name="report_reason_harassment">Acoso o insultos</string>
+    <string name="report_reason_inappropriate">Contenido inapropiado</string>
+    <string name="report_reason_impersonation">Se hace pasar por otra persona</string>
+    <string name="report_reason_other">Otro motivo</string>
+    <!-- Temas visuales -->
+    <string name="theme_deluxe">Deluxe</string>
+    <string name="theme_deluxe_desc">Negro y dorado</string>
+    <string name="theme_champan">Champán</string>
+    <string name="theme_champan_desc">Deluxe, versión clara</string>
+    <string name="theme_volcan">Volcán</string>
+    <string name="theme_volcan_desc">Brasas y ámbar</string>
+    <string name="theme_terracota">Terracota</string>
+    <string name="theme_terracota_desc">Volcán, versión clara</string>
+    <string name="theme_abisal">Abisal</string>
+    <string name="theme_abisal_desc">Azul profundo</string>
+    <string name="theme_laguna">Laguna</string>
+    <string name="theme_laguna_desc">Abisal, versión clara</string>
+    <string name="theme_cielo">Cielo</string>
+    <string name="theme_cielo_desc">Claro y fresco</string>
+    <string name="theme_tormenta">Tormenta</string>
+    <string name="theme_tormenta_desc">Cielo, versión oscura</string>
+    <string name="theme_absenta">Absenta</string>
+    <string name="theme_absenta_desc">Verde absenta en la noche</string>
+    <string name="theme_menta">Menta</string>
+    <string name="theme_menta_desc">Absenta, versión clara</string>
+    <string name="theme_granadina">Granadina</string>
+    <string name="theme_granadina_desc">Rojo granadina y cobre</string>
+    <string name="theme_fresa">Fresa</string>
+    <string name="theme_fresa_desc">Granadina, versión clara</string>
+    <string name="theme_medianoche">Medianoche</string>
+    <string name="theme_medianoche_desc">Violeta y azul nocturno</string>
+    <string name="theme_lavanda">Lavanda</string>
+    <string name="theme_lavanda_desc">Medianoche, versión clara</string>
+    <string name="theme_negroni">Negroni</string>
+    <string name="theme_negroni_desc">Naranja amargo y ámbar</string>
+    <string name="theme_spritz">Spritz</string>
+    <string name="theme_spritz_desc">Negroni, versión clara</string>
+    <string name="theme_espresso">Espresso</string>
+    <string name="theme_espresso_desc">Café tostado y crema</string>
+    <string name="theme_crema">Crema</string>
+    <string name="theme_crema_desc">Espresso, versión clara</string>
+    <!-- Usuario sin nombre y vista previa de mensajes -->
+    <string name="user_fallback_name">Usuario</string>
+    <string name="user_no_name">Sin nombre</string>
+    <string name="rating_anonymous_voter">Anónimo</string>
+    <string name="message_preview_image">📷 Foto</string>
+    <string name="message_preview_audio">🎤 Nota de voz</string>
+    <string name="message_preview_gif">GIF</string>
+    <string name="message_preview_sticker">Sticker</string>
+    <!-- Fechas relativas -->
+    <string name="time_now">ahora</string>
+    <plurals name="time_minutes_ago">
+        <item quantity="one">hace %1$d min</item>
+        <item quantity="other">hace %1$d min</item>
+    </plurals>
+    <plurals name="time_hours_ago">
+        <item quantity="one">hace %1$d h</item>
+        <item quantity="other">hace %1$d h</item>
+    </plurals>
+    <string name="time_yesterday">ayer</string>
+    <plurals name="time_days_ago">
+        <item quantity="one">hace %1$d día</item>
+        <item quantity="other">hace %1$d días</item>
+    </plurals>
+
+    <!-- ===== Acceso: inicio de sesión y registro ===== -->
+    <!-- Cabecera -->
+    <string name="auth_tagline">Tu recetario de coctelería y su comunidad</string>
+    <string name="auth_continue_as_guest">Entrar como comensal sin cuenta</string>
+    <!-- Iniciar sesión -->
+    <string name="auth_login_title">Iniciar sesión</string>
+    <string name="auth_login_with_fingerprint">Entrar con huella</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Contraseña</string>
+    <string name="auth_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="auth_remember_fingerprint">Entrar con huella la próxima vez</string>
+    <string name="auth_use_account_with_fingerprint">Usar esta cuenta con la huella</string>
+    <string name="auth_login_button">Entrar</string>
+    <string name="auth_go_to_register">Crear una cuenta</string>
+    <string name="auth_forget_fingerprint">Quitar la huella de este móvil</string>
+    <string name="auth_or_divider">"  o  "</string>
+    <string name="auth_continue_with_google">Continuar con Google</string>
+    <string name="auth_show_password">Mostrar contraseña</string>
+    <string name="auth_hide_password">Ocultar contraseña</string>
+    <!-- Diálogo de huella -->
+    <string name="auth_fingerprint_enable_title">Activar entrada con huella</string>
+    <string name="auth_fingerprint_enable_subtitle">Pon el dedo para guardar el acceso en este móvil</string>
+    <string name="auth_fingerprint_login_title">Iniciar sesión en BarCraft</string>
+    <!-- Registro -->
+    <string name="auth_register_title">Crear cuenta</string>
+    <string name="auth_register_role_question">¿Cómo vas a usar BarCraft?</string>
+    <string name="auth_register_role_hint">%1$s. El rol de Admin solo lo puede dar otro Admin.</string>
+    <string name="auth_display_name">Nombre visible</string>
+    <string name="auth_password_min">Contraseña (mín. 6)</string>
+    <string name="auth_password_repeat">Repite la contraseña</string>
+    <string name="auth_register_button">Registrarme</string>
+    <string name="auth_go_to_login">Ya tengo cuenta</string>
+    <!-- Carga y cuenta bloqueada -->
+    <string name="auth_loading">Preparando la barra…</string>
+    <string name="auth_logout">Cerrar sesión</string>
+    <string name="auth_banned_title">Cuenta bloqueada</string>
+    <string name="auth_banned_message">%1$s, un administrador ha bloqueado tu cuenta. Si crees que es un error, contacta con el equipo de BarCraft.</string>
+    <!-- Errores de validación -->
+    <string name="auth_error_invalid_email">Escribe un email válido.</string>
+    <string name="auth_error_empty_password">Escribe tu contraseña.</string>
+    <string name="auth_error_short_name">El nombre debe tener al menos 2 letras.</string>
+    <string name="auth_error_short_password">La contraseña debe tener al menos 6 caracteres.</string>
+    <string name="auth_error_password_mismatch">Las contraseñas no coinciden.</string>
+    <string name="auth_error_email_for_reset">Escribe tu email arriba para recuperar la contraseña.</string>
+    <string name="auth_reset_email_sent">Te hemos enviado un email para restablecer la contraseña.</string>
+    <!-- Errores de huella -->
+    <string name="auth_error_fingerprint_unsupported">Este móvil no permite guardar el acceso con huella. Entra con tu contraseña.</string>
+    <string name="auth_error_fingerprint_changed">Las huellas del móvil han cambiado. Entra con tu contraseña y vuelve a activar la huella.</string>
+    <string name="auth_error_fingerprint_unreadable">No se pudo leer el acceso guardado. Entra con tu contraseña y vuelve a activar la huella.</string>
+    <string name="auth_error_password_changed">Tu contraseña ha cambiado. Entra con la nueva y vuelve a activar la huella.</string>
+    <!-- Errores de Firebase -->
+    <string name="auth_error_google_collision">Ya tienes una cuenta con ese email. Entra con tu contraseña.</string>
+    <string name="auth_error_google_wrong_account">Esa no es la cuenta de Google con la que entraste. Elige la misma cuenta.</string>
+    <string name="auth_error_google_invalid">Google no ha podido confirmar la cuenta. Revisa que el proveedor Google está activado en Firebase.</string>
+    <string name="auth_error_email_in_use">Ya existe una cuenta con ese email.</string>
+    <string name="auth_error_no_account">No hay ninguna cuenta con ese email.</string>
+    <string name="auth_error_wrong_credentials">Email o contraseña incorrectos.</string>
+    <string name="error_no_connection">Sin conexión. Revisa tu internet.</string>
+    <string name="error_generic">Algo ha fallado. Inténtalo de nuevo.</string>
+    <!-- Google -->
+    <string name="google_error_not_configured">Google no está configurado: activa el proveedor Google en Firebase Authentication y vuelve a descargar google-services.json.</string>
+    <string name="google_error_unexpected">Google ha devuelto una respuesta inesperada. Inténtalo de nuevo.</string>
+    <string name="google_error_no_account">No hay ninguna cuenta de Google en este móvil. Añádela en Ajustes &gt; Cuentas.</string>
+    <string name="google_error_failed">No se pudo iniciar sesión con Google. %1$s</string>
+    <string name="google_error_unreadable">No se pudo leer la cuenta de Google. Inténtalo de nuevo.</string>
+
+    <!-- ===== Bloqueo con PIN y huella ===== -->
+    <string name="lock_create_pin_title">Crea tu PIN</string>
+    <string name="lock_repeat_pin_title">Repite el PIN</string>
+    <string name="lock_create_pin_message">Protege tu cuenta en este móvil. Entrarás con la huella y cada %1$d entradas te pediremos el PIN.</string>
+    <string name="lock_use_fingerprint_option">Entrar con huella</string>
+    <string name="lock_error_pin_length">El PIN debe tener de %1$d a %2$d cifras</string>
+    <string name="lock_error_pin_mismatch">Los PIN no coinciden. Vuelve a empezar.</string>
+    <string name="lock_continue">Continuar</string>
+    <string name="lock_save_pin">Guardar PIN</string>
+    <string name="lock_greeting">Hola, %1$s</string>
+    <string name="lock_place_finger">Pon el dedo en el lector para entrar.</string>
+    <string name="lock_enter_pin">Introduce tu PIN para entrar.</string>
+    <string name="lock_unlocks_left">Entradas con huella antes de pedir el PIN: %1$d</string>
+    <string name="lock_use_fingerprint">Usar huella</string>
+    <string name="lock_use_pin">Usar PIN</string>
+    <string name="lock_forgot_pin">He olvidado el PIN</string>
+    <string name="lock_recover_title">Recuperar el PIN</string>
+    <string name="lock_recover_google">Tu cuenta usa Google. Elige la misma cuenta de Google (%1$s) para crear un PIN nuevo.</string>
+    <string name="lock_recover_password">Escribe la contraseña de tu cuenta (%1$s) para crear un PIN nuevo.</string>
+    <string name="lock_check">Comprobar</string>
+    <string name="lock_delete_digit">Borrar</string>
+    <string name="lock_periodic_pin">Por seguridad, cada %1$d entradas te pedimos el PIN.</string>
+    <string name="lock_fingerprint_failed_times">Huella no reconocida %1$d veces. Introduce tu PIN.</string>
+    <string name="lock_wrong_pin">PIN incorrecto</string>
+    <string name="lock_account_verified">Cuenta comprobada. Crea un PIN nuevo.</string>
+    <!-- Diálogo del sistema -->
+    <string name="biometric_unlock_title">Desbloquear BarCraft</string>
+    <string name="biometric_unlock_subtitle">Usa tu huella para entrar</string>
+    <string name="biometric_error_retry">No se pudo usar la huella. Inténtalo de nuevo.</string>
+    <!-- Botones genéricos -->
+    <string name="action_cancel">Cancelar</string>
+
+    <!-- ===== Navegación y componentes compartidos ===== -->
+    <!-- Pestañas de la barra inferior -->
+    <string name="tab_recipes">Recetas</string>
+    <string name="tab_community">Comunidad</string>
+    <string name="tab_chats">Chats</string>
+    <string name="tab_search">Buscar</string>
+    <string name="tab_profile">Perfil</string>
+    <!-- Aviso de cuenta necesaria (%1$s = la sección, p. ej. "El chat") -->
+    <string name="feature_search_people">Buscar personas</string>
+    <string name="feature_community">La comunidad</string>
+    <string name="feature_chat">El chat</string>
+    <string name="account_required_firebase_title">Falta conectar Firebase</string>
+    <string name="account_required_firebase_message">%1$s necesita un servidor. Añade el archivo google-services.json en la carpeta app/ (los pasos están en FIREBASE_SETUP.md) y vuelve a compilar. Mientras tanto, tus recetas funcionan sin conexión.</string>
+    <string name="account_required_login_title">Inicia sesión para entrar</string>
+    <string name="account_required_login_message">%1$s es para usuarios con cuenta. Tus recetas locales se quedan como están.</string>
+    <string name="account_required_login_action">Iniciar sesión o registrarme</string>
+    <!-- Elegir foto -->
+    <string name="photo_add_title">Añadir foto</string>
+    <string name="photo_take">Hacer foto</string>
+    <string name="photo_from_gallery">Elegir de la galería</string>
+    <!-- Fotos y audios -->
+    <string name="media_connect_to_download">Conéctate para descargar</string>
+    <string name="media_offline">Sin conexión</string>
+    <string name="media_pause">Pausar</string>
+    <string name="media_play">Reproducir</string>
+    <!-- Estrellas -->
+    <plurals name="rating_stars">
+        <item quantity="one">%1$d estrella</item>
+        <item quantity="other">%1$d estrellas</item>
+    </plurals>
+    <!-- QR del perfil -->
+    <string name="qr_not_barcraft">Ese QR no es de un perfil de BarCraft</string>
+    <string name="qr_scanner_failed">No se pudo abrir el escáner de QR</string>
+    <string name="qr_my_title">Mi QR</string>
+    <string name="qr_image_description">Código QR de tu perfil</string>
+    <string name="qr_scan_hint">Que lo escaneen desde la pestaña Buscar para seguirte.</string>
+    <string name="qr_scan_hint_private">Que lo escaneen desde la pestaña Buscar para seguirte (te llegará una solicitud).</string>
+    <string name="action_close">Cerrar</string>
+
+    <!-- ===== Recetas: lista ===== -->
+    <string name="recipes_title">Mis cócteles</string>
+    <plurals name="recipes_count">
+        <item quantity="one">%1$d receta en tu barra</item>
+        <item quantity="other">%1$d recetas en tu barra</item>
+    </plurals>
+    <string name="recipes_only_favorites">Solo favoritos</string>
+    <string name="recipes_new">Nuevo cóctel</string>
+    <string name="recipes_search_hint">Buscar por nombre o ingrediente</string>
+    <string name="recipes_clear_search">Borrar búsqueda</string>
+    <string name="recipes_filter_all">Todas</string>
+    <string name="recipes_empty_title">Empieza tu recetario</string>
+    <string name="recipes_empty_message">Guarda tus cócteles con ingredientes, pasos, humo y garnish. Todo se queda en el móvil y funciona sin conexión.</string>
+    <string name="recipes_empty_action">Crear mi primer cóctel</string>
+    <string name="recipes_no_results_title">Sin resultados</string>
+    <string name="recipes_no_results_message">Prueba con otra búsqueda o quita los filtros.</string>
+    <string name="recipes_delete_title">¿Eliminar %1$s?</string>
+    <string name="recipes_delete_message">Se borrarán también sus ingredientes, pasos y valoraciones.</string>
+    <!-- Tarjeta de cóctel -->
+    <string name="cocktail_tag_smoke">Humo</string>
+    <string name="cocktail_tag_garnish">Garnish</string>
+    <string name="cocktail_rating_summary">%1$.1f (%2$d)</string>
+    <string name="cocktail_time_and_ingredients">" %1$d min · %2$d ingr."</string>
+    <string name="cocktail_favorite">Favorito</string>
+    <string name="action_collapse">Contraer</string>
+    <string name="action_expand">Expandir</string>
+    <string name="cocktail_ingredient_bullet">• %1$s %2$s</string>
+    <string name="cocktail_more_ingredients">+%1$d más</string>
+    <!-- Botones genéricos -->
+    <string name="action_delete">Eliminar</string>
+    <string name="action_edit">Editar</string>
+    <!-- Errores del editor -->
+    <string name="editor_error_copy_image">No se pudo copiar la imagen</string>
+    <string name="editor_error_name_required">El nombre es obligatorio</string>
+    <string name="editor_error_ingredient_required">Añade al menos un ingrediente</string>
+
+    <!-- ===== Recetas: editor ===== -->
+    <string name="editor_title_edit">Editar cóctel</string>
+    <string name="editor_title_new">Nuevo cóctel</string>
+    <string name="action_save">Guardar</string>
+    <string name="editor_choose_photo">Elegir foto</string>
+    <string name="editor_change_photo">Cambiar foto</string>
+    <string name="editor_image_url">…o pega la URL de una imagen</string>
+    <string name="editor_section_basic">Datos básicos</string>
+    <string name="editor_name">Nombre *</string>
+    <string name="editor_description">Descripción</string>
+    <string name="editor_difficulty">Dificultad: %1$d/%2$d</string>
+    <string name="editor_prep_time">Tiempo de preparación: %1$d min</string>
+    <string name="editor_smoke">Efecto humo</string>
+    <string name="editor_smoke_desc">Ahumado con madera, campana o pistola</string>
+    <string name="editor_garnish">Garnish</string>
+    <string name="editor_garnish_desc">Decoración del cóctel</string>
+    <string name="editor_garnish_detail">Descripción del garnish</string>
+    <string name="editor_favorite">Favorito</string>
+    <string name="editor_favorite_desc">Aparece al filtrar por favoritos</string>
+    <string name="editor_section_visibility">Quién puede verla</string>
+    <string name="editor_visibility_login">Inicia sesión para compartirla en Comunidad. Sin cuenta, tus recetas son privadas.</string>
+    <string name="editor_visibility_local_photo">La foto está guardada en tu móvil y no se comparte; en Comunidad saldrá sin foto.</string>
+    <string name="editor_section_ingredients">Ingredientes (%1$d)</string>
+    <string name="editor_ingredient_detail">%1$s · %2$s</string>
+    <string name="action_remove">Quitar</string>
+    <string name="editor_add_ingredient">Añadir ingrediente</string>
+    <string name="editor_section_steps">Procedimiento</string>
+    <string name="editor_step_number">%1$d.</string>
+    <string name="action_move_up">Subir</string>
+    <string name="action_move_down">Bajar</string>
+    <string name="editor_remove_step">Quitar paso</string>
+    <string name="editor_step_hint">Paso %1$d</string>
+    <string name="action_add">Añadir</string>
+    <string name="editor_category">Categoría</string>
+    <!-- Diálogo de ingrediente -->
+    <string name="ingredient_new">Nuevo ingrediente</string>
+    <string name="ingredient_edit">Editar ingrediente</string>
+    <string name="ingredient_name">Ingrediente</string>
+    <string name="ingredient_amount">Cantidad (ej. 45 ml)</string>
+    <string name="ingredient_type">Tipo</string>
+
+    <!-- ===== Recetas: detalle y valoraciones ===== -->
+    <string name="action_back">Volver</string>
+    <string name="action_more">Más</string>
+    <string name="detail_share_community">Compartir en la comunidad</string>
+    <string name="detail_rate">Valorar</string>
+    <string name="detail_tab_ingredients">Ingredientes</string>
+    <string name="detail_tab_steps">Preparación</string>
+    <string name="detail_tab_ratings">Valoraciones</string>
+    <string name="detail_no_ingredients">Sin ingredientes registrados.</string>
+    <string name="detail_garnish">Garnish</string>
+    <string name="detail_no_steps">Aún no hay pasos. Pulsa editar para añadir el procedimiento.</string>
+    <string name="detail_no_ratings">Aún sin valoraciones. ¡Sé el primero!</string>
+    <string name="detail_delete_title">¿Eliminar este cóctel?</string>
+    <string name="detail_delete_message">Esta acción no se puede deshacer.</string>
+    <string name="detail_delete_rating_title">¿Borrar valoración?</string>
+    <string name="detail_delete_rating_message">Se eliminará el voto de %1$s. No se puede deshacer.</string>
+    <string name="action_delete_short">Borrar</string>
+    <plurals name="detail_rating_votes">
+        <item quantity="one">%1$.1f · %2$d voto</item>
+        <item quantity="other">%1$.1f · %2$d votos</item>
+    </plurals>
+    <string name="detail_minutes">%1$d min</string>
+    <string name="detail_difficulty">"Dificultad "</string>
+    <string name="detail_smoke">Humo</string>
+    <string name="detail_average">%1$.1f</string>
+    <plurals name="detail_average_of">
+        <item quantity="one">Media de %1$d voto</item>
+        <item quantity="other">Media de %1$d votos</item>
+    </plurals>
+    <string name="detail_delete_rating">Borrar valoración</string>
+    <!-- Diálogo de valoración -->
+    <string name="rating_add_title">Añadir valoración</string>
+    <string name="rating_voter_name">Nombre del votante</string>
+    <string name="rating_stars_of">%1$d de %2$d estrellas</string>
+    <string name="rating_comment">Comentario (opcional)</string>
+
+    <!-- ===== Comunidad: muro, publicaciones y recetas compartidas ===== -->
+    <!-- Muro -->
+    <string name="feed_title">Comunidad</string>
+    <string name="feed_subtitle">Recetas y publicaciones de BarCraft</string>
+    <string name="feed_publish">Publicar</string>
+    <string name="feed_tab_recipes">Recetas</string>
+    <string name="feed_tab_posts">Publicaciones</string>
+    <string name="feed_empty_title">Todavía no hay publicaciones</string>
+    <string name="feed_empty_can_publish">Sé el primero en compartir un cóctel con la comunidad.</string>
+    <string name="feed_empty_cannot_publish">Cuando los barmans compartan sus cócteles los verás aquí.</string>
+    <string name="feed_empty_action">Crear publicación</string>
+    <string name="feed_delete_title">¿Eliminar publicación?</string>
+    <string name="feed_delete_mine">Se borrará para todos.</string>
+    <string name="feed_delete_as_admin">Vas a borrar la publicación de %1$s como Admin.</string>
+    <!-- Tarjeta de publicación -->
+    <string name="post_edited_suffix">" · editado"</string>
+    <string name="post_options">Opciones</string>
+    <string name="post_delete_moderation">Eliminar (moderación)</string>
+    <string name="post_like">Me gusta</string>
+    <string name="post_comments">Comentarios</string>
+    <string name="post_unsave">Quitar de guardados</string>
+    <string name="post_save">Guardar</string>
+    <string name="post_message">Mensaje</string>
+    <string name="post_edit_title">Editar publicación</string>
+    <string name="post_edit_warning">Quien la tenga en Guardados verá que la has cambiado.</string>
+    <string name="post_save_changes">Guardar cambios</string>
+    <!-- Detalle de publicación -->
+    <string name="post_detail_title">Publicación</string>
+    <string name="post_comment_hint">Escribe un comentario</string>
+    <string name="action_send">Enviar</string>
+    <string name="post_comments_count">Comentarios (%1$d)</string>
+    <string name="post_no_comments">Nadie ha comentado todavía.</string>
+    <string name="post_delete_comment">Borrar comentario</string>
+    <!-- Nueva publicación -->
+    <string name="compose_title">Nueva publicación</string>
+    <string name="compose_publish">Publicar</string>
+    <string name="compose_hint">¿Qué has preparado hoy? Cuenta un truco, una receta o una duda…</string>
+    <string name="compose_remove_photo">Quitar foto</string>
+    <string name="compose_camera">Cámara</string>
+    <string name="compose_gallery">Galería</string>
+    <string name="compose_photo_url">URL de una foto (opcional)</string>
+    <string name="compose_attach_recipe">Adjuntar una receta de tu barra</string>
+    <string name="compose_no_recipes">Aún no tienes recetas guardadas.</string>
+    <string name="compose_attach_hint">Se compartirán sus ingredientes, pasos y su foto.</string>
+    <!-- Resumen de receta adjunta (va dentro del texto de la publicación) -->
+    <string name="compose_summary_minutes">" · %1$d min"</string>
+    <string name="compose_summary_smoke">" · Humo"</string>
+    <string name="compose_summary_garnish">Garnish: %1$s</string>
+    <!-- Recetas compartidas -->
+    <string name="shared_minutes">%1$d min</string>
+    <plurals name="shared_ingredients_count">
+        <item quantity="one">%1$d ingrediente</item>
+        <item quantity="other">%1$d ingredientes</item>
+    </plurals>
+    <string name="shared_empty_title">Todavía no hay recetas</string>
+    <string name="shared_empty_message">Aquí salen las recetas públicas y las que comparten con sus seguidores las cuentas que sigues. Para compartir una tuya, edítala y elige Seguidores o Pública.</string>
+    <string name="shared_recipe_fallback">Receta</string>
+    <string name="shared_save_copy">Guardar en mis recetas</string>
+    <string name="shared_unavailable_title">Receta no disponible</string>
+    <string name="shared_unavailable_message">Su autor la ha borrado o la ha hecho privada.</string>
+    <string name="shared_ingredients">Ingredientes</string>
+    <string name="shared_garnish">Garnish: %1$s</string>
+    <string name="shared_smoke">Con efecto humo</string>
+    <string name="shared_steps">Procedimiento</string>
+    <string name="shared_step">%1$d. %2$s</string>
+    <string name="shared_copy_credit">Receta de %1$s.</string>
+    <string name="shared_copy_credit_handle">Receta de %1$s (%2$s).</string>
+    <!-- Avisos (snackbars) de Comunidad -->
+    <string name="msg_save_failed">No se pudo guardar</string>
+    <string name="msg_post_unsaved">Quitada de Guardados</string>
+    <string name="msg_post_saved">Guardada. La tienes en Perfil &gt; Guardados</string>
+    <string name="msg_post_edit_failed">No se pudo editar la publicación</string>
+    <string name="msg_post_updated">Publicación actualizada</string>
+    <string name="msg_like_failed">No se pudo guardar el me gusta</string>
+    <string name="msg_post_delete_failed">No se pudo borrar la publicación</string>
+    <string name="msg_post_deleted">Publicación eliminada</string>
+    <string name="msg_chat_open_failed">No se pudo abrir el chat: si su cuenta es privada, tenéis que seguiros los dos</string>
+    <string name="msg_comment_failed">No se pudo enviar el comentario</string>
+    <string name="msg_comment_delete_failed">No se pudo borrar el comentario</string>
+    <string name="msg_only_barmans_publish">Solo los barmans pueden publicar</string>
+    <string name="msg_post_empty">Escribe algo o adjunta un cóctel</string>
+    <string name="msg_publish_failed">No se pudo publicar. Revisa tu conexión.</string>
+    <string name="msg_recipe_save_failed">No se pudo guardar la receta</string>
+    <string name="msg_recipe_saved">Guardada en tus recetas</string>
+
+    <!-- ===== Chats, seguidores y búsqueda de personas ===== -->
+    <!-- Lista de chats -->
+    <string name="chats_title">Chats</string>
+    <string name="chats_find_people">Buscar personas</string>
+    <string name="chats_tab_chats">Chats</string>
+    <string name="chats_tab_followers">Seguidores (%1$d)</string>
+    <string name="chats_tab_following">Siguiendo (%1$d)</string>
+    <string name="chats_tab_requests">Solicitudes</string>
+    <string name="chats_tab_blocked">Bloqueados</string>
+    <string name="chats_empty_title">Sin conversaciones</string>
+    <string name="chats_empty_message">Busca a otra persona y empieza a hablar de cócteles en tiempo real.</string>
+    <string name="chats_room_blocked">Conversación bloqueada</string>
+    <string name="chats_say_hi">Di hola 👋</string>
+    <string name="chats_last_message_mine">Tú: %1$s</string>
+    <string name="chats_no_followers_title">Aún no te sigue nadie</string>
+    <string name="chats_no_followers_message">Comparte tu @nombre #1234 para que te encuentren. Marca con ★ a tus favoritos para tenerlos siempre arriba.</string>
+    <string name="chats_no_following_title">Aún no sigues a nadie</string>
+    <string name="chats_no_following_message">Busca personas y síguelas. Para chatear, su cuenta tiene que ser pública o tenéis que seguiros los dos.</string>
+    <string name="chats_no_requests_title">Sin solicitudes</string>
+    <string name="chats_no_requests_message">Si tu cuenta es privada, aquí verás quién quiere seguirte. También las solicitudes que envíes a cuentas privadas.</string>
+    <string name="chats_requests_received">Recibidas</string>
+    <string name="chats_requests_sent">Enviadas</string>
+    <string name="chats_no_blocked_title">Nadie bloqueado</string>
+    <string name="chats_no_blocked_message">Las personas que bloquees no podrán escribirte.</string>
+    <string name="chats_blocked_label">Bloqueado</string>
+    <string name="chats_unblock">Desbloquear</string>
+    <!-- Conversación -->
+    <string name="chat_more_options">Más opciones</string>
+    <string name="chat_report_user">Denunciar a %1$s</string>
+    <string name="chat_you_blocked">Has bloqueado a %1$s. Desbloquéalo en Chats &gt; Bloqueados.</string>
+    <string name="chat_cannot_send">No puedes enviar mensajes en esta conversación.</string>
+    <string name="chat_photo">Foto</string>
+    <string name="chat_gifs_and_stickers">GIFs y stickers</string>
+    <string name="chat_message_hint">Mensaje</string>
+    <string name="chat_record_voice">Grabar nota de voz</string>
+    <string name="chat_empty_title">Empieza la conversación</string>
+    <string name="chat_empty_message">Los mensajes llegan al instante a %1$s.</string>
+    <string name="chat_react">Reaccionar</string>
+    <string name="chat_delete_for_all">Borrar para todos</string>
+    <string name="chat_report_message">Denunciar mensaje</string>
+    <string name="chat_quoted_message">“%1$s”</string>
+    <string name="chat_report_question">¿Qué ocurre?</string>
+    <string name="chat_report_details">Detalles (opcional)</string>
+    <string name="chat_report_anonymous">%1$s no sabrá quién le ha denunciado. Si además no quieres hablar con esta persona, bloquéala desde Chats.</string>
+    <string name="chat_report_send">Enviar denuncia</string>
+    <string name="chat_recording">"Grabando  %1$s"</string>
+    <string name="chat_send_voice">Enviar nota de voz</string>
+    <string name="chat_save_to_gallery">Guardar en la galería</string>
+    <!-- GIPHY -->
+    <string name="giphy_tab_gifs">GIFs</string>
+    <string name="giphy_tab_stickers">Stickers</string>
+    <string name="giphy_search_gifs">Buscar GIFs (cocktail, cheers…)</string>
+    <string name="giphy_search_stickers">Buscar stickers</string>
+    <string name="giphy_powered_by">Powered by GIPHY</string>
+    <string name="giphy_error">No se pudo conectar con GIPHY</string>
+    <!-- Fila de persona -->
+    <string name="person_private_account">Cuenta privada</string>
+    <string name="person_wants_to_follow">Quiere seguirte</string>
+    <string name="person_mutual">Os seguís</string>
+    <string name="person_request_sent">Solicitud enviada</string>
+    <string name="person_follows_you">Te sigue</string>
+    <string name="person_following">Siguiendo</string>
+    <string name="person_handle_status">%1$s · %2$s</string>
+    <string name="person_accept">Aceptar</string>
+    <string name="person_request">Solicitar</string>
+    <string name="person_follow">Seguir</string>
+    <string name="person_write">Escribir</string>
+    <string name="person_send_message">Enviar mensaje</string>
+    <string name="person_remove_favorite">Quitar de favoritos</string>
+    <string name="person_add_favorite">Añadir a favoritos</string>
+    <string name="person_unfollow">Dejar de seguir</string>
+    <string name="person_remove_follower">Quitar de mis seguidores</string>
+    <string name="person_reject_request">Rechazar solicitud</string>
+    <string name="person_block">Bloquear</string>
+    <!-- Buscar personas -->
+    <string name="people_title">Buscar personas</string>
+    <string name="people_scan_qr">Escanear QR</string>
+    <string name="people_search_hint">Nombre o @nombre #1234</string>
+    <string name="people_filter_all">Todos</string>
+    <string name="people_empty_title">No hay nadie</string>
+    <string name="people_empty_message">Cuando otras personas se registren aparecerán aquí.</string>
+    <string name="people_no_match">Nadie coincide con \"%1$s\".</string>
+    <!-- Avisos (snackbars) de chats y seguidores -->
+    <string name="msg_follow_failed">No se pudo seguir</string>
+    <string name="msg_request_sent">Solicitud enviada a %1$s</string>
+    <string name="msg_now_following">Ahora sigues a %1$s</string>
+    <string name="msg_qr_own">Ese es tu propio QR</string>
+    <string name="msg_qr_not_found">No se ha encontrado esa cuenta</string>
+    <string name="msg_already_following">Ya sigues a %1$s</string>
+    <string name="msg_already_requested">Ya enviaste una solicitud a %1$s</string>
+    <string name="msg_action_failed">No se pudo completar</string>
+    <string name="msg_accept_failed">No se pudo aceptar</string>
+    <string name="msg_now_follows_you">%1$s ya te sigue</string>
+    <string name="msg_favorite_failed">No se pudo guardar el favorito</string>
+    <string name="msg_block_failed">No se pudo bloquear</string>
+    <string name="msg_blocked">%1$s bloqueado</string>
+    <string name="msg_unblock_failed">No se pudo desbloquear</string>
+    <string name="msg_unblocked">%1$s desbloqueado</string>
+    <string name="msg_private_cannot_chat">%1$s tiene la cuenta privada: para escribirle tenéis que seguiros los dos.</string>
+    <string name="msg_open_chat_failed">No se pudo abrir el chat</string>
+    <string name="msg_send_photo_failed">No se pudo enviar la foto</string>
+    <string name="msg_send_voice_failed">No se pudo enviar la nota de voz</string>
+    <string name="msg_send_failed">No se pudo enviar el mensaje</string>
+    <string name="msg_react_failed">No se pudo reaccionar</string>
+    <string name="msg_delete_message_failed">No se pudo borrar el mensaje</string>
+    <string name="msg_report_failed">No se pudo enviar la denuncia</string>
+    <string name="msg_report_sent">Denuncia enviada. Un administrador la revisará.</string>
+    <string name="msg_photo_saved">Foto guardada en la galería</string>
+    <string name="msg_photo_save_failed">No se pudo guardar la foto</string>
+    <string name="msg_mic_failed">No se pudo usar el micrófono</string>
+    <string name="msg_recording_too_short">Mantén la grabación al menos un segundo</string>
+
+    <!-- ===== Perfil, publicaciones propias y guardados ===== -->
+    <!-- Perfil -->
+    <string name="profile_title">Perfil</string>
+    <string name="profile_guest">Invitado</string>
+    <string name="profile_my_qr">Mi QR</string>
+    <string name="profile_share_handle">Comparte tu @nombre #1234 o tu QR para que te encuentren (toca el nombre para copiarlo)</string>
+    <string name="profile_edit">Editar perfil</string>
+    <string name="profile_where_to_find_me">Dónde encontrarme</string>
+    <string name="profile_guest_mode">Modo sin cuenta: solo recetas en este móvil.</string>
+    <string name="profile_local_mode">Modo local: Firebase aún no está configurado.</string>
+    <string name="profile_login">Iniciar sesión o registrarme</string>
+    <string name="profile_my_posts">Mis publicaciones</string>
+    <string name="profile_my_posts_desc">Ver, editar o borrar lo que has publicado</string>
+    <string name="profile_saved">Guardados</string>
+    <plurals name="profile_saved_updated">
+        <item quantity="one">%1$d publicación ha cambiado</item>
+        <item quantity="other">%1$d publicaciones han cambiado</item>
+    </plurals>
+    <string name="profile_saved_desc">Publicaciones de otros que has guardado</string>
+    <string name="profile_section_settings">Configuración</string>
+    <string name="profile_private_account">Cuenta privada</string>
+    <string name="profile_private_on">Para seguirte tendrán que enviarte una solicitud</string>
+    <string name="profile_private_off">Cualquiera puede seguirte y ver tus publicaciones</string>
+    <string name="profile_notify_comments">Avisos de comentarios</string>
+    <string name="profile_notify_messages">Avisos de mensajes</string>
+    <string name="profile_notify_followers">Avisos de nuevos seguidores</string>
+    <string name="profile_notify_note">Los avisos se guardan ya; las notificaciones en el móvil llegarán en una próxima versión.</string>
+    <string name="profile_admin_panel">Panel de Admin</string>
+    <string name="profile_admin_panel_desc">Usuarios, denuncias y moderación</string>
+    <string name="profile_section_security">Seguridad y almacenamiento</string>
+    <string name="profile_fingerprint">Entrar con huella</string>
+    <string name="profile_fingerprint_desc">Cada %1$d entradas se pide el PIN</string>
+    <string name="profile_fingerprint_unavailable">Este móvil no tiene huella configurada</string>
+    <string name="profile_change_pin">Cambiar PIN</string>
+    <string name="profile_lock_now">Bloquear ahora</string>
+    <string name="profile_downloads">Fotos y audios descargados</string>
+    <string name="profile_downloads_desc">Ocupan %1$s. Pulsa para liberar espacio.</string>
+    <string name="profile_export">Exportar recetas (JSON)</string>
+    <string name="profile_export_desc">Copia de seguridad para compartir o guardar</string>
+    <string name="profile_export_subject">Recetas BarCraft</string>
+    <string name="profile_export_chooser">Exportar recetas</string>
+    <string name="profile_firebase_off">Comunidad y chat desactivados</string>
+    <string name="profile_firebase_off_desc">Añade app/google-services.json siguiendo FIREBASE_SETUP.md</string>
+    <string name="profile_member_since">Miembro desde</string>
+    <string name="profile_logout">Cerrar sesión</string>
+    <string name="profile_version">BarCraft %1$s</string>
+    <!-- Editar perfil -->
+    <string name="profile_edit_title">Editar perfil</string>
+    <string name="profile_edit_name">Nombre visible</string>
+    <string name="profile_edit_bio">Descripción (opcional)</string>
+    <string name="profile_edit_bio_counter">%1$d/%2$d</string>
+    <!-- Dónde encontrarme -->
+    <string name="links_title">Dónde encontrarme</string>
+    <string name="links_handle">\@%1$s</string>
+    <string name="links_hint">Opcional. Rellena solo lo que quieras que vean los demás.</string>
+    <string name="links_instagram">Instagram (usuario)</string>
+    <string name="links_tiktok">TikTok (usuario)</string>
+    <string name="links_x">X (usuario)</string>
+    <string name="links_web">Web</string>
+    <string name="links_place_name">Local (nombre)</string>
+    <string name="links_place_address">Dirección o ciudad del local</string>
+    <!-- Mis publicaciones y Guardados -->
+    <string name="my_posts_title">Mis publicaciones</string>
+    <string name="my_posts_empty_title">Aún no has publicado nada</string>
+    <string name="my_posts_empty_message">Tus publicaciones de Comunidad aparecerán aquí para editarlas o borrarlas.</string>
+    <string name="saved_title">Guardados</string>
+    <string name="saved_empty_title">Nada guardado</string>
+    <string name="saved_empty_message">En Comunidad, toca el marcador de una publicación para guardarla aquí.</string>
+    <string name="saved_post_changed">%1$s ha cambiado su post</string>
+    <string name="saved_post_deleted">Su autor ha borrado esta publicación.</string>
+    <!-- Avisos (snackbars) de Perfil -->
+    <string name="msg_name_too_short">El nombre debe tener al menos 2 letras</string>
+    <string name="msg_profile_save_failed">No se pudo guardar el perfil</string>
+    <string name="msg_profile_updated">Perfil actualizado</string>
+    <string name="msg_links_save_failed">No se pudo guardar \"Dónde encontrarme\"</string>
+    <string name="msg_saved">Guardado</string>
+    <string name="msg_privacy_failed">No se pudo cambiar la privacidad</string>
+    <string name="msg_account_private">Tu cuenta ahora es privada</string>
+    <string name="msg_account_public">Tu cuenta ahora es pública</string>
+    <string name="msg_notice_save_failed">No se pudo guardar el aviso</string>
+    <string name="msg_downloads_cleared">Descargas borradas. Se volverán a bajar al abrirlas.</string>
+    <string name="msg_notice_update_failed">No se pudo actualizar el aviso</string>
+    <string name="msg_unsave_failed">No se pudo quitar</string>
+
+    <!-- ===== Perfil: selector de tema ===== -->
+    <string name="theme_picker_title">Tema del perfil</string>
+    <string name="theme_picker_hint">Desliza una ficha a la derecha para el modo oscuro o a la izquierda para el claro. Un toque aplica el que se ve.</string>
+    <string name="theme_picker_dark">Modo oscuro</string>
+    <string name="theme_picker_light">Modo claro</string>
+    <string name="theme_picker_expand">Mostrar temas</string>
+    <string name="theme_picker_collapse">Ocultar temas</string>
+    <string name="theme_picker_current">Tema actual</string>
+
+    <!-- ===== Panel de Admin ===== -->
+    <string name="admin_title">Panel de Admin</string>
+    <string name="admin_subtitle">Gestiona usuarios y modera la comunidad</string>
+    <string name="admin_stat_barmans">Barmans</string>
+    <string name="admin_stat_clients">Comensales</string>
+    <string name="admin_stat_admins">Admins</string>
+    <string name="admin_stat_banned">Bloq.</string>
+    <string name="admin_tab_users">Usuarios</string>
+    <string name="admin_tab_posts">Publicaciones</string>
+    <string name="admin_tab_reports">Denuncias</string>
+    <string name="admin_tab_reports_count">Denuncias (%1$d)</string>
+    <string name="admin_no_reports_title">Sin denuncias pendientes</string>
+    <string name="admin_no_reports_message">Cuando alguien denuncie a otra persona desde un chat aparecerá aquí.</string>
+    <string name="admin_search_hint">Buscar nombre, @usuario o email</string>
+    <string name="admin_post_no_text">(sin texto)</string>
+    <string name="admin_post_summary">%1$s · %2$s · %3$d ♥ · %4$d coment.</string>
+    <string name="admin_view">Ver</string>
+    <string name="admin_ban_title">¿Bloquear a %1$s?</string>
+    <string name="admin_ban_message">No podrá volver a entrar en BarCraft hasta que lo desbloquees desde Usuarios. La denuncia quedará como revisada.</string>
+    <string name="admin_block">Bloquear</string>
+    <string name="admin_delete_post_title">¿Borrar publicación?</string>
+    <string name="admin_delete_post_message">Se eliminará la publicación de %1$s para todos.</string>
+    <string name="admin_report_message">Mensaje: “%1$s”</string>
+    <string name="admin_reported_by">Denunciado por %1$s</string>
+    <string name="admin_already_banned_suffix">" · cuenta ya bloqueada"</string>
+    <string name="admin_dismiss">Descartar</string>
+    <string name="admin_resolve">Revisada</string>
+    <string name="admin_ban_account">Bloquear cuenta</string>
+    <string name="admin_you_suffix">" (tú)"</string>
+    <string name="admin_banned_label">Bloqueado</string>
+    <string name="admin_actions">Acciones</string>
+    <string name="admin_change_role">Cambiar a %1$s</string>
+    <string name="admin_unban">Desbloquear</string>
+    <!-- Avisos (snackbars) del panel -->
+    <string name="msg_admin_no_permission">No tienes permiso o no hay conexión</string>
+    <string name="msg_admin_role_changed">%1$s ahora es %2$s</string>
+    <string name="msg_admin_banned">%1$s ha sido bloqueado</string>
+    <string name="msg_admin_unbanned">%1$s ya puede volver a entrar</string>
+    <string name="msg_admin_report_failed">No se pudo actualizar la denuncia</string>
+    <string name="msg_admin_report_dismissed">Denuncia descartada</string>
+    <string name="msg_admin_report_resolved">Denuncia revisada</string>
 </resources>

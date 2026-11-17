@@ -1,17 +1,26 @@
 package com.barcraft.app.data.remote
 
+import com.barcraft.app.R
 import com.barcraft.app.model.ChatMessage
 import com.barcraft.app.model.ChatRoom
 import com.barcraft.app.model.Comment
+import com.barcraft.app.model.Follow
 import com.barcraft.app.model.Friendship
 import com.barcraft.app.model.MessageType
+import com.barcraft.app.model.NotificationPrefs
 import com.barcraft.app.model.PrivateSettings
 import com.barcraft.app.model.Post
+import com.barcraft.app.model.ProfileLinks
 import com.barcraft.app.model.Report
 import com.barcraft.app.model.ReportReason
 import com.barcraft.app.model.ReportStatus
+import com.barcraft.app.model.RecipeVisibility
 import com.barcraft.app.model.Role
+import com.barcraft.app.model.SavedPost
+import com.barcraft.app.model.SharedIngredient
+import com.barcraft.app.model.SharedRecipe
 import com.barcraft.app.model.UserProfile
+import com.barcraft.app.utils.Txt
 import com.google.firebase.firestore.DocumentSnapshot
 
 // Conversión manual documento -> modelo. Evita depender de constructores vacíos.
@@ -34,13 +43,15 @@ fun DocumentSnapshot.toUserProfile(): UserProfile? {
     if (!exists()) return null
     return UserProfile(
         uid = id,
-        name = getString("name").orEmpty().ifBlank { "Sin nombre" },
+        name = getString("name").orEmpty().ifBlank { Txt.get(R.string.user_no_name) },
         email = getString("email").orEmpty(),
         role = Role.from(getString("role")),
         banned = getBoolean("banned") ?: false,
         bio = getString("bio").orEmpty(),
         createdAt = millis("createdAt"),
-        tag = getString("tag").orEmpty()
+        tag = getString("tag").orEmpty(),
+        links = ProfileLinks.fromMap(stringMap("links")),
+        privateAccount = getBoolean("privateAccount") ?: false
     )
 }
 
@@ -67,6 +78,14 @@ fun DocumentSnapshot.toChatMessage(): ChatMessage = ChatMessage(
     createdAt = millis("createdAt")
 )
 
+fun DocumentSnapshot.toFollow(): Follow = Follow(
+    id = id,
+    followerId = getString("followerId").orEmpty(),
+    followedId = getString("followedId").orEmpty(),
+    accepted = getString("status") == "accepted",
+    createdAt = millis("createdAt")
+)
+
 fun DocumentSnapshot.toFriendship(): Friendship = Friendship(
     id = id,
     users = stringList("users"),
@@ -78,13 +97,23 @@ fun DocumentSnapshot.toFriendship(): Friendship = Friendship(
 
 fun DocumentSnapshot.toPrivateSettings(): PrivateSettings =
     if (!exists()) PrivateSettings()
-    else PrivateSettings(favorites = stringList("favorites"), blocked = stringList("blocked"))
+    else PrivateSettings(
+        favorites = stringList("favorites"),
+        blocked = stringList("blocked"),
+        followsMigrated = getBoolean("followsMigrated") ?: false,
+        notifications = NotificationPrefs(
+            comments = getBoolean(NotificationPrefs.COMMENTS) ?: true,
+            messages = getBoolean(NotificationPrefs.MESSAGES) ?: true,
+            followers = getBoolean(NotificationPrefs.FOLLOWERS) ?: true
+        )
+    )
 
 fun DocumentSnapshot.toPost(): Post = Post(
     id = id,
     authorId = getString("authorId").orEmpty(),
     authorName = getString("authorName").orEmpty(),
     authorRole = Role.from(getString("authorRole")),
+    authorTag = getString("authorTag").orEmpty(),
     text = getString("text").orEmpty(),
     imageUrl = getString("imageUrl").orEmpty(),
     mediaId = getString("mediaId").orEmpty(),
@@ -92,7 +121,14 @@ fun DocumentSnapshot.toPost(): Post = Post(
     cocktailSummary = getString("cocktailSummary").orEmpty(),
     likes = stringList("likes"),
     commentCount = (getLong("commentCount") ?: 0L).toInt().coerceAtLeast(0),
-    createdAt = millis("createdAt")
+    createdAt = millis("createdAt"),
+    editedAt = getTimestamp("editedAt", DocumentSnapshot.ServerTimestampBehavior.ESTIMATE)?.toDate()?.time ?: 0L
+)
+
+fun DocumentSnapshot.toSavedPost(): SavedPost = SavedPost(
+    postId = id,
+    savedAt = millis("savedAt"),
+    seenEditAt = getLong("seenEditAt") ?: 0L
 )
 
 fun DocumentSnapshot.toComment(): Comment = Comment(
@@ -116,4 +152,31 @@ fun DocumentSnapshot.toReport(): Report = Report(
     messageText = getString("messageText").orEmpty(),
     status = ReportStatus.from(getString("status")),
     createdAt = millis("createdAt")
+)
+
+fun DocumentSnapshot.toSharedRecipe(): SharedRecipe = SharedRecipe(
+    id = id,
+    authorId = getString("authorId").orEmpty(),
+    authorName = getString("authorName").orEmpty().ifBlank { Txt.get(R.string.user_fallback_name) },
+    authorTag = getString("authorTag").orEmpty(),
+    visibility = RecipeVisibility.from(getString("visibility")),
+    name = getString("name").orEmpty(),
+    description = getString("description").orEmpty(),
+    category = getString("category").orEmpty(),
+    difficulty = (getLong("difficulty") ?: 2L).toInt(),
+    prepTimeMinutes = (getLong("prepTimeMinutes") ?: 5L).toInt(),
+    hasSmoke = getBoolean("hasSmoke") ?: false,
+    garnishDescription = getString("garnishDescription").orEmpty(),
+    imageUrl = getString("imageUrl").orEmpty(),
+    ingredients = (get("ingredients") as? List<*>)?.mapNotNull { item ->
+        (item as? Map<*, *>)?.let {
+            SharedIngredient(
+                name = it["name"] as? String ?: return@let null,
+                amount = it["amount"] as? String ?: "",
+                type = it["type"] as? String ?: "Alcohol"
+            )
+        }
+    } ?: emptyList(),
+    steps = stringList("steps"),
+    updatedAt = millis("updatedAt")
 )

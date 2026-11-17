@@ -3,7 +3,10 @@ package com.barcraft.app.ui.lock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barcraft.app.AppContainer
+import com.barcraft.app.R
 import com.barcraft.app.data.local.LockStore
+import com.barcraft.app.ui.auth.GoogleTokenResult
+import com.barcraft.app.utils.Txt
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +29,7 @@ data class LockUiState(
  * - Se entra con huella si está activada.
  * - Cada [LockStore.PIN_EVERY] entradas con huella se pide el PIN una vez.
  * - Tras [LockStore.MAX_BIOMETRIC_FAILS] huellas fallidas seguidas el PIN es obligatorio.
- * - Si se olvida el PIN, se recupera con la contraseña de la cuenta.
+ * - Si se olvida el PIN, se recupera con la contraseña de la cuenta (o con Google si la cuenta es de Google).
  */
 class LockViewModel(private val container: AppContainer, private val uid: String) : ViewModel() {
 
@@ -42,7 +45,7 @@ class LockViewModel(private val container: AppContainer, private val uid: String
             needsSetup = !store.hasPin(uid),
             pinRequired = !bio || periodic,
             biometricEnabled = bio,
-            message = if (bio && periodic) "Por seguridad, cada ${LockStore.PIN_EVERY} entradas te pedimos el PIN." else null
+            message = if (bio && periodic) Txt.get(R.string.lock_periodic_pin, LockStore.PIN_EVERY) else null
         )
     }
 
@@ -70,7 +73,7 @@ class LockViewModel(private val container: AppContainer, private val uid: String
             it.copy(
                 biometricFails = fails,
                 pinRequired = it.pinRequired || forcePin,
-                message = if (forcePin) "Huella no reconocida ${LockStore.MAX_BIOMETRIC_FAILS} veces. Introduce tu PIN." else it.message
+                message = if (forcePin) Txt.get(R.string.lock_fingerprint_failed_times, LockStore.MAX_BIOMETRIC_FAILS) else it.message
             )
         }
         return forcePin
@@ -96,19 +99,35 @@ class LockViewModel(private val container: AppContainer, private val uid: String
             _state.update { it.copy(pinError = null, biometricFails = 0) }
             true
         } else {
-            _state.update { it.copy(pinError = "PIN incorrecto") }
+            _state.update { it.copy(pinError = Txt.get(R.string.lock_wrong_pin)) }
             false
         }
     }
 
+    /** Las cuentas creadas con Google no tienen contraseña: el PIN se recupera confirmando Google. */
+    val recoversWithGoogle: Boolean get() = !container.authRepository.hasPasswordLogin
+
     /** "He olvidado el PIN": se comprueba la contraseña de la cuenta y se crea un PIN nuevo. */
-    fun recoverWithPassword(password: String) {
+    fun recoverWithPassword(password: String) = recover { container.authRepository.verifyPassword(password) }
+
+    fun onGoogleRecoverStarted() = _state.update { it.copy(checkingPassword = true, passwordError = null) }
+
+    /** "He olvidado el PIN" en una cuenta de Google. */
+    fun onGoogleRecoverResult(result: GoogleTokenResult) {
+        when (result) {
+            is GoogleTokenResult.Success -> recover { container.authRepository.verifyGoogle(result.idToken) }
+            is GoogleTokenResult.Error -> _state.update { it.copy(checkingPassword = false, passwordError = result.message) }
+            GoogleTokenResult.Cancelled -> _state.update { it.copy(checkingPassword = false) }
+        }
+    }
+
+    private fun recover(check: suspend () -> Result<Unit>) {
         viewModelScope.launch {
             _state.update { it.copy(checkingPassword = true, passwordError = null) }
-            val result = container.authRepository.verifyPassword(password)
+            val result = check()
             if (result.isSuccess) {
                 store.clear(uid)
-                _state.value = initialState().copy(message = "Contraseña correcta. Crea un PIN nuevo.")
+                _state.value = initialState().copy(message = Txt.get(R.string.lock_account_verified))
             } else {
                 _state.update { it.copy(checkingPassword = false, passwordError = result.exceptionOrNull()?.message) }
             }

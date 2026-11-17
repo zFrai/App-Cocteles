@@ -23,11 +23,20 @@ object Collections {
     const val USERS = "users"
     /** Un documento por tag (`tags/{tag}` -> uid) para que no haya dos iguales. */
     const val TAGS = "tags"
+    /** Email de cada cuenta, fuera del perfil público: solo lo ven su dueño y los Admins. */
+    const val EMAILS = "emails"
     const val CHATS = "chats"
     const val MESSAGES = "messages"
     const val POSTS = "posts"
     const val COMMENTS = "comments"
+    /** Amistades del sistema anterior; solo se leen para convertirlas en seguimientos. */
     const val FRIENDSHIPS = "friendships"
+    /** Seguimientos: `follows/{followerUid_followedUid}`. */
+    const val FOLLOWS = "follows"
+    /** Recetas compartidas: `users/{uid}/recipes/{idLocal}` (consulta de grupo para las públicas). */
+    const val RECIPES = "recipes"
+    /** Publicaciones guardadas: `users/{uid}/saved/{postId}` (privado). */
+    const val SAVED = "saved"
     const val MEDIA = "media"
     const val REPORTS = "reports"
     const val PRIVATE = "private"

@@ -2,6 +2,9 @@
 
 package com.barcraft.app.ui.chat
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -66,17 +69,17 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbar) },
-        topBar = { TopAppBar(title = { Text("Chats y amigos") }) },
+        topBar = { TopAppBar(title = { FitText(stringResource(R.string.chats_title)) }) },
         floatingActionButton = {
             if (me != null) ExtendedFloatingActionButton(
                 onClick = onFindPeople,
                 icon = { Icon(Icons.Outlined.PersonSearch, null) },
-                text = { Text("Buscar personas") }
+                text = { FitText(stringResource(R.string.chats_find_people)) }
             )
         }
     ) { padding ->
         if (me == null) {
-            AccountRequiredState(session, "El chat", onLogin)
+            AccountRequiredState(session, stringResource(R.string.feature_chat), onLogin)
             return@Scaffold
         }
         val vm = appViewModel(key = "people_${me.uid}") { PeopleViewModel(it, me) }
@@ -86,14 +89,15 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
 
         Column(Modifier.fillMaxSize().padding(padding)) {
             ScrollableTabRow(selectedTabIndex = tab, edgePadding = 12.dp) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Chats") })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Amigos (${people.friends.size})") })
-                Tab(selected = tab == 2, onClick = { tab = 2 }, text = {
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { FitText(stringResource(R.string.chats_tab_chats)) })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { FitText(stringResource(R.string.chats_tab_followers, people.followers.size)) })
+                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { FitText(stringResource(R.string.chats_tab_following, people.following.size)) })
+                Tab(selected = tab == 3, onClick = { tab = 3 }, text = {
                     BadgedBox(badge = { if (people.incoming.isNotEmpty()) Badge { Text("${people.incoming.size}") } }) {
-                        Text("Solicitudes")
+                        FitText(stringResource(R.string.chats_tab_requests))
                     }
                 })
-                Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text("Bloqueados") })
+                Tab(selected = tab == 4, onClick = { tab = 4 }, text = { FitText(stringResource(R.string.chats_tab_blocked)) })
             }
 
             if (!people.loaded) { LoadingBox(); return@Column }
@@ -104,9 +108,9 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
                     when {
                         list == null -> LoadingBox()
                         list.isEmpty() -> EmptyState(
-                            Icons.Outlined.Forum, "Sin conversaciones",
-                            "Busca a otra persona y empieza a hablar de cócteles en tiempo real.",
-                            actionLabel = "Buscar personas", onAction = onFindPeople
+                            Icons.Outlined.Forum, stringResource(R.string.chats_empty_title),
+                            stringResource(R.string.chats_empty_message),
+                            actionLabel = stringResource(R.string.chats_find_people), onAction = onFindPeople
                         )
                         else -> {
                             // Favoritos arriba, luego por último mensaje. Los bloqueados no se muestran aquí.
@@ -128,16 +132,16 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
                                                 Text(name, style = MaterialTheme.typography.titleMedium)
                                                 if (fav) {
                                                     Spacer(Modifier.width(4.dp))
-                                                    Icon(Icons.Filled.Star, "Favorito", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                                                    Icon(Icons.Filled.Star, stringResource(R.string.cocktail_favorite), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                                                 }
                                             }
                                         },
                                         supportingContent = {
                                             Text(
                                                 when {
-                                                    room.isBlocked -> "Conversación bloqueada"
-                                                    room.lastMessage.isBlank() -> "Di hola 👋"
-                                                    room.lastSenderId == me.uid -> "Tú: ${room.lastMessage}"
+                                                    room.isBlocked -> stringResource(R.string.chats_room_blocked)
+                                                    room.lastMessage.isBlank() -> stringResource(R.string.chats_say_hi)
+                                                    room.lastSenderId == me.uid -> stringResource(R.string.chats_last_message_mine, room.lastMessage)
                                                     else -> room.lastMessage
                                                 },
                                                 maxLines = 1, overflow = TextOverflow.Ellipsis
@@ -153,31 +157,38 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
                         }
                     }
                 }
-                1 -> if (people.friends.isEmpty()) EmptyState(
-                    Icons.Outlined.Group, "Aún no tienes amigos",
-                    "Busca personas y envíales una solicitud. Marca con ★ a tus favoritos para tenerlos siempre arriba.",
-                    actionLabel = "Buscar personas", onAction = onFindPeople
+                1 -> if (people.followers.isEmpty()) EmptyState(
+                    Icons.Outlined.Group, stringResource(R.string.chats_no_followers_title),
+                    stringResource(R.string.chats_no_followers_message)
                 ) else LazyColumn(contentPadding = PaddingValues(bottom = 96.dp)) {
-                    items(people.friends, key = { it.profile.uid }) { PersonRow(it, vm, onOpenRoom) }
+                    items(people.followers, key = { it.profile.uid }) { PersonRow(it, vm, onOpenRoom) }
                 }
-                2 -> if (people.incoming.isEmpty() && people.outgoing.isEmpty()) EmptyState(
-                    Icons.Outlined.PersonAdd, "Sin solicitudes", "Aquí verás quién quiere ser tu amigo."
+                2 -> if (people.following.isEmpty()) EmptyState(
+                    Icons.Outlined.Group, stringResource(R.string.chats_no_following_title),
+                    stringResource(R.string.chats_no_following_message),
+                    actionLabel = stringResource(R.string.chats_find_people), onAction = onFindPeople
                 ) else LazyColumn(contentPadding = PaddingValues(bottom = 96.dp)) {
-                    if (people.incoming.isNotEmpty()) item { SubHeader("Recibidas") }
+                    items(people.following, key = { it.profile.uid }) { PersonRow(it, vm, onOpenRoom) }
+                }
+                3 -> if (people.incoming.isEmpty() && people.outgoing.isEmpty()) EmptyState(
+                    Icons.Outlined.PersonAdd, stringResource(R.string.chats_no_requests_title),
+                    stringResource(R.string.chats_no_requests_message)
+                ) else LazyColumn(contentPadding = PaddingValues(bottom = 96.dp)) {
+                    if (people.incoming.isNotEmpty()) item { SubHeader(stringResource(R.string.chats_requests_received)) }
                     items(people.incoming, key = { "in_" + it.profile.uid }) { PersonRow(it, vm, onOpenRoom) }
-                    if (people.outgoing.isNotEmpty()) item { SubHeader("Enviadas") }
+                    if (people.outgoing.isNotEmpty()) item { SubHeader(stringResource(R.string.chats_requests_sent)) }
                     items(people.outgoing, key = { "out_" + it.profile.uid }) { PersonRow(it, vm, onOpenRoom) }
                 }
                 else -> if (people.blocked.isEmpty()) EmptyState(
-                    Icons.Outlined.Block, "Nadie bloqueado", "Las personas que bloquees no podrán escribirte."
+                    Icons.Outlined.Block, stringResource(R.string.chats_no_blocked_title), stringResource(R.string.chats_no_blocked_message)
                 ) else LazyColumn(contentPadding = PaddingValues(bottom = 96.dp)) {
                     items(people.blocked, key = { it.profile.uid }) { p ->
                         ListItem(
                             leadingContent = { UserAvatar(p.profile.name) },
                             headlineContent = { Text(p.profile.name) },
-                            supportingContent = { Text("Bloqueado") },
+                            supportingContent = { Text(stringResource(R.string.chats_blocked_label)) },
                             trailingContent = {
-                                OutlinedButton(onClick = { vm.unblock(p.profile.uid, p.profile.name) }) { Text("Desbloquear") }
+                                OutlinedButton(onClick = { vm.unblock(p.profile.uid, p.profile.name) }) { FitText(stringResource(R.string.chats_unblock)) }
                             }
                         )
                     }
