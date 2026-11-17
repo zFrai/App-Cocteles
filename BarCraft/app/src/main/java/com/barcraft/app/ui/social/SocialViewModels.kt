@@ -62,8 +62,30 @@ class FeedViewModel(
         ) { recipes, settings -> recipes?.filter { it.authorId !in settings.blocked } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    private val myUid = me.uid
+
+    /** Ids de las publicaciones que tengo en Guardados. */
+    val savedIds: StateFlow<Set<String>> =
+        social.observeSaved(me.uid).map { list -> list.map { it.postId }.toSet() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
     private val _messages = MutableSharedFlow<String>()
     val messages: SharedFlow<String> = _messages
+
+    fun toggleSave(post: Post) = launchSafely(_messages, "No se pudo guardar") {
+        if (post.id in savedIds.value) {
+            social.unsavePost(myUid, post.id)
+            _messages.emit("Quitada de Guardados")
+        } else {
+            social.savePost(myUid, post)
+            _messages.emit("Guardada. La tienes en Perfil > Guardados")
+        }
+    }
+
+    fun edit(post: Post, text: String) = launchSafely(_messages, "No se pudo editar la publicación") {
+        social.editPost(post.id, text)
+        _messages.emit("Publicación actualizada")
+    }
 
     fun toggleLike(post: Post, uid: String) =
         launchSafely(_messages, "No se pudo guardar el me gusta") { social.setLiked(post.id, uid, !post.isLikedBy(uid)) }

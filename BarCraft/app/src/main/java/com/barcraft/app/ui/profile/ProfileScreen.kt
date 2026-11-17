@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.profile
 
+import com.barcraft.app.ui.components.FitText
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -22,7 +23,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.AdminPanelSettings
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Lock
@@ -38,6 +41,7 @@ import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.automirrored.outlined.Login
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -83,7 +87,13 @@ import com.barcraft.app.utils.appViewModel
 import kotlinx.coroutines.flow.flowOf
 
 @Composable
-fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> Unit) {
+fun ProfileScreen(
+    onLogin: () -> Unit,
+    onLogout: () -> Unit,
+    onOpenAdmin: () -> Unit,
+    onOpenMyPosts: () -> Unit,
+    onOpenSaved: () -> Unit
+) {
     val session = LocalAppSession.current
     val me = session.profile
     val vm = appViewModel { ProfileViewModel(it) }
@@ -102,7 +112,7 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbar) },
-        topBar = { TopAppBar(title = { Text("Perfil") }) }
+        topBar = { TopAppBar(title = { FitText("Perfil") }) }
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().padding(padding),
@@ -131,7 +141,7 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                                 TextButton(onClick = { showingQr = true }) {
                                     Icon(Icons.Outlined.QrCode2, null)
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Mi QR")
+                                    FitText("Mi QR")
                                 }
                                 Text(
                                     "Comparte tu @nombre #1234 o tu QR para que te encuentren (toca el nombre para copiarlo)",
@@ -152,16 +162,16 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                                 WhereToFindMe(me.links)
                             }
                             Spacer(Modifier.height(12.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(onClick = { editing = true }) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(onClick = { editing = true }, modifier = Modifier.weight(1f)) {
                                     Icon(Icons.Outlined.Edit, null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Editar perfil")
+                                    FitText("Editar perfil")
                                 }
-                                OutlinedButton(onClick = { editingLinks = true }) {
+                                OutlinedButton(onClick = { editingLinks = true }, modifier = Modifier.weight(1f)) {
                                     Icon(Icons.Outlined.Place, null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Dónde encontrarme")
+                                    FitText("Dónde encontrarme")
                                 }
                             }
                         } else {
@@ -177,10 +187,41 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                                 Button(onClick = onLogin) {
                                     Icon(Icons.AutoMirrored.Outlined.Login, null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Iniciar sesión o registrarme")
+                                    FitText("Iniciar sesión o registrarme")
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // ── Mis publicaciones y Guardados ─────────────────────────
+            if (me != null) item {
+                val savedVm = appViewModel(key = "saved_${me.uid}") { SavedPostsViewModel(it, me) }
+                val updated by savedVm.updatedCount.collectAsStateWithLifecycle()
+                val itemColors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                SectionCard(contentPadding = PaddingValues(vertical = 4.dp)) {
+                    Column {
+                        ListItem(
+                            headlineContent = { Text("Mis publicaciones") },
+                            supportingContent = { Text("Ver, editar o borrar lo que has publicado") },
+                            leadingContent = { Icon(Icons.Outlined.Forum, null) },
+                            colors = itemColors,
+                            modifier = Modifier.clickable(onClick = onOpenMyPosts)
+                        )
+                        ListItem(
+                            headlineContent = { Text("Guardados") },
+                            supportingContent = {
+                                Text(
+                                    if (updated > 0) "$updated ${if (updated == 1) "publicación ha cambiado" else "publicaciones han cambiado"}"
+                                    else "Publicaciones de otros que has guardado"
+                                )
+                            },
+                            leadingContent = { Icon(Icons.Outlined.BookmarkBorder, null) },
+                            trailingContent = { if (updated > 0) Badge { Text("$updated") } },
+                            colors = itemColors,
+                            modifier = Modifier.clickable(onClick = onOpenSaved)
+                        )
                     }
                 }
             }
@@ -373,9 +414,9 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                 }
             },
             confirmButton = {
-                Button(onClick = { vm.updateProfile(me.uid, name, bio); editing = false }) { Text("Guardar") }
+                Button(onClick = { vm.updateProfile(me.uid, name, bio); editing = false }) { FitText("Guardar") }
             },
-            dismissButton = { TextButton(onClick = { editing = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { editing = false }) { FitText("Cancelar") } }
         )
     }
 

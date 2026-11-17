@@ -15,6 +15,7 @@ import com.barcraft.app.model.ReportReason
 import com.barcraft.app.model.ReportStatus
 import com.barcraft.app.model.RecipeVisibility
 import com.barcraft.app.model.Role
+import com.barcraft.app.model.SavedPost
 import com.barcraft.app.model.SharedIngredient
 import com.barcraft.app.model.SharedRecipe
 import com.barcraft.app.model.UserProfile
@@ -110,6 +111,7 @@ fun DocumentSnapshot.toPost(): Post = Post(
     authorId = getString("authorId").orEmpty(),
     authorName = getString("authorName").orEmpty(),
     authorRole = Role.from(getString("authorRole")),
+    authorTag = getString("authorTag").orEmpty(),
     text = getString("text").orEmpty(),
     imageUrl = getString("imageUrl").orEmpty(),
     mediaId = getString("mediaId").orEmpty(),
@@ -117,7 +119,14 @@ fun DocumentSnapshot.toPost(): Post = Post(
     cocktailSummary = getString("cocktailSummary").orEmpty(),
     likes = stringList("likes"),
     commentCount = (getLong("commentCount") ?: 0L).toInt().coerceAtLeast(0),
-    createdAt = millis("createdAt")
+    createdAt = millis("createdAt"),
+    editedAt = getTimestamp("editedAt", DocumentSnapshot.ServerTimestampBehavior.ESTIMATE)?.toDate()?.time ?: 0L
+)
+
+fun DocumentSnapshot.toSavedPost(): SavedPost = SavedPost(
+    postId = id,
+    savedAt = millis("savedAt"),
+    seenEditAt = getLong("seenEditAt") ?: 0L
 )
 
 fun DocumentSnapshot.toComment(): Comment = Comment(

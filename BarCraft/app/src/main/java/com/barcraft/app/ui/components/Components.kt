@@ -78,7 +78,7 @@ fun EmptyState(
         )
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(20.dp))
-            Button(onClick = onAction) { Text(actionLabel) }
+            Button(onClick = onAction) { FitText(actionLabel) }
         }
     }
 }

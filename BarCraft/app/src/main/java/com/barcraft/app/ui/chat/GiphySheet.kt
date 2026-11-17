@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.chat
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,8 +59,8 @@ fun GiphySheet(onDismiss: () -> Unit, onPick: (GiphyItem, GiphyRepository.Kind) 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().height(560.dp)) {
             PrimaryTabRow(selectedTabIndex = kind.ordinal) {
-                Tab(selected = kind == GiphyRepository.Kind.GIFS, onClick = { kind = GiphyRepository.Kind.GIFS }, text = { Text("GIFs") })
-                Tab(selected = kind == GiphyRepository.Kind.STICKERS, onClick = { kind = GiphyRepository.Kind.STICKERS }, text = { Text("Stickers") })
+                Tab(selected = kind == GiphyRepository.Kind.GIFS, onClick = { kind = GiphyRepository.Kind.GIFS }, text = { FitText("GIFs") })
+                Tab(selected = kind == GiphyRepository.Kind.STICKERS, onClick = { kind = GiphyRepository.Kind.STICKERS }, text = { FitText("Stickers") })
             }
             OutlinedTextField(
                 value = query, onValueChange = { query = it },

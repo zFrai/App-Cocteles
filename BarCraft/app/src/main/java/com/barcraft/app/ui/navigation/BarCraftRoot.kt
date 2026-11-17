@@ -1,5 +1,6 @@
 package com.barcraft.app.ui.navigation
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -36,7 +37,9 @@ import com.barcraft.app.ui.cocktails.CocktailDetailScreen
 import com.barcraft.app.ui.cocktails.CocktailEditorScreen
 import com.barcraft.app.ui.cocktails.CocktailListScreen
 import com.barcraft.app.ui.lock.LockGate
+import com.barcraft.app.ui.profile.MyPostsScreen
 import com.barcraft.app.ui.profile.ProfileScreen
+import com.barcraft.app.ui.profile.SavedPostsScreen
 import com.barcraft.app.ui.social.ComposePostScreen
 import com.barcraft.app.ui.social.FeedScreen
 import com.barcraft.app.ui.social.PostDetailScreen
@@ -88,7 +91,7 @@ private fun MainScaffold(session: AppSession, onLogin: () -> Unit, onLogout: () 
                                 selected = selected,
                                 onClick = { nav.navigateToTab(tab.route) },
                                 icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
-                                label = { Text(tab.label) }
+                                label = { FitText(tab.label) }
                             )
                         }
                     }
@@ -224,8 +227,16 @@ private fun AppNavHost(
             ProfileScreen(
                 onLogin = onLogin,
                 onLogout = onLogout,
-                onOpenAdmin = { nav.navigate(Routes.ADMIN) }
+                onOpenAdmin = { nav.navigate(Routes.ADMIN) },
+                onOpenMyPosts = { nav.navigate(Routes.MY_POSTS) },
+                onOpenSaved = { nav.navigate(Routes.SAVED) }
             )
+        }
+        composable(Routes.MY_POSTS) {
+            MyPostsScreen(onBack = { nav.popBackStack() }, onOpenPost = { nav.navigate(Routes.post(it)) })
+        }
+        composable(Routes.SAVED) {
+            SavedPostsScreen(onBack = { nav.popBackStack() }, onOpenPost = { nav.navigate(Routes.post(it)) })
         }
         composable(Routes.ADMIN) {
             if (session.isAdmin) AdminScreen(

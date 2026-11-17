@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.chat
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -68,7 +69,7 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text("Buscar personas") },
+                title = { FitText("Buscar personas") },
                 navigationIcon = {
                     if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") }
                 },
@@ -98,9 +99,9 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
             )
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                item { FilterChip(selected = roleFilter == null, onClick = { roleFilter = null }, label = { Text("Todos") }) }
+                item { FilterChip(selected = roleFilter == null, onClick = { roleFilter = null }, label = { FitText("Todos") }) }
                 items(Role.entries) { r ->
-                    FilterChip(selected = roleFilter == r, onClick = { roleFilter = if (roleFilter == r) null else r }, label = { Text(r.label) })
+                    FilterChip(selected = roleFilter == r, onClick = { roleFilter = if (roleFilter == r) null else r }, label = { FitText(r.label) })
                 }
             }
             val list = people.everyone.filter {

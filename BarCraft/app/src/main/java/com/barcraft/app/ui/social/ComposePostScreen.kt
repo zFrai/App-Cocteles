@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.social
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
@@ -83,7 +84,7 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text("Nueva publicación") },
+                title = { FitText("Nueva publicación") },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Filled.Close, "Cancelar") } },
                 actions = {
                     Button(
@@ -92,7 +93,7 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
                         if (sending) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                        else Text("Publicar")
+                        else FitText("Publicar")
                     }
                 }
             )
@@ -133,12 +134,12 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
                             ) { Icon(Icons.Filled.Close, "Quitar foto") }
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilledTonalButton(onClick = { picker.camera() }) {
-                            Icon(Icons.Outlined.PhotoCamera, null); Spacer(Modifier.width(6.dp)); Text("Cámara")
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilledTonalButton(onClick = { picker.camera() }, modifier = Modifier.weight(1f)) {
+                            Icon(Icons.Outlined.PhotoCamera, null); Spacer(Modifier.width(6.dp)); FitText("Cámara")
                         }
-                        FilledTonalButton(onClick = { picker.gallery() }) {
-                            Icon(Icons.Outlined.PhotoLibrary, null); Spacer(Modifier.width(6.dp)); Text("Galería")
+                        FilledTonalButton(onClick = { picker.gallery() }, modifier = Modifier.weight(1f)) {
+                            Icon(Icons.Outlined.PhotoLibrary, null); Spacer(Modifier.width(6.dp)); FitText("Galería")
                         }
                     }
                 }
@@ -167,7 +168,7 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
                                 FilterChip(
                                     selected = attached == c.cocktail.id,
                                     onClick = { vm.attach(if (attached == c.cocktail.id) 0 else c.cocktail.id) },
-                                    label = { Text(c.cocktail.name) },
+                                    label = { FitText(c.cocktail.name) },
                                     leadingIcon = { Icon(Icons.Filled.LocalBar, null, Modifier.size(18.dp)) }
                                 )
                             }

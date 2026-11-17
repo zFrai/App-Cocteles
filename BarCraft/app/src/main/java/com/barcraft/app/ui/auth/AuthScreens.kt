@@ -2,6 +2,7 @@
 
 package com.barcraft.app.ui.auth
 
+import com.barcraft.app.ui.components.FitText
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -181,7 +182,7 @@ fun AuthFlow(onContinueAsGuest: () -> Unit) {
             }
             Spacer(Modifier.height(16.dp))
             TextButton(onClick = onContinueAsGuest) {
-                Text("Entrar como comensal sin cuenta")
+                FitText("Entrar como comensal sin cuenta")
             }
         }
     }
@@ -230,7 +231,7 @@ private fun LoginForm(
             ) {
                 Icon(Icons.Outlined.Fingerprint, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Entrar con huella")
+                FitText("Entrar con huella")
             }
             Text(
                 fingerprintEmail,
@@ -246,7 +247,7 @@ private fun LoginForm(
             onLogin(email, password, rememberFingerprint)
         }
         TextButton(onClick = { onForgot(email) }, modifier = Modifier.align(Alignment.End)) {
-            Text("¿Olvidaste tu contraseña?")
+            FitText("¿Olvidaste tu contraseña?")
         }
         if (fingerprintAvailable) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -260,11 +261,11 @@ private fun LoginForm(
         PrimaryAction("Entrar", loading) { onLogin(email, password, rememberFingerprint) }
         GoogleButton(loading, onGoogle)
         OutlinedButton(onClick = onGoRegister, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-            Text("Crear una cuenta")
+            FitText("Crear una cuenta")
         }
         if (fingerprintEmail != null) {
             TextButton(onClick = onForgetFingerprint, modifier = Modifier.fillMaxWidth()) {
-                Text("Quitar la huella de este móvil")
+                FitText("Quitar la huella de este móvil")
             }
         }
     }
@@ -290,7 +291,7 @@ private fun GoogleButton(loading: Boolean, onClick: () -> Unit) {
         enabled = !loading,
         modifier = Modifier.fillMaxWidth().height(52.dp)
     ) {
-        Text("Continuar con Google")
+        FitText("Continuar con Google")
     }
 }
 
@@ -316,7 +317,7 @@ private fun RegisterForm(
                     selected = role == r,
                     onClick = { role = r },
                     shape = SegmentedButtonDefaults.itemShape(i, Role.selfAssignable.size),
-                    label = { Text(r.label) }
+                    label = { FitText(r.label) }
                 )
             }
         }
@@ -336,7 +337,7 @@ private fun RegisterForm(
         // Con Google no hace falta nombre ni contraseña: se usan los de la cuenta de Google y el rol elegido arriba.
         GoogleButton(loading) { onGoogle(role) }
         TextButton(onClick = onGoLogin, modifier = Modifier.fillMaxWidth()) {
-            Text("Ya tengo cuenta")
+            FitText("Ya tengo cuenta")
         }
     }
 }
@@ -404,7 +405,7 @@ private fun PrimaryAction(label: String, loading: Boolean, onClick: () -> Unit) 
                 modifier = Modifier.size(22.dp)
             )
         } else {
-            Text(label)
+            FitText(label)
         }
     }
 }
@@ -421,7 +422,7 @@ fun SessionLoadingScreen(onLogout: () -> Unit) {
         Spacer(Modifier.height(16.dp))
         Text("Preparando la barra…", style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(24.dp))
-        TextButton(onClick = onLogout) { Text("Cerrar sesión") }
+        TextButton(onClick = onLogout) { FitText("Cerrar sesión") }
     }
 }
 
@@ -443,6 +444,6 @@ fun BannedScreen(profile: UserProfile, onLogout: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(24.dp))
-        Button(onClick = onLogout) { Text("Cerrar sesión") }
+        Button(onClick = onLogout) { FitText("Cerrar sesión") }
     }
 }
