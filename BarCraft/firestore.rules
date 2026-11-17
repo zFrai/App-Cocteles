@@ -8,6 +8,13 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function me() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
     function isAdmin() { return signedIn() && me().role == 'admin'; }
+    // Formato del tag: nombre (letras con tildes, números y _ - . / \ |, máx. 16) + 4 cifras.
+    // Debe coincidir con UserRepository.tagBase.
+    function tagFormatOk(t) {
+      return t is string && t.matches('^[\\p{L}0-9_.|/\\\\-]{1,16}[0-9]{4}$');
+    }
+    // Id del documento en tags/: Firestore no admite "/" (ver UserRepository.tagKey).
+    function tagKey(t) { return t.replace('/', '%2F'); }
     function active() { return signedIn() && me().banned != true; }
     // Debe coincidir con Permissions.canPublishPosts en model/Role.kt
     function canPublish() { return active() && me().role in ['barman', 'admin']; }
@@ -20,7 +27,8 @@ service cloud.firestore {
       function tagOk() {
         return !('tag' in changed())
                || (resource.data.get('tag', '') == ''
-                   && getAfter(/databases/$(database)/documents/tags/$(request.resource.data.tag)).data.uid == uid);
+                   && tagFormatOk(request.resource.data.tag)
+                   && getAfter(/databases/$(database)/documents/tags/$(tagKey(request.resource.data.tag))).data.uid == uid);
       }
 
       // Descripción de 250 caracteres como máximo y "Dónde encontrarme" como mapa de textos cortos.
@@ -72,8 +80,7 @@ service cloud.firestore {
       // Solo se reserva junto con el perfil (misma transacción) y con formato válido.
       allow create: if signedIn()
                     && request.resource.data.uid == request.auth.uid
-                    && tag.matches('^[a-z0-9]{3,20}$')
-                    && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.tag == tag;
+                    && tagKey(getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.tag) == tag;
       allow update, delete: if false;
     }
 

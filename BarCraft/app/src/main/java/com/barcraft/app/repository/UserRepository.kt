@@ -81,14 +81,14 @@ class UserRepository(private val db: FirebaseFirestore) {
     suspend fun ensureTag(uid: String, name: String): String {
         val base = tagBase(name)
         repeat(MAX_TAG_ATTEMPTS) { attempt ->
-            // Primero 4 cifras; si hay mala suerte varias veces seguidas, 6.
-            val digits = if (attempt < 5) Random.nextInt(1000, 10000) else Random.nextInt(100000, 1000000)
+            // Siempre 4 cifras: así "@nombre #1234" se separa sin ambigüedad aunque el nombre acabe en número.
+            val digits = Random.nextInt(1000, 10000)
             val candidate = "$base$digits"
             val assigned: String? = db.runTransaction { tx ->
                 val userRef = users.document(uid)
                 val current = tx.get(userRef).getString("tag")
                 if (!current.isNullOrBlank()) return@runTransaction current
-                val tagRef = db.collection(Collections.TAGS).document(candidate)
+                val tagRef = db.collection(Collections.TAGS).document(tagKey(candidate))
                 if (tx.get(tagRef).exists()) return@runTransaction null
                 tx.set(tagRef, mapOf("uid" to uid, "createdAt" to FieldValue.serverTimestamp()))
                 tx.update(userRef, "tag", candidate)
@@ -112,14 +112,22 @@ class UserRepository(private val db: FirebaseFirestore) {
     private companion object {
         const val MAX_TAG_ATTEMPTS = 8
 
-        /** "Laura Gómez" -> "lauragomez". Solo a-z y 0-9, máx. 12 letras. Debe cumplir la regla de firestore.rules. */
+        /**
+         * "Láura_Bar 2" -> "láura_bar2". Se quedan letras (con tildes: á à â ä…), números y los símbolos
+         * _ - . / \ |; se quitan espacios y lo demás. En minúsculas y máx. [TAG_BASE_MAX] caracteres.
+         * Debe cumplir la regla `tagFormatOk` de firestore.rules.
+         */
         fun tagBase(name: String): String {
-            val plain = Normalizer.normalize(name, Normalizer.Form.NFD)
-                .replace(Regex("\\p{M}+"), "")
+            val plain = Normalizer.normalize(name, Normalizer.Form.NFC)
                 .lowercase()
-                .replace(Regex("[^a-z0-9]"), "")
-                .take(12)
-            return if (plain.length >= 3) plain else "barcraft"
+                .replace(Regex("[^\\p{L}0-9_.|/\\\\-]"), "")
+                .take(TAG_BASE_MAX)
+            return plain.ifEmpty { "barcraft" }
         }
+
+        /** Id del documento en `tags/`: Firestore no admite "/" en un id. Debe coincidir con firestore.rules. */
+        fun tagKey(tag: String): String = tag.replace("/", "%2F")
+
+        const val TAG_BASE_MAX = 16
     }
 }

@@ -71,7 +71,7 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
         Column(Modifier.fillMaxSize().padding(padding)) {
             OutlinedTextField(
                 value = query, onValueChange = { query = it },
-                placeholder = { Text("Nombre o @usuario") },
+                placeholder = { Text("Nombre o @nombre #1234") },
                 leadingIcon = { Icon(Icons.Filled.Search, null) },
                 singleLine = true,
                 shape = MaterialTheme.shapes.extraLarge,
