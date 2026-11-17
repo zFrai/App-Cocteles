@@ -282,16 +282,7 @@ fun ProfileScreen(
 
             // ── Tema ──────────────────────────────────────────────────
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle("Tema del perfil")
-                    AppTheme.entries.chunked(2).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            row.forEach { t ->
-                                ThemeTile(t, selected = t == theme, Modifier.weight(1f)) { vm.setTheme(t) }
-                            }
-                        }
-                    }
-                }
+                ThemePicker(current = theme, onApply = vm::setTheme)
             }
 
             // ── Seguridad y almacenamiento ────────────────────────────
@@ -446,29 +437,6 @@ private fun NotificationSwitch(
         trailingContent = { Switch(checked = checked, onCheckedChange = onChange) },
         colors = colors
     )
-}
-
-@Composable
-private fun ThemeTile(theme: AppTheme, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val scheme = theme.colorScheme
-    Surface(
-        onClick = onClick,
-        shape = MaterialTheme.shapes.medium,
-        color = scheme.surfaceContainer,
-        contentColor = scheme.onSurface,
-        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
-        modifier = modifier
-    ) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(theme.emoji, style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f)) {
-                Text(theme.label, style = MaterialTheme.typography.titleSmall, color = scheme.primary)
-                Text(theme.description, style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
-            }
-            if (selected) Icon(Icons.Outlined.CheckCircle, null, tint = scheme.primary)
-        }
-    }
 }
 
 private fun formatBytes(bytes: Long): String = when {
