@@ -13,9 +13,23 @@ import com.barcraft.app.utils.Txt
 /** Temas visuales que el usuario puede elegir en Perfil. */
 enum class AppTheme(@StringRes val labelRes: Int, @StringRes val descriptionRes: Int, val emoji: String, val isLight: Boolean) {
     DELUXE(R.string.theme_deluxe, R.string.theme_deluxe_desc, "🥃", false),
+    CHAMPAN(R.string.theme_champan, R.string.theme_champan_desc, "🍾", true),
     VOLCAN(R.string.theme_volcan, R.string.theme_volcan_desc, "🌋", false),
+    TERRACOTA(R.string.theme_terracota, R.string.theme_terracota_desc, "🏺", true),
     ABISAL(R.string.theme_abisal, R.string.theme_abisal_desc, "🌊", false),
-    CIELO(R.string.theme_cielo, R.string.theme_cielo_desc, "☀️", true);
+    LAGUNA(R.string.theme_laguna, R.string.theme_laguna_desc, "🏝️", true),
+    CIELO(R.string.theme_cielo, R.string.theme_cielo_desc, "☀️", true),
+    TORMENTA(R.string.theme_tormenta, R.string.theme_tormenta_desc, "⛈️", false),
+    ABSENTA(R.string.theme_absenta, R.string.theme_absenta_desc, "🌿", false),
+    MENTA(R.string.theme_menta, R.string.theme_menta_desc, "🍃", true),
+    GRANADINA(R.string.theme_granadina, R.string.theme_granadina_desc, "🍒", false),
+    FRESA(R.string.theme_fresa, R.string.theme_fresa_desc, "🍓", true),
+    MEDIANOCHE(R.string.theme_medianoche, R.string.theme_medianoche_desc, "🌙", false),
+    LAVANDA(R.string.theme_lavanda, R.string.theme_lavanda_desc, "💜", true),
+    NEGRONI(R.string.theme_negroni, R.string.theme_negroni_desc, "🍊", false),
+    SPRITZ(R.string.theme_spritz, R.string.theme_spritz_desc, "🥂", true),
+    ESPRESSO(R.string.theme_espresso, R.string.theme_espresso_desc, "☕", false),
+    CREMA(R.string.theme_crema, R.string.theme_crema_desc, "🥛", true);
 
     /** Nombre visible (sale de strings.xml). */
     val label: String get() = Txt.get(labelRes)
@@ -24,9 +38,23 @@ enum class AppTheme(@StringRes val labelRes: Int, @StringRes val descriptionRes:
     val colorScheme: ColorScheme
         get() = when (this) {
             DELUXE -> DeluxeScheme
+            CHAMPAN -> ChampanScheme
             VOLCAN -> VolcanScheme
+            TERRACOTA -> TerracotaScheme
             ABISAL -> AbisalScheme
+            LAGUNA -> LagunaScheme
             CIELO -> CieloScheme
+            TORMENTA -> TormentaScheme
+            ABSENTA -> AbsentaScheme
+            MENTA -> MentaScheme
+            GRANADINA -> GranadinaScheme
+            FRESA -> FresaScheme
+            MEDIANOCHE -> MedianocheScheme
+            LAVANDA -> LavandaScheme
+            NEGRONI -> NegroniScheme
+            SPRITZ -> SpritzScheme
+            ESPRESSO -> EspressoScheme
+            CREMA -> CremaScheme
         }
 }
 

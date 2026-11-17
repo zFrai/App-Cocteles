@@ -32,12 +32,40 @@
     <!-- Temas visuales -->
     <string name="theme_deluxe">Deluxe</string>
     <string name="theme_deluxe_desc">Negro y dorado</string>
+    <string name="theme_champan">Champán</string>
+    <string name="theme_champan_desc">Deluxe, versión clara</string>
     <string name="theme_volcan">Volcán</string>
     <string name="theme_volcan_desc">Brasas y ámbar</string>
+    <string name="theme_terracota">Terracota</string>
+    <string name="theme_terracota_desc">Volcán, versión clara</string>
     <string name="theme_abisal">Abisal</string>
     <string name="theme_abisal_desc">Azul profundo</string>
+    <string name="theme_laguna">Laguna</string>
+    <string name="theme_laguna_desc">Abisal, versión clara</string>
     <string name="theme_cielo">Cielo</string>
     <string name="theme_cielo_desc">Claro y fresco</string>
+    <string name="theme_tormenta">Tormenta</string>
+    <string name="theme_tormenta_desc">Cielo, versión oscura</string>
+    <string name="theme_absenta">Absenta</string>
+    <string name="theme_absenta_desc">Verde absenta en la noche</string>
+    <string name="theme_menta">Menta</string>
+    <string name="theme_menta_desc">Absenta, versión clara</string>
+    <string name="theme_granadina">Granadina</string>
+    <string name="theme_granadina_desc">Rojo granadina y cobre</string>
+    <string name="theme_fresa">Fresa</string>
+    <string name="theme_fresa_desc">Granadina, versión clara</string>
+    <string name="theme_medianoche">Medianoche</string>
+    <string name="theme_medianoche_desc">Violeta y azul nocturno</string>
+    <string name="theme_lavanda">Lavanda</string>
+    <string name="theme_lavanda_desc">Medianoche, versión clara</string>
+    <string name="theme_negroni">Negroni</string>
+    <string name="theme_negroni_desc">Naranja amargo y ámbar</string>
+    <string name="theme_spritz">Spritz</string>
+    <string name="theme_spritz_desc">Negroni, versión clara</string>
+    <string name="theme_espresso">Espresso</string>
+    <string name="theme_espresso_desc">Café tostado y crema</string>
+    <string name="theme_crema">Crema</string>
+    <string name="theme_crema_desc">Espresso, versión clara</string>
     <!-- Usuario sin nombre y vista previa de mensajes -->
     <string name="user_fallback_name">Usuario</string>
     <string name="user_no_name">Sin nombre</string>
@@ -595,7 +623,7 @@
 
     <!-- ===== Perfil: selector de tema ===== -->
     <string name="theme_picker_title">Tema del perfil</string>
-    <string name="theme_picker_hint">Toca una ficha para marcarla y haz doble toque para aplicarla.</string>
+    <string name="theme_picker_hint">Toca una ficha para aplicar el tema.</string>
     <string name="theme_picker_expand">Mostrar temas</string>
     <string name="theme_picker_collapse">Ocultar temas</string>
     <string name="theme_picker_current">Tema actual</string>
