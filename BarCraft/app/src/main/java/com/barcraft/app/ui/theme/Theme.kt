@@ -58,6 +58,25 @@ enum class AppTheme(@StringRes val labelRes: Int, @StringRes val descriptionRes:
         }
 }
 
+/** Fichas del selector: cada una junta la versión oscura y la clara de un mismo tema. */
+enum class ThemePair(val dark: AppTheme, val light: AppTheme) {
+    DELUXE(AppTheme.DELUXE, AppTheme.CHAMPAN),
+    VOLCAN(AppTheme.VOLCAN, AppTheme.TERRACOTA),
+    ABISAL(AppTheme.ABISAL, AppTheme.LAGUNA),
+    CIELO(AppTheme.TORMENTA, AppTheme.CIELO),
+    ABSENTA(AppTheme.ABSENTA, AppTheme.MENTA),
+    GRANADINA(AppTheme.GRANADINA, AppTheme.FRESA),
+    MEDIANOCHE(AppTheme.MEDIANOCHE, AppTheme.LAVANDA),
+    NEGRONI(AppTheme.NEGRONI, AppTheme.SPRITZ),
+    ESPRESSO(AppTheme.ESPRESSO, AppTheme.CREMA);
+
+    operator fun contains(theme: AppTheme): Boolean = theme == dark || theme == light
+
+    companion object {
+        fun of(theme: AppTheme): ThemePair = entries.first { theme in it }
+    }
+}
+
 private val BarCraftShapes = Shapes(
     extraSmall = RoundedCornerShape(6.dp),
     small = RoundedCornerShape(10.dp),

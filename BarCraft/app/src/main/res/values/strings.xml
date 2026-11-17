@@ -623,7 +623,9 @@
 
     <!-- ===== Perfil: selector de tema ===== -->
     <string name="theme_picker_title">Tema del perfil</string>
-    <string name="theme_picker_hint">Toca una ficha para aplicar el tema.</string>
+    <string name="theme_picker_hint">Desliza una ficha a la derecha para el modo oscuro o a la izquierda para el claro. Un toque aplica el que se ve.</string>
+    <string name="theme_picker_dark">Modo oscuro</string>
+    <string name="theme_picker_light">Modo claro</string>
     <string name="theme_picker_expand">Mostrar temas</string>
     <string name="theme_picker_collapse">Ocultar temas</string>
     <string name="theme_picker_current">Tema actual</string>
