@@ -110,3 +110,14 @@ igual pero sin GIFs ni stickers.
   se abren y desde Perfil se pueden borrar las descargas para liberar espacio.
 - El plan gratuito de Firestore da 1 GB de datos: unos 3.000-5.000 fotos o audios. Si se queda
   corto, el siguiente paso sería pasar las fotos a Cloudinary o a Firebase Storage.
+
+## Recetas en Comunidad
+Al editar una receta eliges **Privada** (solo en tu móvil), **Seguidores** o **Pública**. Las dos últimas
+se copian a `users/{uid}/recipes/{id}` y salen en **Comunidad > Recetas**: las públicas para todo el mundo
+y las de Seguidores solo para quien te sigue. Las fotos guardadas en el móvil no se suben.
+
+La lista de recetas públicas usa una consulta de grupo y **necesita un índice**: la primera vez que abras
+Comunidad > Recetas, en Logcat (filtro `BarCraft`) aparecerá un error de Firestore con un enlace para crearlo.
+Ábrelo, pulsa **Crear índice** y espera unos minutos. También puedes crearlo a mano en
+Firestore Database > Índices > **Exenciones de campo único**: colección `recipes`, campo `visibility`,
+ámbito **Grupo de colecciones**, ascendente activado.

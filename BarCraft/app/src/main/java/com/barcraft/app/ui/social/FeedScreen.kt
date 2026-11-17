@@ -2,6 +2,10 @@
 
 package com.barcraft.app.ui.social
 
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Tab
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,7 +50,8 @@ fun FeedScreen(
     onLogin: () -> Unit,
     onOpenPost: (String) -> Unit,
     onCompose: () -> Unit,
-    onMessageUser: (String) -> Unit
+    onMessageUser: (String) -> Unit,
+    onOpenRecipe: (authorId: String, recipeId: String) -> Unit
 ) {
     val session = LocalAppSession.current
     val me = session.profile
@@ -60,7 +65,7 @@ fun FeedScreen(
                 Column {
                     Text("Comunidad")
                     Text(
-                        "Barmans y comensales de BarCraft",
+                        "Recetas y publicaciones de BarCraft",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -82,36 +87,49 @@ fun FeedScreen(
         val vm = appViewModel(key = "feed_${me.uid}") { FeedViewModel(it, me) }
         val canPublish = Permissions.canPublishPosts(me.role)
         val posts by vm.posts.collectAsStateWithLifecycle()
+        val recipes by vm.recipes.collectAsStateWithLifecycle()
         var toDelete by remember { mutableStateOf<Post?>(null) }
+        var tab by rememberSaveable { mutableIntStateOf(0) }
         LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
 
-        val list = posts
-        when {
-            list == null -> LoadingBox(Modifier.padding(padding))
-            list.isEmpty() -> EmptyState(
-                icon = Icons.Outlined.Public,
-                title = "Todavía no hay publicaciones",
-                message = if (canPublish) "Sé el primero en compartir un cóctel con la comunidad."
-                else "Cuando los barmans compartan sus cócteles los verás aquí.",
-                actionLabel = if (canPublish) "Crear publicación" else null,
-                onAction = if (canPublish) onCompose else null,
-                modifier = Modifier.padding(padding)
-            )
-            else -> LazyColumn(
-                Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(list, key = { it.id }) { post ->
-                    PostCard(
-                        post = post,
-                        myUid = me.uid,
-                        canModerate = session.isAdmin,
-                        onOpen = { onOpenPost(post.id) },
-                        onLike = { vm.toggleLike(post, me.uid) },
-                        onDelete = { toDelete = post },
-                        onMessage = { vm.messageAuthor(me, post, onMessageUser) }
-                    )
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            TabRow(selectedTabIndex = tab) {
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Recetas") })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Publicaciones") })
+            }
+            // Recetas: públicas + las de "Seguidores" de las cuentas que sigo.
+            if (tab == 0) {
+                SharedRecipeList(recipes, onOpen = { onOpenRecipe(it.authorId, it.id) })
+                return@Column
+            }
+
+            val list = posts
+            when {
+                list == null -> LoadingBox()
+                list.isEmpty() -> EmptyState(
+                    icon = Icons.Outlined.Public,
+                    title = "Todavía no hay publicaciones",
+                    message = if (canPublish) "Sé el primero en compartir un cóctel con la comunidad."
+                    else "Cuando los barmans compartan sus cócteles los verás aquí.",
+                    actionLabel = if (canPublish) "Crear publicación" else null,
+                    onAction = if (canPublish) onCompose else null
+                )
+                else -> LazyColumn(
+                    Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(list, key = { it.id }) { post ->
+                        PostCard(
+                            post = post,
+                            myUid = me.uid,
+                            canModerate = session.isAdmin,
+                            onOpen = { onOpenPost(post.id) },
+                            onLike = { vm.toggleLike(post, me.uid) },
+                            onDelete = { toDelete = post },
+                            onMessage = { vm.messageAuthor(me, post, onMessageUser) }
+                        )
+                    }
                 }
             }
         }

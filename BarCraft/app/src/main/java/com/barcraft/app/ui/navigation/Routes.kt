@@ -27,6 +27,10 @@ object Routes {
     const val EDITOR = "editor/{id}"
     fun editor(id: Long = 0) = "editor/$id"
 
+    /** Receta compartida en Comunidad: `users/{authorId}/recipes/{recipeId}`. */
+    const val SHARED_RECIPE = "shared/{authorId}/{recipeId}"
+    fun sharedRecipe(authorId: String, recipeId: String) = "shared/$authorId/$recipeId"
+
     const val POST = "post/{id}"
     fun post(id: String) = "post/$id"
 
