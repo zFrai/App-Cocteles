@@ -64,6 +64,8 @@ Cada cuenta tiene un identificador único y fijo, como `@laura #4821`: su nombre
 El número se puede repetir con otro nombre y el nombre con otro número, pero nunca los dos.
 Se crea solo al entrar en la app (también a las cuentas que ya existían; los tags ya creados no cambian),
 se ve en **Perfil** y sirve para buscar a alguien en la pestaña **Buscar** (escribe `@laura` o `@laura #4821`).
+En **Perfil > Mi QR** está el QR de la cuenta: quien lo escanee desde **Buscar** (icono de QR arriba)
+te seguirá automáticamente, o te enviará una solicitud si tu cuenta es privada.
 Firestore guarda un documento por tag en la colección `tags`, así que no puede haber dos iguales.
 Necesita las reglas actualizadas: vuelve a publicar `firestore.rules`.
 

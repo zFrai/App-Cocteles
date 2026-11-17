@@ -97,4 +97,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+
+    // QR del perfil: zxing genera el código; el escáner de Google Play services lo lee sin pedir permiso de cámara
+    implementation(libs.zxing.core)
+    implementation(libs.play.services.code.scanner)
 }

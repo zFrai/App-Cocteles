@@ -35,6 +35,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.automirrored.outlined.Login
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -75,6 +76,7 @@ import com.barcraft.app.ui.components.SectionCard
 import com.barcraft.app.ui.components.SectionTitle
 import com.barcraft.app.ui.components.UserAvatar
 import com.barcraft.app.ui.navigation.LocalAppSession
+import com.barcraft.app.ui.qr.MyQrDialog
 import com.barcraft.app.ui.theme.AppTheme
 import com.barcraft.app.utils.DateUtils
 import com.barcraft.app.utils.appViewModel
@@ -90,6 +92,7 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
     val snackbar = remember { SnackbarHostState() }
     var editing by remember { mutableStateOf(false) }
     var editingLinks by remember { mutableStateOf(false) }
+    var showingQr by remember { mutableStateOf(false) }
     // Fuera de la lista: así el listener de Firestore no se crea de nuevo cada vez que el bloque entra en pantalla.
     val prefs by remember(me?.uid) { me?.let { vm.notificationPrefs(it.uid) } ?: flowOf(NotificationPrefs()) }
         .collectAsStateWithLifecycle(NotificationPrefs())
@@ -125,8 +128,13 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
                                         .clickable { clipboard.setText(AnnotatedString(me.handle)) }
                                         .padding(horizontal = 8.dp, vertical = 2.dp)
                                 )
+                                TextButton(onClick = { showingQr = true }) {
+                                    Icon(Icons.Outlined.QrCode2, null)
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Mi QR")
+                                }
                                 Text(
-                                    "Comparte tu @usuario para que te encuentren (toca para copiar)",
+                                    "Comparte tu @nombre #1234 o tu QR para que te encuentren (toca el nombre para copiarlo)",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -369,6 +377,10 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
             },
             dismissButton = { TextButton(onClick = { editing = false }) { Text("Cancelar") } }
         )
+    }
+
+    if (showingQr && me != null) {
+        MyQrDialog(me, onDismiss = { showingQr = false })
     }
 
     if (editingLinks && me != null) {
