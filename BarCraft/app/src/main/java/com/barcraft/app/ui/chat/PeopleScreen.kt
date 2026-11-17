@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.PersonSearch
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -31,16 +32,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.barcraft.app.model.Role
 import com.barcraft.app.ui.components.EmptyState
 import com.barcraft.app.ui.components.LoadingBox
 import com.barcraft.app.ui.navigation.LocalAppSession
+import com.barcraft.app.ui.qr.ProfileQr
 import com.barcraft.app.utils.appViewModel
+import kotlinx.coroutines.launch
 
 /**
  * Pestaña Buscar: directorio de personas para buscar, añadir, marcar favoritos, bloquear y escribir.
@@ -54,6 +59,8 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
     val snackbar = remember { SnackbarHostState() }
     var query by rememberSaveable { mutableStateOf("") }
     var roleFilter by rememberSaveable { mutableStateOf<Role?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
 
     Scaffold(
@@ -64,6 +71,19 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
                 title = { Text("Buscar personas") },
                 navigationIcon = {
                     if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") }
+                },
+                actions = {
+                    // Escanear el QR de otro perfil: le sigue (o le envía solicitud) automáticamente.
+                    IconButton(onClick = {
+                        ProfileQr.scan(
+                            context,
+                            onUid = { uid ->
+                                people.byUid(uid)?.let { query = it.profile.name }
+                                vm.followFromQr(uid)
+                            },
+                            onError = { msg -> scope.launch { snackbar.showSnackbar(msg) } }
+                        )
+                    }) { Icon(Icons.Outlined.QrCodeScanner, "Escanear QR") }
                 }
             )
         }

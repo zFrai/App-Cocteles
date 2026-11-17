@@ -66,7 +66,7 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbar) },
-        topBar = { TopAppBar(title = { Text("Chats y amigos") }) },
+        topBar = { TopAppBar(title = { Text("Chats") }) },
         floatingActionButton = {
             if (me != null) ExtendedFloatingActionButton(
                 onClick = onFindPeople,
@@ -87,13 +87,14 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
         Column(Modifier.fillMaxSize().padding(padding)) {
             ScrollableTabRow(selectedTabIndex = tab, edgePadding = 12.dp) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Chats") })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Amigos (${people.friends.size})") })
-                Tab(selected = tab == 2, onClick = { tab = 2 }, text = {
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Seguidores (${people.followers.size})") })
+                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text("Siguiendo (${people.following.size})") })
+                Tab(selected = tab == 3, onClick = { tab = 3 }, text = {
                     BadgedBox(badge = { if (people.incoming.isNotEmpty()) Badge { Text("${people.incoming.size}") } }) {
                         Text("Solicitudes")
                     }
                 })
-                Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text("Bloqueados") })
+                Tab(selected = tab == 4, onClick = { tab = 4 }, text = { Text("Bloqueados") })
             }
 
             if (!people.loaded) { LoadingBox(); return@Column }
@@ -153,15 +154,22 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
                         }
                     }
                 }
-                1 -> if (people.friends.isEmpty()) EmptyState(
-                    Icons.Outlined.Group, "Aún no tienes amigos",
-                    "Busca personas y envíales una solicitud. Marca con ★ a tus favoritos para tenerlos siempre arriba.",
+                1 -> if (people.followers.isEmpty()) EmptyState(
+                    Icons.Outlined.Group, "Aún no te sigue nadie",
+                    "Comparte tu @nombre #1234 para que te encuentren. Marca con ★ a tus favoritos para tenerlos siempre arriba."
+                ) else LazyColumn(contentPadding = PaddingValues(bottom = 96.dp)) {
+                    items(people.followers, key = { it.profile.uid }) { PersonRow(it, vm, onOpenRoom) }
+                }
+                2 -> if (people.following.isEmpty()) EmptyState(
+                    Icons.Outlined.Group, "Aún no sigues a nadie",
+                    "Busca personas y síguelas. Para chatear, su cuenta tiene que ser pública o tenéis que seguiros los dos.",
                     actionLabel = "Buscar personas", onAction = onFindPeople
                 ) else LazyColumn(contentPadding = PaddingValues(bottom = 96.dp)) {
-                    items(people.friends, key = { it.profile.uid }) { PersonRow(it, vm, onOpenRoom) }
+                    items(people.following, key = { it.profile.uid }) { PersonRow(it, vm, onOpenRoom) }
                 }
-                2 -> if (people.incoming.isEmpty() && people.outgoing.isEmpty()) EmptyState(
-                    Icons.Outlined.PersonAdd, "Sin solicitudes", "Aquí verás quién quiere ser tu amigo."
+                3 -> if (people.incoming.isEmpty() && people.outgoing.isEmpty()) EmptyState(
+                    Icons.Outlined.PersonAdd, "Sin solicitudes",
+                    "Si tu cuenta es privada, aquí verás quién quiere seguirte. También las solicitudes que envíes a cuentas privadas."
                 ) else LazyColumn(contentPadding = PaddingValues(bottom = 96.dp)) {
                     if (people.incoming.isNotEmpty()) item { SubHeader("Recibidas") }
                     items(people.incoming, key = { "in_" + it.profile.uid }) { PersonRow(it, vm, onOpenRoom) }

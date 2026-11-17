@@ -9,6 +9,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,7 +17,10 @@ import com.google.firebase.FirebaseNetworkException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 
-/** Cuentas de usuario con Firebase Authentication (email + contraseña). */
+/** Error de cuenta con un mensaje para mostrar. [wrongCredentials] = email o contraseña ya no valen. */
+class AuthException(message: String, val wrongCredentials: Boolean = false) : Exception(message)
+
+/** Cuentas de usuario con Firebase Authentication (email + contraseña o Google). */
 class AuthRepository(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore
@@ -28,20 +32,57 @@ class AuthRepository(
 
     fun observeUid(): Flow<String?> = auth.uidFlow()
 
+    /** ¿La cuenta actual tiene contraseña? (las creadas con Google no tienen). */
+    val hasPasswordLogin: Boolean
+        get() = auth.currentUser?.providerData?.any { it.providerId == EmailAuthProvider.PROVIDER_ID } == true
+
+    /**
+     * Mientras se crea el perfil al registrarse, [ensureProfile] no debe crearlo por su cuenta
+     * (lo haría como Comensal y podría pisar el rol elegido).
+     */
+    @Volatile
+    private var creatingProfile = false
+
     suspend fun login(email: String, password: String): Result<Unit> = runCatching {
         auth.signInWithEmailAndPassword(email.trim(), password).await()
         Unit
     }.mapError()
 
     suspend fun register(name: String, email: String, password: String, role: Role): Result<Unit> = runCatching {
-        val result = auth.createUserWithEmailAndPassword(email.trim(), password).await()
-        val user = requireNotNull(result.user)
-        user.updateProfile(UserProfileChangeRequest.Builder().setDisplayName(name.trim()).build()).await()
-        createProfile(user.uid, name.trim(), email.trim(), role)
+        creatingProfile = true
+        try {
+            val result = auth.createUserWithEmailAndPassword(email.trim(), password).await()
+            val user = requireNotNull(result.user)
+            user.updateProfile(UserProfileChangeRequest.Builder().setDisplayName(name.trim()).build()).await()
+            createProfile(user.uid, name.trim(), email.trim(), role)
+        } finally {
+            creatingProfile = false
+        }
     }.mapError()
+
+    /**
+     * Entra (o crea la cuenta) con Google. Si es la primera vez, se crea el perfil con [role]
+     * y el nombre de la cuenta de Google.
+     */
+    suspend fun signInWithGoogle(idToken: String, role: Role): Result<Unit> = runCatching {
+        creatingProfile = true
+        try {
+            val result = auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null)).await()
+            val user = requireNotNull(result.user)
+            val exists = db.collection(Collections.USERS).document(user.uid).get().await().exists()
+            if (!exists) {
+                val email = user.email.orEmpty()
+                val name = user.displayName?.takeIf { it.isNotBlank() } ?: email.substringBefore('@').ifBlank { "Usuario" }
+                createProfile(user.uid, name, email, role)
+            }
+        } finally {
+            creatingProfile = false
+        }
+    }.mapError(google = true)
 
     /** Crea el documento del usuario si no existe (por ejemplo, cuentas creadas desde la consola). */
     suspend fun ensureProfile(uid: String) {
+        if (creatingProfile) return
         val user = auth.currentUser ?: return
         if (user.uid != uid) return
         val doc = db.collection(Collections.USERS).document(uid).get().await()
@@ -83,8 +124,32 @@ class AuthRepository(
         Unit
     }.mapError()
 
-    private fun <T> Result<T>.mapError(): Result<T> =
-        fold({ Result.success(it) }, { Result.failure(Exception(friendlyMessage(it))) })
+    /** Recuperar el PIN en cuentas de Google: se confirma la misma cuenta de Google. */
+    suspend fun verifyGoogle(idToken: String): Result<Unit> = runCatching {
+        val user = requireNotNull(auth.currentUser)
+        user.reauthenticate(GoogleAuthProvider.getCredential(idToken, null)).await()
+        Unit
+    }.mapError(google = true)
+
+    private fun <T> Result<T>.mapError(google: Boolean = false): Result<T> =
+        fold({ Result.success(it) }, {
+            Result.failure(
+                AuthException(
+                    friendlyMessage(it, google),
+                    wrongCredentials = !google && (it is FirebaseAuthInvalidCredentialsException || it is FirebaseAuthInvalidUserException)
+                )
+            )
+        })
+
+    private fun friendlyMessage(e: Throwable, google: Boolean): String = when {
+        google && e is FirebaseAuthUserCollisionException ->
+            "Ya tienes una cuenta con ese email. Entra con tu contraseña."
+        google && e is FirebaseAuthInvalidUserException ->
+            "Esa no es la cuenta de Google con la que entraste. Elige la misma cuenta."
+        google && e is FirebaseAuthInvalidCredentialsException ->
+            "Google no ha podido confirmar la cuenta. Revisa que el proveedor Google está activado en Firebase."
+        else -> friendlyMessage(e)
+    }
 
     private fun friendlyMessage(e: Throwable): String = when (e) {
         is FirebaseAuthWeakPasswordException -> "La contraseña debe tener al menos 6 caracteres."

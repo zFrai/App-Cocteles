@@ -18,6 +18,29 @@ hace falta un proyecto de Firebase (gratis, plan Spark). Son unos 10 minutos.
 1. Menú **Compilación > Authentication > Comenzar**.
 2. Pestaña **Método de acceso** > **Correo electrónico/contraseña** > Habilitar > Guardar.
 
+### Iniciar sesión con Google (opcional)
+1. En la misma pestaña **Método de acceso** > **Agregar proveedor nuevo** > **Google** > Habilitar,
+   elige el correo de asistencia y Guardar.
+2. Google exige la huella **SHA-1** del certificado con el que se firma la app. Sácala en Android Studio
+   con el panel **Gradle > BarCraft > Tasks > android > signingReport** (o `gradlew signingReport`).
+   Aparecen la de `debug` y, si tienes keystore de publicación, la de `release`.
+3. En **Configuración del proyecto** (rueda dentada) > **Tus apps** > la app Android > **Agregar huella digital**:
+   añade la SHA-1 de debug y la de release (y la SHA-256 si quieres).
+4. **Vuelve a descargar `google-services.json`** y sustituye el de `app/`: ahora incluye el ID de cliente
+   web que necesita el botón de Google. Sin esto el botón muestra "Google no está configurado".
+5. Si publicas en Google Play con "Firma de apps de Google Play", añade también la SHA-1 que aparece en
+   Play Console > Integridad de la app.
+
+Las cuentas nuevas creadas con Google desde **Iniciar sesión** son Comensal; desde **Crear cuenta**
+usan el rol elegido arriba. Como no tienen contraseña, el PIN olvidado se recupera eligiendo la misma
+cuenta de Google.
+
+### Iniciar sesión con huella
+No necesita nada en Firebase. Al entrar con email y contraseña, marca **Entrar con huella la próxima vez**:
+el acceso se guarda cifrado en el móvil con una clave del Android Keystore que solo se abre con la huella.
+Después de cerrar sesión aparece **Entrar con huella**. Si cambias la contraseña o añades huellas nuevas
+en el móvil, hay que volver a activarlo. Las cuentas de Google no lo necesitan: entran con un toque.
+
 ## 4. Crear la base de datos
 1. Menú **Compilación > Firestore Database > Crear base de datos**.
 2. Ubicación: `eur3 (europe-west)` o la más cercana.
@@ -50,7 +73,13 @@ Las denuncias se guardan en la colección `reports` y solo las ve el Admin, en
 
 ## Probar el chat entre dos usuarios
 Usa dos móviles o dos emuladores (o un móvil y un emulador), registra una cuenta en cada uno,
-y en **Chats > Nuevo chat** busca al otro usuario. Los mensajes llegan al instante.
+y en la pestaña **Buscar** busca al otro usuario y pulsa el icono de mensaje. Los mensajes llegan al instante.
+
+## Seguir y seguidores
+Seguir es en un solo sentido (colección `follows`, un documento `{quienSigue}_{aQuién}`).
+Si la cuenta es privada (Perfil > Configuración), seguirla envía una **solicitud** que se acepta en
+**Chats > Solicitudes**. Se puede chatear con quien tenga la cuenta pública o con quien os sigáis los dos.
+Las amistades de la versión anterior se convierten solas en seguimiento mutuo al abrir Chats o Buscar.
 
 ## @usuario (tag único)
 Cada cuenta tiene un identificador único y fijo, como `@laura #4821`: su nombre en minúsculas
@@ -58,6 +87,8 @@ Cada cuenta tiene un identificador único y fijo, como `@laura #4821`: su nombre
 El número se puede repetir con otro nombre y el nombre con otro número, pero nunca los dos.
 Se crea solo al entrar en la app (también a las cuentas que ya existían; los tags ya creados no cambian),
 se ve en **Perfil** y sirve para buscar a alguien en la pestaña **Buscar** (escribe `@laura` o `@laura #4821`).
+En **Perfil > Mi QR** está el QR de la cuenta: quien lo escanee desde **Buscar** (icono de QR arriba)
+te seguirá automáticamente, o te enviará una solicitud si tu cuenta es privada.
 Firestore guarda un documento por tag en la colección `tags`, así que no puede haber dos iguales.
 Necesita las reglas actualizadas: vuelve a publicar `firestore.rules`.
 

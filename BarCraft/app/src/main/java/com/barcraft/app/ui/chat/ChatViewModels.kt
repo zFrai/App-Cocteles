@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.barcraft.app.AppContainer
 import com.barcraft.app.model.ChatMessage
 import com.barcraft.app.model.ChatRoom
-import com.barcraft.app.model.FriendState
-import com.barcraft.app.model.Friendship
+import com.barcraft.app.model.Follow
+import com.barcraft.app.model.FollowState
 import com.barcraft.app.model.GiphyItem
 import com.barcraft.app.model.MessageType
 import com.barcraft.app.model.PrivateSettings
@@ -32,63 +32,89 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 // ─────────────────────────────────────────────────────────────────────
-//  Personas: amigos, solicitudes, favoritos y bloqueados
+//  Personas: seguidores, seguidos, solicitudes, favoritos y bloqueados
 // ─────────────────────────────────────────────────────────────────────
 
 /** Otra persona vista desde mi cuenta. */
 data class Person(
     val profile: UserProfile,
-    val state: FriendState,
-    val friendshipId: String?,
+    /** Si yo la sigo (o se lo he pedido). */
+    val iFollow: FollowState,
+    /** Si ella me sigue (o me lo ha pedido). */
+    val followsMe: FollowState,
     val favorite: Boolean,
     val blocked: Boolean
-)
+) {
+    val mutual: Boolean get() = iFollow == FollowState.FOLLOWING && followsMe == FollowState.FOLLOWING
+
+    /** Se puede chatear si os seguís mutuamente o si su cuenta es pública. Debe coincidir con firestore.rules. */
+    val canChat: Boolean get() = !blocked && (mutual || !profile.privateAccount)
+}
 
 data class PeopleState(
     val loaded: Boolean = false,
     val everyone: List<Person> = emptyList(),
     val settings: PrivateSettings = PrivateSettings()
 ) {
-    val friends get() = everyone.filter { it.state == FriendState.FRIENDS && !it.blocked }
-        .sortedWith(compareByDescending<Person> { it.favorite }.thenBy { it.profile.name.lowercase() })
-    val incoming get() = everyone.filter { it.state == FriendState.REQUEST_RECEIVED && !it.blocked }
-    val outgoing get() = everyone.filter { it.state == FriendState.REQUEST_SENT && !it.blocked }
+    private val visible get() = everyone.filter { !it.blocked }
+    private val byFavThenName = compareByDescending<Person> { it.favorite }.thenBy { it.profile.name.lowercase() }
+
+    val followers get() = visible.filter { it.followsMe == FollowState.FOLLOWING }.sortedWith(byFavThenName)
+    val following get() = visible.filter { it.iFollow == FollowState.FOLLOWING }.sortedWith(byFavThenName)
+    /** Quieren seguirme (mi cuenta es privada). */
+    val incoming get() = visible.filter { it.followsMe == FollowState.REQUESTED }
+    /** He pedido seguir a cuentas privadas. */
+    val outgoing get() = visible.filter { it.iFollow == FollowState.REQUESTED }
     val blocked get() = everyone.filter { it.blocked }
     fun byUid(uid: String) = everyone.firstOrNull { it.profile.uid == uid }
+}
+
+private fun Follow?.state(): FollowState = when {
+    this == null -> FollowState.NONE
+    accepted -> FollowState.FOLLOWING
+    else -> FollowState.REQUESTED
 }
 
 /** Compartido por las pantallas de chat: lista, personas y conversación. */
 class PeopleViewModel(private val container: AppContainer, private val me: UserProfile) : ViewModel() {
 
     private val friends = container.friendsRepository
+    private var migrationStarted = false
 
     val state: StateFlow<PeopleState> =
         combine(
             container.userRepository.observeAll(),
-            friends.observeFriendships(me.uid),
+            friends.observeFollowing(me.uid),
+            friends.observeFollowers(me.uid),
             friends.observeSettings(me.uid)
-        ) { users, friendships, settings ->
-            val byOther: Map<String, Friendship> = friendships.associateBy { it.otherId(me.uid) }
+        ) { users, following, followers, settings ->
+            if (!settings.followsMigrated) migrateOnce(users)
+            val iFollow = following.associateBy { it.followedId }
+            val followsMe = followers.associateBy { it.followerId }
             PeopleState(
                 loaded = true,
                 settings = settings,
                 everyone = users.filter { it.uid != me.uid }.map { u ->
-                    val f = byOther[u.uid]
                     Person(
                         profile = u,
-                        state = when {
-                            f == null -> FriendState.NONE
-                            f.accepted -> FriendState.FRIENDS
-                            f.requesterId == me.uid -> FriendState.REQUEST_SENT
-                            else -> FriendState.REQUEST_RECEIVED
-                        },
-                        friendshipId = f?.id,
+                        iFollow = iFollow[u.uid].state(),
+                        followsMe = followsMe[u.uid].state(),
                         favorite = u.uid in settings.favorites,
                         blocked = u.uid in settings.blocked
                     )
                 }
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PeopleState())
+
+    /** Las amistades del sistema anterior pasan a ser seguimientos (una vez por cuenta). */
+    private fun migrateOnce(users: List<UserProfile>) {
+        if (migrationStarted) return
+        migrationStarted = true
+        viewModelScope.launch {
+            runCatching { friends.migrateFriendships(me, users.associateBy { it.uid }) }
+                .onFailure { migrationStarted = false }
+        }
+    }
 
     val rooms: StateFlow<List<ChatRoom>?> =
         container.chatRepository.observeRooms(me.uid).map<List<ChatRoom>, List<ChatRoom>?> { it }
@@ -97,19 +123,41 @@ class PeopleViewModel(private val container: AppContainer, private val me: UserP
     private val _messages = MutableSharedFlow<String>()
     val messages: SharedFlow<String> = _messages
 
-    fun sendRequest(p: Person) = launchSafely(_messages, "No se pudo enviar la solicitud") {
-        friends.sendRequest(me, p.profile)
-        _messages.emit("Solicitud enviada a ${p.profile.name}")
+    fun follow(p: Person) = launchSafely(_messages, "No se pudo seguir") {
+        friends.follow(me, p.profile)
+        _messages.emit(
+            if (p.profile.privateAccount) "Solicitud enviada a ${p.profile.name}"
+            else "Ahora sigues a ${p.profile.name}"
+        )
     }
 
-    fun accept(p: Person) = launchSafely(_messages, "No se pudo aceptar") {
-        p.friendshipId?.let { friends.accept(it) }
-        _messages.emit("${p.profile.name} y tú ya sois amigos")
+    /** QR escaneado en Buscar: sigue a esa cuenta, o le envía solicitud si es privada. */
+    fun followFromQr(uid: String) {
+        val p = state.value.byUid(uid)
+        val notice = when {
+            uid == me.uid -> "Ese es tu propio QR"
+            p == null -> "No se ha encontrado esa cuenta"
+            p.blocked -> "Has bloqueado a ${p.profile.name}. Desbloquéalo en Chats > Bloqueados."
+            p.iFollow == FollowState.FOLLOWING -> "Ya sigues a ${p.profile.name}"
+            p.iFollow == FollowState.REQUESTED -> "Ya enviaste una solicitud a ${p.profile.name}"
+            else -> null
+        }
+        if (notice != null) viewModelScope.launch { _messages.emit(notice) } else follow(p!!)
     }
 
-    /** Rechazar, cancelar o eliminar amigo. */
-    fun removeFriend(p: Person) = launchSafely(_messages, "No se pudo completar") {
-        p.friendshipId?.let { friends.remove(it) }
+    /** Dejar de seguir o cancelar la solicitud enviada. */
+    fun unfollow(p: Person) = launchSafely(_messages, "No se pudo completar") {
+        friends.unfollow(me.uid, p.profile.uid)
+    }
+
+    fun acceptFollower(p: Person) = launchSafely(_messages, "No se pudo aceptar") {
+        friends.acceptFollower(me.uid, p.profile.uid)
+        _messages.emit("${p.profile.name} ya te sigue")
+    }
+
+    /** Rechazar una solicitud o quitar a alguien de mis seguidores. */
+    fun removeFollower(p: Person) = launchSafely(_messages, "No se pudo completar") {
+        friends.removeFollower(me.uid, p.profile.uid)
     }
 
     fun toggleFavorite(p: Person) = launchSafely(_messages, "No se pudo guardar el favorito") {
@@ -126,10 +174,18 @@ class PeopleViewModel(private val container: AppContainer, private val me: UserP
         _messages.emit("$name desbloqueado")
     }
 
-    fun openChat(uid: String, name: String, onReady: (String) -> Unit) =
-        launchSafely(_messages, "No se pudo abrir el chat") {
-            onReady(container.chatRepository.openRoom(me, uid, name))
+    /** Abre (o crea) la conversación. Solo con seguimiento mutuo o si su cuenta es pública. */
+    fun openChat(p: Person, onReady: (String) -> Unit) {
+        if (!p.canChat) {
+            viewModelScope.launch {
+                _messages.emit("${p.profile.name} tiene la cuenta privada: para escribirle tenéis que seguiros los dos.")
+            }
+            return
         }
+        launchSafely(_messages, "No se pudo abrir el chat") {
+            onReady(container.chatRepository.openRoom(me, p.profile.uid, p.profile.name))
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────
