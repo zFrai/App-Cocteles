@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barcraft.app.AppContainer
+import com.barcraft.app.R
 import com.barcraft.app.model.ChatMessage
 import com.barcraft.app.model.ChatRoom
 import com.barcraft.app.model.Follow
@@ -18,6 +19,7 @@ import com.barcraft.app.repository.GiphyRepository
 import com.barcraft.app.repository.OutgoingMessage
 import com.barcraft.app.ui.social.launchSafely
 import com.barcraft.app.utils.AudioRecorder
+import com.barcraft.app.utils.Txt
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -123,11 +125,11 @@ class PeopleViewModel(private val container: AppContainer, private val me: UserP
     private val _messages = MutableSharedFlow<String>()
     val messages: SharedFlow<String> = _messages
 
-    fun follow(p: Person) = launchSafely(_messages, "No se pudo seguir") {
+    fun follow(p: Person) = launchSafely(_messages, Txt.get(R.string.msg_follow_failed)) {
         friends.follow(me, p.profile)
         _messages.emit(
-            if (p.profile.privateAccount) "Solicitud enviada a ${p.profile.name}"
-            else "Ahora sigues a ${p.profile.name}"
+            if (p.profile.privateAccount) Txt.get(R.string.msg_request_sent, p.profile.name)
+            else Txt.get(R.string.msg_now_following, p.profile.name)
         )
     }
 
@@ -135,54 +137,54 @@ class PeopleViewModel(private val container: AppContainer, private val me: UserP
     fun followFromQr(uid: String) {
         val p = state.value.byUid(uid)
         val notice = when {
-            uid == me.uid -> "Ese es tu propio QR"
-            p == null -> "No se ha encontrado esa cuenta"
-            p.blocked -> "Has bloqueado a ${p.profile.name}. Desbloquéalo en Chats > Bloqueados."
-            p.iFollow == FollowState.FOLLOWING -> "Ya sigues a ${p.profile.name}"
-            p.iFollow == FollowState.REQUESTED -> "Ya enviaste una solicitud a ${p.profile.name}"
+            uid == me.uid -> Txt.get(R.string.msg_qr_own)
+            p == null -> Txt.get(R.string.msg_qr_not_found)
+            p.blocked -> Txt.get(R.string.chat_you_blocked, p.profile.name)
+            p.iFollow == FollowState.FOLLOWING -> Txt.get(R.string.msg_already_following, p.profile.name)
+            p.iFollow == FollowState.REQUESTED -> Txt.get(R.string.msg_already_requested, p.profile.name)
             else -> null
         }
         if (notice != null) viewModelScope.launch { _messages.emit(notice) } else follow(p!!)
     }
 
     /** Dejar de seguir o cancelar la solicitud enviada. */
-    fun unfollow(p: Person) = launchSafely(_messages, "No se pudo completar") {
+    fun unfollow(p: Person) = launchSafely(_messages, Txt.get(R.string.msg_action_failed)) {
         friends.unfollow(me.uid, p.profile.uid)
     }
 
-    fun acceptFollower(p: Person) = launchSafely(_messages, "No se pudo aceptar") {
+    fun acceptFollower(p: Person) = launchSafely(_messages, Txt.get(R.string.msg_accept_failed)) {
         friends.acceptFollower(me.uid, p.profile.uid)
-        _messages.emit("${p.profile.name} ya te sigue")
+        _messages.emit(Txt.get(R.string.msg_now_follows_you, p.profile.name))
     }
 
     /** Rechazar una solicitud o quitar a alguien de mis seguidores. */
-    fun removeFollower(p: Person) = launchSafely(_messages, "No se pudo completar") {
+    fun removeFollower(p: Person) = launchSafely(_messages, Txt.get(R.string.msg_action_failed)) {
         friends.removeFollower(me.uid, p.profile.uid)
     }
 
-    fun toggleFavorite(p: Person) = launchSafely(_messages, "No se pudo guardar el favorito") {
+    fun toggleFavorite(p: Person) = launchSafely(_messages, Txt.get(R.string.msg_favorite_failed)) {
         friends.setFavorite(me.uid, p.profile.uid, !p.favorite)
     }
 
-    fun block(p: Person) = launchSafely(_messages, "No se pudo bloquear") {
+    fun block(p: Person) = launchSafely(_messages, Txt.get(R.string.msg_block_failed)) {
         friends.block(me.uid, p.profile.uid)
-        _messages.emit("${p.profile.name} bloqueado")
+        _messages.emit(Txt.get(R.string.msg_blocked, p.profile.name))
     }
 
-    fun unblock(uid: String, name: String) = launchSafely(_messages, "No se pudo desbloquear") {
+    fun unblock(uid: String, name: String) = launchSafely(_messages, Txt.get(R.string.msg_unblock_failed)) {
         friends.unblock(me.uid, uid)
-        _messages.emit("$name desbloqueado")
+        _messages.emit(Txt.get(R.string.msg_unblocked, name))
     }
 
     /** Abre (o crea) la conversación. Solo con seguimiento mutuo o si su cuenta es pública. */
     fun openChat(p: Person, onReady: (String) -> Unit) {
         if (!p.canChat) {
             viewModelScope.launch {
-                _messages.emit("${p.profile.name} tiene la cuenta privada: para escribirle tenéis que seguiros los dos.")
+                _messages.emit(Txt.get(R.string.msg_private_cannot_chat, p.profile.name))
             }
             return
         }
-        launchSafely(_messages, "No se pudo abrir el chat") {
+        launchSafely(_messages, Txt.get(R.string.msg_open_chat_failed)) {
             onReady(container.chatRepository.openRoom(me, p.profile.uid, p.profile.name))
         }
     }
@@ -228,19 +230,19 @@ class ChatRoomViewModel(
         )
     )
 
-    fun sendImage(uri: Uri) = upload("No se pudo enviar la foto") {
+    fun sendImage(uri: Uri) = upload(Txt.get(R.string.msg_send_photo_failed)) {
         val id = container.mediaRepository.uploadImage(me.uid, uri)
         chat.send(roomId, me, OutgoingMessage(MessageType.IMAGE, mediaId = id))
     }
 
-    fun sendAudio(file: File, durationMs: Long) = upload("No se pudo enviar la nota de voz") {
+    fun sendAudio(file: File, durationMs: Long) = upload(Txt.get(R.string.msg_send_voice_failed)) {
         val id = container.mediaRepository.uploadAudio(me.uid, file)
         file.delete()
         chat.send(roomId, me, OutgoingMessage(MessageType.AUDIO, mediaId = id, durationMs = durationMs))
     }
 
     private fun send(message: OutgoingMessage) =
-        launchSafely(_errors, "No se pudo enviar el mensaje") { chat.send(roomId, me, message) }
+        launchSafely(_errors, Txt.get(R.string.msg_send_failed)) { chat.send(roomId, me, message) }
 
     private fun upload(error: String, block: suspend () -> Unit): Job = viewModelScope.launch {
         _uploading.value = true
@@ -251,12 +253,12 @@ class ChatRoomViewModel(
     // ── Reacciones y borrado ─────────────────────────────────────────
     fun react(message: ChatMessage, emoji: String) {
         val current = message.reactions[me.uid]
-        launchSafely(_errors, "No se pudo reaccionar") {
+        launchSafely(_errors, Txt.get(R.string.msg_react_failed)) {
             chat.react(roomId, message.id, me.uid, if (current == emoji) null else emoji)
         }
     }
 
-    fun delete(message: ChatMessage) = launchSafely(_errors, "No se pudo borrar el mensaje") {
+    fun delete(message: ChatMessage) = launchSafely(_errors, Txt.get(R.string.msg_delete_message_failed)) {
         chat.deleteMessage(roomId, message.id)
         if (message.mediaId.isNotBlank()) container.mediaRepository.delete(message.mediaId)
     }
@@ -264,16 +266,16 @@ class ChatRoomViewModel(
     // ── Denuncias ────────────────────────────────────────────────────
     /** Denuncia a la otra persona del chat. [message] es opcional: el mensaje concreto que se denuncia. */
     fun report(reason: ReportReason, details: String, message: ChatMessage?) =
-        launchSafely(_errors, "No se pudo enviar la denuncia") {
+        launchSafely(_errors, Txt.get(R.string.msg_report_failed)) {
             val r = room.value ?: error("Sala no cargada")
             val otherId = r.otherId(me.uid)
             require(otherId != me.uid)
             container.reportRepository.report(me, otherId, r.otherName(me.uid), roomId, reason, details, message)
-            _errors.emit("Denuncia enviada. Un administrador la revisará.")
+            _errors.emit(Txt.get(R.string.msg_report_sent))
         }
 
     fun saveToGallery(mediaId: String) = viewModelScope.launch {
-        _errors.emit(if (container.mediaRepository.saveToGallery(mediaId)) "Foto guardada en la galería" else "No se pudo guardar la foto")
+        _errors.emit(if (container.mediaRepository.saveToGallery(mediaId)) Txt.get(R.string.msg_photo_saved) else Txt.get(R.string.msg_photo_save_failed))
     }
 
     // ── Notas de voz ─────────────────────────────────────────────────
@@ -287,7 +289,7 @@ class ChatRoomViewModel(
             recorder = r
             _recording.value = true
         } else {
-            viewModelScope.launch { _errors.emit("No se pudo usar el micrófono") }
+            viewModelScope.launch { _errors.emit(Txt.get(R.string.msg_mic_failed)) }
         }
     }
 
@@ -297,7 +299,7 @@ class ChatRoomViewModel(
         val result = recorder?.stop()
         recorder = null
         _recording.value = false
-        if (result == null) viewModelScope.launch { _errors.emit("Mantén la grabación al menos un segundo") }
+        if (result == null) viewModelScope.launch { _errors.emit(Txt.get(R.string.msg_recording_too_short)) }
         else sendAudio(result.first, result.second)
     }
 
@@ -336,7 +338,7 @@ class GiphyViewModel(private val giphy: GiphyRepository) : ViewModel() {
             _loading.value = true
             val result = giphy.search(kind, query)
             _results.value = result.getOrDefault(emptyList())
-            _error.value = result.exceptionOrNull()?.let { "No se pudo conectar con GIPHY" }
+            _error.value = result.exceptionOrNull()?.let { Txt.get(R.string.giphy_error) }
             _loading.value = false
         }
     }

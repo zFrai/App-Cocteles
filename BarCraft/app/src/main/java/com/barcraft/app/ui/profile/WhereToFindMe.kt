@@ -2,6 +2,8 @@
 
 package com.barcraft.app.ui.profile
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,15 +45,15 @@ fun WhereToFindMe(links: ProfileLinks, modifier: Modifier = Modifier) {
     if (links.isEmpty) return
     val uri = LocalUriHandler.current
     val entries = buildList {
-        links.instagramUrl?.let { add(Triple(Icons.Outlined.CameraAlt, "@${links.instagram}", it)) }
-        links.tiktokUrl?.let { add(Triple(Icons.Outlined.MusicNote, "@${links.tiktok}", it)) }
-        links.xUrl?.let { add(Triple(Icons.Outlined.AlternateEmail, "@${links.x}", it)) }
+        links.instagramUrl?.let { add(Triple(Icons.Outlined.CameraAlt, stringResource(R.string.links_handle, links.instagram), it)) }
+        links.tiktokUrl?.let { add(Triple(Icons.Outlined.MusicNote, stringResource(R.string.links_handle, links.tiktok), it)) }
+        links.xUrl?.let { add(Triple(Icons.Outlined.AlternateEmail, stringResource(R.string.links_handle, links.x), it)) }
         links.webUrl?.let { add(Triple(Icons.Outlined.Language, links.web.removePrefix("https://").removePrefix("http://"), it)) }
         links.mapsUrl?.let { add(Triple(Icons.Outlined.Place, links.placeLabel, it)) }
     }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            "Dónde encontrarme",
+            stringResource(R.string.links_title),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -86,30 +88,30 @@ fun EditLinksDialog(initial: ProfileLinks, onDismiss: () -> Unit, onSave: (Profi
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Dónde encontrarme") },
+        title = { Text(stringResource(R.string.links_title)) },
         text = {
             Column(
                 Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    "Opcional. Rellena solo lo que quieras que vean los demás.",
+                    stringResource(R.string.links_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                OutlinedTextField(instagram, { instagram = it.take(max) }, label = { Text("Instagram (usuario)") }, singleLine = true)
-                OutlinedTextField(tiktok, { tiktok = it.take(max) }, label = { Text("TikTok (usuario)") }, singleLine = true)
-                OutlinedTextField(x, { x = it.take(max) }, label = { Text("X (usuario)") }, singleLine = true)
-                OutlinedTextField(web, { web = it.take(max) }, label = { Text("Web") }, singleLine = true)
-                OutlinedTextField(placeName, { placeName = it.take(max) }, label = { Text("Local (nombre)") }, singleLine = true)
-                OutlinedTextField(placeAddress, { placeAddress = it.take(max) }, label = { Text("Dirección o ciudad del local") }, singleLine = true)
+                OutlinedTextField(instagram, { instagram = it.take(max) }, label = { Text(stringResource(R.string.links_instagram)) }, singleLine = true)
+                OutlinedTextField(tiktok, { tiktok = it.take(max) }, label = { Text(stringResource(R.string.links_tiktok)) }, singleLine = true)
+                OutlinedTextField(x, { x = it.take(max) }, label = { Text(stringResource(R.string.links_x)) }, singleLine = true)
+                OutlinedTextField(web, { web = it.take(max) }, label = { Text(stringResource(R.string.links_web)) }, singleLine = true)
+                OutlinedTextField(placeName, { placeName = it.take(max) }, label = { Text(stringResource(R.string.links_place_name)) }, singleLine = true)
+                OutlinedTextField(placeAddress, { placeAddress = it.take(max) }, label = { Text(stringResource(R.string.links_place_address)) }, singleLine = true)
             }
         },
         confirmButton = {
             Button(onClick = {
                 onSave(ProfileLinks(instagram, tiktok, x, web, placeName, placeAddress))
-            }) { FitText("Guardar") }
+            }) { FitText(stringResource(R.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { FitText("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { FitText(stringResource(R.string.action_cancel)) } }
     )
 }

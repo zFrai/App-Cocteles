@@ -2,6 +2,10 @@
 
 package com.barcraft.app.ui.cocktails
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
+import com.barcraft.app.model.CocktailCatalog
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -114,7 +118,7 @@ fun CocktailDetailScreen(
             TopAppBar(
                 title = { FitText(data?.cocktail?.name ?: "") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) }
                 },
                 actions = {
                     val c = data?.cocktail
@@ -122,21 +126,21 @@ fun CocktailDetailScreen(
                         IconButton(onClick = vm::toggleFavorite) {
                             Icon(
                                 if (c.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Favorito",
+                                contentDescription = stringResource(R.string.cocktail_favorite),
                                 tint = if (c.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             )
                         }
-                        IconButton(onClick = { onEdit(c.id) }) { Icon(Icons.Outlined.Edit, "Editar") }
+                        IconButton(onClick = { onEdit(c.id) }) { Icon(Icons.Outlined.Edit, stringResource(R.string.action_edit)) }
                         Box {
-                            IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, "Más") }
+                            IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.action_more)) }
                             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                                 if (Permissions.canPublishPosts(session.profile?.role)) DropdownMenuItem(
-                                    text = { FitText("Compartir en la comunidad") },
+                                    text = { FitText(stringResource(R.string.detail_share_community)) },
                                     leadingIcon = { Icon(Icons.Outlined.Share, null) },
                                     onClick = { menuOpen = false; onShare(c.id) }
                                 )
                                 DropdownMenuItem(
-                                    text = { FitText("Eliminar") },
+                                    text = { FitText(stringResource(R.string.action_delete)) },
                                     leadingIcon = { Icon(Icons.Outlined.Delete, null) },
                                     onClick = { menuOpen = false; confirmDelete = true }
                                 )
@@ -151,7 +155,7 @@ fun CocktailDetailScreen(
             if (data != null && tab == 2) ExtendedFloatingActionButton(
                 onClick = { ratingDialog = true },
                 icon = { Icon(Icons.Filled.Star, null) },
-                text = { FitText("Valorar") }
+                text = { FitText(stringResource(R.string.detail_rate)) }
             )
         }
     ) { padding ->
@@ -168,8 +172,8 @@ fun CocktailDetailScreen(
             item {
                 Column {
                     PrimaryTabRow(selectedTabIndex = tab) {
-                        listOf("Ingredientes", "Preparación", "Valoraciones").forEachIndexed { i, label ->
-                            Tab(selected = tab == i, onClick = { tab = i }, text = { FitText(label) })
+                        listOf(R.string.detail_tab_ingredients, R.string.detail_tab_steps, R.string.detail_tab_ratings).forEachIndexed { i, label ->
+                            Tab(selected = tab == i, onClick = { tab = i }, text = { FitText(stringResource(label)) })
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -177,24 +181,24 @@ fun CocktailDetailScreen(
             }
             when (tab) {
                 0 -> {
-                    if (d.ingredients.isEmpty()) item { InlineEmpty("Sin ingredientes registrados.") }
+                    if (d.ingredients.isEmpty()) item { InlineEmpty(stringResource(R.string.detail_no_ingredients)) }
                     items(d.sortedIngredients, key = { it.id }) { IngredientRow(it) }
                     if (d.cocktail.hasGarnish && d.cocktail.garnishDescription.isNotBlank()) item {
                         SectionCard(Modifier.padding(16.dp)) {
                             Column {
-                                SectionTitle("Garnish")
+                                SectionTitle(stringResource(R.string.detail_garnish))
                                 Text(d.cocktail.garnishDescription, style = MaterialTheme.typography.bodyLarge)
                             }
                         }
                     }
                 }
                 1 -> {
-                    if (d.steps.isEmpty()) item { InlineEmpty("Aún no hay pasos. Pulsa editar para añadir el procedimiento.") }
+                    if (d.steps.isEmpty()) item { InlineEmpty(stringResource(R.string.detail_no_steps)) }
                     itemsIndexed(d.sortedSteps, key = { _, s -> s.id }) { i, step -> StepRow(i + 1, step.instruction) }
                 }
                 else -> {
                     item { RatingSummary(d) }
-                    if (d.ratings.isEmpty()) item { InlineEmpty("Aún sin valoraciones. ¡Sé el primero!") }
+                    if (d.ratings.isEmpty()) item { InlineEmpty(stringResource(R.string.detail_no_ratings)) }
                     items(d.sortedRatings, key = { it.id }) { r ->
                         RatingRow(r, onDelete = if (canDeleteRatings) ({ ratingToDelete = r }) else null)
                     }
@@ -206,28 +210,28 @@ fun CocktailDetailScreen(
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("¿Eliminar este cóctel?") },
-            text = { Text("Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(R.string.detail_delete_title)) },
+            text = { Text(stringResource(R.string.detail_delete_message)) },
             confirmButton = {
                 TextButton(onClick = { confirmDelete = false; vm.delete(onBack) }) {
-                    FitText("Eliminar", color = MaterialTheme.colorScheme.error)
+                    FitText(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { FitText("Cancelar") } }
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { FitText(stringResource(R.string.action_cancel)) } }
         )
     }
 
     ratingToDelete?.let { r ->
         AlertDialog(
             onDismissRequest = { ratingToDelete = null },
-            title = { Text("¿Borrar valoración?") },
-            text = { Text("Se eliminará el voto de ${r.voterName}. No se puede deshacer.") },
+            title = { Text(stringResource(R.string.detail_delete_rating_title)) },
+            text = { Text(stringResource(R.string.detail_delete_rating_message, r.voterName)) },
             confirmButton = {
                 TextButton(onClick = { vm.deleteRating(r.id); ratingToDelete = null }) {
-                    FitText("Borrar", color = MaterialTheme.colorScheme.error)
+                    FitText(stringResource(R.string.action_delete_short), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { ratingToDelete = null }) { FitText("Cancelar") } }
+            dismissButton = { TextButton(onClick = { ratingToDelete = null }) { FitText(stringResource(R.string.action_cancel)) } }
         )
     }
 
@@ -261,7 +265,7 @@ private fun DetailHeader(d: CocktailWithDetails) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 StarRating(c.averageRating)
                 Spacer(Modifier.width(6.dp))
-                Text("%.1f · %d votos".format(c.averageRating, c.ratingCount), style = MaterialTheme.typography.bodySmall)
+                Text(pluralStringResource(R.plurals.detail_rating_votes, c.ratingCount, c.averageRating, c.ratingCount), style = MaterialTheme.typography.bodySmall)
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -269,20 +273,20 @@ private fun DetailHeader(d: CocktailWithDetails) {
             AssistChip(onClick = {}, label = { FitText(c.category) })
             AssistChip(
                 onClick = {},
-                label = { FitText("${c.prepTimeMinutes} min") },
+                label = { FitText(stringResource(R.string.detail_minutes, c.prepTimeMinutes)) },
                 leadingIcon = { Icon(Icons.Outlined.Schedule, null, Modifier.size(18.dp)) }
             )
             AssistChip(onClick = {}, label = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    FitText("Dificultad "); DifficultyDots(c.difficulty)
+                    FitText(stringResource(R.string.detail_difficulty)); DifficultyDots(c.difficulty)
                 }
             })
             if (c.hasSmoke) AssistChip(
-                onClick = {}, label = { FitText("Humo") },
+                onClick = {}, label = { FitText(stringResource(R.string.detail_smoke)) },
                 leadingIcon = { Icon(Icons.Outlined.Cloud, null, Modifier.size(18.dp)) }
             )
             if (c.hasGarnish) AssistChip(
-                onClick = {}, label = { FitText("Garnish") },
+                onClick = {}, label = { FitText(stringResource(R.string.detail_garnish)) },
                 leadingIcon = { Icon(Icons.Outlined.Spa, null, Modifier.size(18.dp)) }
             )
         }
@@ -340,11 +344,11 @@ private fun RatingSummary(d: CocktailWithDetails) {
     if (d.ratings.isEmpty()) return
     SectionCard(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("%.1f".format(d.cocktail.averageRating), style = MaterialTheme.typography.displaySmall)
+            Text(stringResource(R.string.detail_average, d.cocktail.averageRating), style = MaterialTheme.typography.displaySmall)
             Spacer(Modifier.width(16.dp))
             Column {
                 StarRating(d.cocktail.averageRating, starSize = 20.dp)
-                Text("Media de ${d.ratings.size} votos", style = MaterialTheme.typography.bodySmall)
+                Text(pluralStringResource(R.plurals.detail_average_of, d.ratings.size, d.ratings.size), style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -365,7 +369,7 @@ private fun RatingRow(r: RatingEntity, onDelete: (() -> Unit)?) {
         }
         // Solo Barman y Admin (ver Permissions.canDeleteRatings).
         if (onDelete != null) IconButton(onClick = onDelete) {
-            Icon(Icons.Outlined.Delete, "Borrar valoración", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(Icons.Outlined.Delete, stringResource(R.string.detail_delete_rating), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -393,29 +397,29 @@ private fun AddRatingDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Outlined.StarOutline, null) },
-        title = { Text("Añadir valoración") },
+        title = { Text(stringResource(R.string.rating_add_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name, onValueChange = { name = it },
-                    label = { Text("Nombre del votante") }, singleLine = true,
+                    label = { Text(stringResource(R.string.rating_voter_name)) }, singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     StarRating(stars.toFloat(), starSize = 34.dp, onRate = { stars = it })
-                    Text("$stars de 6 estrellas", style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.rating_stars_of, stars, CocktailCatalog.MAX_STARS), style = MaterialTheme.typography.labelMedium)
                 }
                 OutlinedTextField(
                     value = comment, onValueChange = { comment = it },
-                    label = { Text("Comentario (opcional)") },
+                    label = { Text(stringResource(R.string.rating_comment)) },
                     minLines = 2, modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            Button(onClick = { onSubmit(name, stars, comment) }, enabled = name.isNotBlank()) { FitText("Guardar") }
+            Button(onClick = { onSubmit(name, stars, comment) }, enabled = name.isNotBlank()) { FitText(stringResource(R.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { FitText("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { FitText(stringResource(R.string.action_cancel)) } }
     )
 }
 

@@ -1,5 +1,7 @@
 package com.barcraft.app.ui.chat
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -58,11 +60,11 @@ fun PersonRow(
                 Text(p.name, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 if (p.privateAccount) {
                     Spacer(Modifier.width(4.dp))
-                    Icon(Icons.Outlined.Lock, "Cuenta privada", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Outlined.Lock, stringResource(R.string.person_private_account), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp))
                 }
                 if (person.favorite) {
                     Spacer(Modifier.width(4.dp))
-                    Icon(Icons.Filled.Star, "Favorito", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Filled.Star, stringResource(R.string.cocktail_favorite), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                 }
                 Spacer(Modifier.width(6.dp))
                 RoleBadge(p.role, showUser = true)
@@ -70,16 +72,16 @@ fun PersonRow(
         },
         supportingContent = {
             val status = when {
-                person.followsMe == FollowState.REQUESTED -> "Quiere seguirte"
-                person.mutual -> "Os seguís"
-                person.iFollow == FollowState.REQUESTED -> "Solicitud enviada"
-                person.followsMe == FollowState.FOLLOWING -> "Te sigue"
-                person.iFollow == FollowState.FOLLOWING -> "Siguiendo"
-                else -> p.bio.ifBlank { p.role.description }
+                person.followsMe == FollowState.REQUESTED -> stringResource(R.string.person_wants_to_follow)
+                person.mutual -> stringResource(R.string.person_mutual)
+                person.iFollow == FollowState.REQUESTED -> stringResource(R.string.person_request_sent)
+                person.followsMe == FollowState.FOLLOWING -> stringResource(R.string.person_follows_you)
+                person.iFollow == FollowState.FOLLOWING -> stringResource(R.string.person_following)
+                else -> p.bio.ifBlank { stringResource(p.role.descriptionRes) }
             }
             // "@laura #4821 · Os seguís": el tag distingue a personas con el mismo nombre.
             Text(
-                if (p.handle.isBlank()) status else "${p.handle} · $status",
+                if (p.handle.isBlank()) status else stringResource(R.string.person_handle_status, p.handle, status),
                 maxLines = 1, overflow = TextOverflow.Ellipsis
             )
         },
@@ -87,44 +89,44 @@ fun PersonRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (showPrimaryAction) when {
                     person.followsMe == FollowState.REQUESTED ->
-                        FilledTonalButton(onClick = { vm.acceptFollower(person) }) { FitText("Aceptar") }
+                        FilledTonalButton(onClick = { vm.acceptFollower(person) }) { FitText(stringResource(R.string.person_accept)) }
                     person.iFollow == FollowState.NONE -> OutlinedButton(onClick = { vm.follow(person) }) {
                         Icon(Icons.Outlined.PersonAdd, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp))
-                        FitText(if (p.privateAccount) "Solicitar" else "Seguir")
+                        FitText(if (p.privateAccount) stringResource(R.string.person_request) else stringResource(R.string.person_follow))
                     }
-                    person.iFollow == FollowState.REQUESTED -> OutlinedButton(onClick = { vm.unfollow(person) }) { FitText("Cancelar") }
-                    person.canChat -> IconButton(onClick = openChat) { Icon(Icons.AutoMirrored.Outlined.Chat, "Escribir") }
+                    person.iFollow == FollowState.REQUESTED -> OutlinedButton(onClick = { vm.unfollow(person) }) { FitText(stringResource(R.string.action_cancel)) }
+                    person.canChat -> IconButton(onClick = openChat) { Icon(Icons.AutoMirrored.Outlined.Chat, stringResource(R.string.person_write)) }
                 }
                 Box {
-                    IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "Más opciones") }
+                    IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.chat_more_options)) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         if (person.canChat) DropdownMenuItem(
-                            text = { FitText("Enviar mensaje") },
+                            text = { FitText(stringResource(R.string.person_send_message)) },
                             leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Chat, null) },
                             onClick = { menu = false; openChat() }
                         )
                         DropdownMenuItem(
-                            text = { FitText(if (person.favorite) "Quitar de favoritos" else "Añadir a favoritos") },
+                            text = { FitText(if (person.favorite) stringResource(R.string.person_remove_favorite) else stringResource(R.string.person_add_favorite)) },
                             leadingIcon = { Icon(if (person.favorite) Icons.Filled.Star else Icons.Outlined.StarOutline, null) },
                             onClick = { menu = false; vm.toggleFavorite(person) }
                         )
                         if (person.iFollow == FollowState.FOLLOWING) DropdownMenuItem(
-                            text = { FitText("Dejar de seguir") },
+                            text = { FitText(stringResource(R.string.person_unfollow)) },
                             leadingIcon = { Icon(Icons.Outlined.PersonRemove, null) },
                             onClick = { menu = false; vm.unfollow(person) }
                         )
                         if (person.followsMe == FollowState.FOLLOWING) DropdownMenuItem(
-                            text = { FitText("Quitar de mis seguidores") },
+                            text = { FitText(stringResource(R.string.person_remove_follower)) },
                             leadingIcon = { Icon(Icons.Outlined.PersonRemove, null) },
                             onClick = { menu = false; vm.removeFollower(person) }
                         )
                         if (person.followsMe == FollowState.REQUESTED) DropdownMenuItem(
-                            text = { FitText("Rechazar solicitud") },
+                            text = { FitText(stringResource(R.string.person_reject_request)) },
                             leadingIcon = { Icon(Icons.Outlined.PersonRemove, null) },
                             onClick = { menu = false; vm.removeFollower(person) }
                         )
                         DropdownMenuItem(
-                            text = { FitText("Bloquear", color = MaterialTheme.colorScheme.error) },
+                            text = { FitText(stringResource(R.string.person_block), color = MaterialTheme.colorScheme.error) },
                             leadingIcon = { Icon(Icons.Outlined.Block, null, tint = MaterialTheme.colorScheme.error) },
                             onClick = { menu = false; vm.block(person) }
                         )

@@ -1,5 +1,6 @@
 package com.barcraft.app.data.remote
 
+import com.barcraft.app.R
 import com.barcraft.app.model.ChatMessage
 import com.barcraft.app.model.ChatRoom
 import com.barcraft.app.model.Comment
@@ -19,6 +20,7 @@ import com.barcraft.app.model.SavedPost
 import com.barcraft.app.model.SharedIngredient
 import com.barcraft.app.model.SharedRecipe
 import com.barcraft.app.model.UserProfile
+import com.barcraft.app.utils.Txt
 import com.google.firebase.firestore.DocumentSnapshot
 
 // Conversión manual documento -> modelo. Evita depender de constructores vacíos.
@@ -41,7 +43,7 @@ fun DocumentSnapshot.toUserProfile(): UserProfile? {
     if (!exists()) return null
     return UserProfile(
         uid = id,
-        name = getString("name").orEmpty().ifBlank { "Sin nombre" },
+        name = getString("name").orEmpty().ifBlank { Txt.get(R.string.user_no_name) },
         email = getString("email").orEmpty(),
         role = Role.from(getString("role")),
         banned = getBoolean("banned") ?: false,
@@ -155,7 +157,7 @@ fun DocumentSnapshot.toReport(): Report = Report(
 fun DocumentSnapshot.toSharedRecipe(): SharedRecipe = SharedRecipe(
     id = id,
     authorId = getString("authorId").orEmpty(),
-    authorName = getString("authorName").orEmpty().ifBlank { "Usuario" },
+    authorName = getString("authorName").orEmpty().ifBlank { Txt.get(R.string.user_fallback_name) },
     authorTag = getString("authorTag").orEmpty(),
     visibility = RecipeVisibility.from(getString("visibility")),
     name = getString("name").orEmpty(),

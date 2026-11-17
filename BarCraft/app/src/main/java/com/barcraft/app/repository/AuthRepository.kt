@@ -1,8 +1,10 @@
 package com.barcraft.app.repository
 
+import com.barcraft.app.R
 import com.barcraft.app.data.remote.Collections
 import com.barcraft.app.data.remote.uidFlow
 import com.barcraft.app.model.Role
+import com.barcraft.app.utils.Txt
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -72,7 +74,7 @@ class AuthRepository(
             val exists = db.collection(Collections.USERS).document(user.uid).get().await().exists()
             if (!exists) {
                 val email = user.email.orEmpty()
-                val name = user.displayName?.takeIf { it.isNotBlank() } ?: email.substringBefore('@').ifBlank { "Usuario" }
+                val name = user.displayName?.takeIf { it.isNotBlank() } ?: email.substringBefore('@').ifBlank { Txt.get(R.string.user_fallback_name) }
                 createProfile(user.uid, name, email, role)
             }
         } finally {
@@ -87,7 +89,7 @@ class AuthRepository(
         if (user.uid != uid) return
         val doc = db.collection(Collections.USERS).document(uid).get().await()
         if (!doc.exists()) {
-            createProfile(uid, user.displayName ?: user.email?.substringBefore('@') ?: "Usuario", user.email.orEmpty(), Role.CLIENTE)
+            createProfile(uid, user.displayName ?: user.email?.substringBefore('@') ?: Txt.get(R.string.user_fallback_name), user.email.orEmpty(), Role.CLIENTE)
         }
     }
 
@@ -143,20 +145,20 @@ class AuthRepository(
 
     private fun friendlyMessage(e: Throwable, google: Boolean): String = when {
         google && e is FirebaseAuthUserCollisionException ->
-            "Ya tienes una cuenta con ese email. Entra con tu contraseña."
+            Txt.get(R.string.auth_error_google_collision)
         google && e is FirebaseAuthInvalidUserException ->
-            "Esa no es la cuenta de Google con la que entraste. Elige la misma cuenta."
+            Txt.get(R.string.auth_error_google_wrong_account)
         google && e is FirebaseAuthInvalidCredentialsException ->
-            "Google no ha podido confirmar la cuenta. Revisa que el proveedor Google está activado en Firebase."
+            Txt.get(R.string.auth_error_google_invalid)
         else -> friendlyMessage(e)
     }
 
     private fun friendlyMessage(e: Throwable): String = when (e) {
-        is FirebaseAuthWeakPasswordException -> "La contraseña debe tener al menos 6 caracteres."
-        is FirebaseAuthUserCollisionException -> "Ya existe una cuenta con ese email."
-        is FirebaseAuthInvalidUserException -> "No hay ninguna cuenta con ese email."
-        is FirebaseAuthInvalidCredentialsException -> "Email o contraseña incorrectos."
-        is FirebaseNetworkException -> "Sin conexión. Revisa tu internet."
-        else -> e.message ?: "Algo ha fallado. Inténtalo de nuevo."
+        is FirebaseAuthWeakPasswordException -> Txt.get(R.string.auth_error_short_password)
+        is FirebaseAuthUserCollisionException -> Txt.get(R.string.auth_error_email_in_use)
+        is FirebaseAuthInvalidUserException -> Txt.get(R.string.auth_error_no_account)
+        is FirebaseAuthInvalidCredentialsException -> Txt.get(R.string.auth_error_wrong_credentials)
+        is FirebaseNetworkException -> Txt.get(R.string.error_no_connection)
+        else -> e.message ?: Txt.get(R.string.error_generic)
     }
 }

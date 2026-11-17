@@ -3,9 +3,11 @@ package com.barcraft.app.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barcraft.app.AppContainer
+import com.barcraft.app.R
 import com.barcraft.app.data.local.BiometricCredentialStore
 import com.barcraft.app.model.Role
 import com.barcraft.app.repository.AuthException
+import com.barcraft.app.utils.Txt
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,8 +34,8 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
 
     /** Comprueba los campos antes de pedir la huella o llamar a Firebase. */
     fun validateLogin(email: String, password: String): Boolean {
-        if (!emailRegex.matches(email.trim())) { fail("Escribe un email válido."); return false }
-        if (password.isEmpty()) { fail("Escribe tu contraseña."); return false }
+        if (!emailRegex.matches(email.trim())) { fail(Txt.get(R.string.auth_error_invalid_email)); return false }
+        if (password.isEmpty()) { fail(Txt.get(R.string.auth_error_empty_password)); return false }
         return true
     }
 
@@ -55,10 +57,10 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun register(name: String, email: String, password: String, confirm: String, role: Role) {
-        if (name.trim().length < 2) return fail("El nombre debe tener al menos 2 letras.")
-        if (!emailRegex.matches(email.trim())) return fail("Escribe un email válido.")
-        if (password.length < 6) return fail("La contraseña debe tener al menos 6 caracteres.")
-        if (password != confirm) return fail("Las contraseñas no coinciden.")
+        if (name.trim().length < 2) return fail(Txt.get(R.string.auth_error_short_name))
+        if (!emailRegex.matches(email.trim())) return fail(Txt.get(R.string.auth_error_invalid_email))
+        if (password.length < 6) return fail(Txt.get(R.string.auth_error_short_password))
+        if (password != confirm) return fail(Txt.get(R.string.auth_error_password_mismatch))
         run { container.authRepository.register(name, email, password, role) }
     }
 
@@ -79,7 +81,7 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
 
     /** Cipher para guardar las credenciales (null si este móvil no lo permite). */
     fun cipherToSaveFingerprint(): Cipher? = bioStore.encryptCipher().also {
-        if (it == null) fail("Este móvil no permite guardar el acceso con huella. Entra con tu contraseña.")
+        if (it == null) fail(Txt.get(R.string.auth_error_fingerprint_unsupported))
     }
 
     /** Cipher para leer las credenciales guardadas (null si ya no valen; el mensaje lo pone esta función). */
@@ -87,7 +89,7 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
         is BiometricCredentialStore.Unlock.Ready -> unlock.cipher
         BiometricCredentialStore.Unlock.Invalidated -> {
             _state.update { it.copy(fingerprintEmail = null) }
-            fail("Las huellas del móvil han cambiado. Entra con tu contraseña y vuelve a activar la huella.")
+            fail(Txt.get(R.string.auth_error_fingerprint_changed))
             null
         }
         BiometricCredentialStore.Unlock.Missing -> {
@@ -101,7 +103,7 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
         val credentials = bioStore.read(authorizedCipher)
         if (credentials == null) {
             forgetFingerprint()
-            return fail("No se pudo leer el acceso guardado. Entra con tu contraseña y vuelve a activar la huella.")
+            return fail(Txt.get(R.string.auth_error_fingerprint_unreadable))
         }
         val (email, password) = credentials
         run {
@@ -110,7 +112,7 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
             if (error is AuthException && error.wrongCredentials) {
                 // La contraseña guardada ya no sirve: se olvida para no seguir fallando.
                 forgetFingerprint()
-                Result.failure(AuthException("Tu contraseña ha cambiado. Entra con la nueva y vuelve a activar la huella."))
+                Result.failure(AuthException(Txt.get(R.string.auth_error_password_changed)))
             } else {
                 result
             }
@@ -128,14 +130,14 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
     // ---------- Contraseña olvidada ----------
 
     fun resetPassword(email: String) {
-        if (!emailRegex.matches(email.trim())) return fail("Escribe tu email arriba para recuperar la contraseña.")
+        if (!emailRegex.matches(email.trim())) return fail(Txt.get(R.string.auth_error_email_for_reset))
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null, info = null) }
             val result = container.authRepository.sendPasswordReset(email)
             _state.update {
                 it.copy(
                     loading = false,
-                    info = if (result.isSuccess) "Te hemos enviado un email para restablecer la contraseña." else null,
+                    info = if (result.isSuccess) Txt.get(R.string.auth_reset_email_sent) else null,
                     error = result.exceptionOrNull()?.message
                 )
             }

@@ -1,5 +1,7 @@
 package com.barcraft.app.ui.lock
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -106,10 +108,10 @@ private fun PinSetupScreen(message: String?, onCreate: (String, Boolean) -> Unit
     LockScaffold {
         LockIcon(Icons.Outlined.Lock)
         Spacer(Modifier.height(16.dp))
-        Text(if (first == null) "Crea tu PIN" else "Repite el PIN", style = MaterialTheme.typography.headlineSmall)
+        Text(if (first == null) stringResource(R.string.lock_create_pin_title) else stringResource(R.string.lock_repeat_pin_title), style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(6.dp))
         Text(
-            message ?: "Protege tu cuenta en este móvil. Entrarás con la huella y cada ${LockStore.PIN_EVERY} entradas te pediremos el PIN.",
+            message ?: stringResource(R.string.lock_create_pin_message, LockStore.PIN_EVERY),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -128,25 +130,27 @@ private fun PinSetupScreen(message: String?, onCreate: (String, Boolean) -> Unit
         Spacer(Modifier.height(12.dp))
         if (first != null && canUseBiometric) {
             ListItem(
-                headlineContent = { Text("Entrar con huella") },
+                headlineContent = { Text(stringResource(R.string.lock_use_fingerprint_option)) },
                 leadingContent = { Icon(Icons.Outlined.Fingerprint, null) },
                 trailingContent = { Switch(checked = useBiometric, onCheckedChange = { useBiometric = it }) },
                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background)
             )
         }
+        val errorPinLength = stringResource(R.string.lock_error_pin_length, LockStore.PIN_LENGTH.first, LockStore.PIN_LENGTH.last)
+        val errorPinMismatch = stringResource(R.string.lock_error_pin_mismatch)
         Button(
             onClick = {
                 val f = first
                 when {
-                    pin.length !in LockStore.PIN_LENGTH -> error = "El PIN debe tener de 4 a 6 cifras"
+                    pin.length !in LockStore.PIN_LENGTH -> error = errorPinLength
                     f == null -> { first = pin; pin = "" }
-                    f != pin -> { error = "Los PIN no coinciden. Vuelve a empezar."; first = null; pin = "" }
+                    f != pin -> { error = errorPinMismatch; first = null; pin = "" }
                     else -> onCreate(pin, useBiometric && canUseBiometric)
                 }
             },
             modifier = Modifier.fillMaxWidth().height(52.dp)
-        ) { FitText(if (first == null) "Continuar" else "Guardar PIN") }
-        TextButton(onClick = onLogout) { FitText("Cerrar sesión") }
+        ) { FitText(if (first == null) stringResource(R.string.lock_continue) else stringResource(R.string.lock_save_pin)) }
+        TextButton(onClick = onLogout) { FitText(stringResource(R.string.auth_logout)) }
     }
 }
 
@@ -175,17 +179,17 @@ private fun LockScreen(profile: UserProfile, vm: LockViewModel, state: LockUiSta
     LockScaffold {
         LockIcon(if (useBiometric) Icons.Outlined.Fingerprint else Icons.Outlined.Lock)
         Spacer(Modifier.height(16.dp))
-        Text("Hola, ${profile.name}", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.lock_greeting, profile.name), style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(6.dp))
         Text(
-            state.message ?: if (useBiometric) "Pon el dedo en el lector para entrar." else "Introduce tu PIN para entrar.",
+            state.message ?: if (useBiometric) stringResource(R.string.lock_place_finger) else stringResource(R.string.lock_enter_pin),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         if (state.biometricEnabled && !state.pinRequired) {
             Text(
-                "Entradas con huella antes de pedir el PIN: ${vm.unlocksLeft}",
+                stringResource(R.string.lock_unlocks_left, vm.unlocksLeft),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -211,24 +215,24 @@ private fun LockScreen(profile: UserProfile, vm: LockViewModel, state: LockUiSta
                 OutlinedButton(onClick = vm::retryBiometric) {
                     Icon(Icons.Outlined.Fingerprint, null)
                     Spacer(Modifier.width(8.dp))
-                    FitText("Usar huella")
+                    FitText(stringResource(R.string.lock_use_fingerprint))
                 }
             }
         } else {
-            Button(onClick = vm::onBiometricDismissed) { FitText("Usar PIN") }
+            Button(onClick = vm::onBiometricDismissed) { FitText(stringResource(R.string.lock_use_pin)) }
         }
-        TextButton(onClick = { forgot = true }) { FitText("He olvidado el PIN") }
-        TextButton(onClick = onLogout) { FitText("Cerrar sesión") }
+        TextButton(onClick = { forgot = true }) { FitText(stringResource(R.string.lock_forgot_pin)) }
+        TextButton(onClick = onLogout) { FitText(stringResource(R.string.auth_logout)) }
     }
 
     if (forgot && vm.recoversWithGoogle) {
         val scope = rememberCoroutineScope()
         AlertDialog(
             onDismissRequest = { forgot = false },
-            title = { Text("Recuperar el PIN") },
+            title = { Text(stringResource(R.string.lock_recover_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Tu cuenta usa Google. Elige la misma cuenta de Google (${profile.email}) para crear un PIN nuevo.")
+                    Text(stringResource(R.string.lock_recover_google, profile.email))
                     state.passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             },
@@ -239,21 +243,21 @@ private fun LockScreen(profile: UserProfile, vm: LockViewModel, state: LockUiSta
                         scope.launch { vm.onGoogleRecoverResult(requestGoogleIdToken(context)) }
                     },
                     enabled = !state.checkingPassword
-                ) { FitText("Continuar con Google") }
+                ) { FitText(stringResource(R.string.auth_continue_with_google)) }
             },
-            dismissButton = { TextButton(onClick = { forgot = false }) { FitText("Cancelar") } }
+            dismissButton = { TextButton(onClick = { forgot = false }) { FitText(stringResource(R.string.action_cancel)) } }
         )
     } else if (forgot) {
         var password by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { forgot = false },
-            title = { Text("Recuperar el PIN") },
+            title = { Text(stringResource(R.string.lock_recover_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Escribe la contraseña de tu cuenta (${profile.email}) para crear un PIN nuevo.")
+                    Text(stringResource(R.string.lock_recover_password, profile.email))
                     OutlinedTextField(
                         value = password, onValueChange = { password = it },
-                        label = { Text("Contraseña") }, singleLine = true,
+                        label = { Text(stringResource(R.string.auth_password)) }, singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         isError = state.passwordError != null,
@@ -263,10 +267,10 @@ private fun LockScreen(profile: UserProfile, vm: LockViewModel, state: LockUiSta
             },
             confirmButton = {
                 Button(onClick = { vm.recoverWithPassword(password) }, enabled = password.isNotEmpty() && !state.checkingPassword) {
-                    FitText("Comprobar")
+                    FitText(stringResource(R.string.lock_check))
                 }
             },
-            dismissButton = { TextButton(onClick = { forgot = false }) { FitText("Cancelar") } }
+            dismissButton = { TextButton(onClick = { forgot = false }) { FitText(stringResource(R.string.action_cancel)) } }
         )
     }
 }
@@ -304,7 +308,7 @@ private fun PinPad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
                     when (key) {
                         "" -> Spacer(Modifier.size(68.dp))
                         "⌫" -> IconButton(onClick = onDelete, modifier = Modifier.size(68.dp)) {
-                            Icon(Icons.AutoMirrored.Outlined.Backspace, "Borrar")
+                            Icon(Icons.AutoMirrored.Outlined.Backspace, stringResource(R.string.lock_delete_digit))
                         }
                         else -> FilledTonalIconButton(onClick = { onDigit(key) }, modifier = Modifier.size(68.dp)) {
                             Text(key, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)

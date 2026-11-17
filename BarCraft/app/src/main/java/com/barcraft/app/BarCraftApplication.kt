@@ -6,6 +6,7 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
+import com.barcraft.app.utils.Txt
 
 class BarCraftApplication : Application(), ImageLoaderFactory {
     lateinit var container: AppContainer
@@ -13,6 +14,7 @@ class BarCraftApplication : Application(), ImageLoaderFactory {
 
     override fun onCreate() {
         super.onCreate()
+        Txt.init(this)
         container = AppContainer(this)
         container.appLock.start()
     }
