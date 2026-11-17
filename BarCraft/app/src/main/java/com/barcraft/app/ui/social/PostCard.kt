@@ -1,5 +1,7 @@
 package com.barcraft.app.ui.social
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -91,21 +93,21 @@ fun PostCard(
                         RoleBadge(post.authorRole)
                     }
                     Text(
-                        DateUtils.relative(post.createdAt) + if (post.editedAt > 0) " · editado" else "",
+                        DateUtils.relative(post.createdAt) + if (post.editedAt > 0) stringResource(R.string.post_edited_suffix) else "",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 if (isMine || canModerate) Box {
-                    IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "Opciones") }
+                    IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.post_options)) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         if (isMine && onEdit != null) DropdownMenuItem(
-                            text = { Text("Editar") },
+                            text = { Text(stringResource(R.string.action_edit)) },
                             leadingIcon = { Icon(Icons.Outlined.Edit, null) },
                             onClick = { menu = false; onEdit() }
                         )
                         DropdownMenuItem(
-                            text = { FitText(if (isMine) "Eliminar" else "Eliminar (moderación)") },
+                            text = { FitText(if (isMine) stringResource(R.string.action_delete) else stringResource(R.string.post_delete_moderation)) },
                             leadingIcon = { Icon(Icons.Outlined.Delete, null) },
                             onClick = { menu = false; onDelete() }
                         )
@@ -165,7 +167,7 @@ fun PostCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onLike, enabled = myUid != null) {
                     Icon(
-                        if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, "Me gusta",
+                        if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, stringResource(R.string.post_like),
                         tint = if (liked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
@@ -173,7 +175,7 @@ fun PostCard(
                     FitText("${post.likes.size}")
                 }
                 TextButton(onClick = { onOpen?.invoke() }, enabled = onOpen != null) {
-                    Icon(Icons.AutoMirrored.Outlined.Chat, "Comentarios", modifier = Modifier.size(20.dp))
+                    Icon(Icons.AutoMirrored.Outlined.Chat, stringResource(R.string.post_comments), modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(6.dp))
                     FitText("${post.commentCount}")
                 }
@@ -182,7 +184,7 @@ fun PostCard(
                     IconButton(onClick = onToggleSave) {
                         Icon(
                             if (saved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                            if (saved) "Quitar de guardados" else "Guardar",
+                            if (saved) stringResource(R.string.post_unsave) else stringResource(R.string.post_save),
                             tint = if (saved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -191,7 +193,7 @@ fun PostCard(
                     TextButton(onClick = onMessage) {
                         Icon(Icons.AutoMirrored.Outlined.Send, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        FitText("Mensaje")
+                        FitText(stringResource(R.string.post_message))
                     }
                 }
             }
@@ -205,7 +207,7 @@ fun EditPostDialog(post: Post, onDismiss: () -> Unit, onSave: (String) -> Unit) 
     var text by androidx.compose.runtime.saveable.rememberSaveable(post.id) { mutableStateOf(post.text) }
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar publicación") },
+        title = { Text(stringResource(R.string.post_edit_title)) },
         text = {
             Column {
                 androidx.compose.material3.OutlinedTextField(
@@ -214,7 +216,7 @@ fun EditPostDialog(post: Post, onDismiss: () -> Unit, onSave: (String) -> Unit) 
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Quien la tenga en Guardados verá que la has cambiado.",
+                    stringResource(R.string.post_edit_warning),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -222,9 +224,9 @@ fun EditPostDialog(post: Post, onDismiss: () -> Unit, onSave: (String) -> Unit) 
         },
         confirmButton = {
             androidx.compose.material3.Button(onClick = { onSave(text) }, enabled = text.isNotBlank() && text.trim() != post.text) {
-                Text("Guardar cambios")
+                Text(stringResource(R.string.post_save_changes))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }

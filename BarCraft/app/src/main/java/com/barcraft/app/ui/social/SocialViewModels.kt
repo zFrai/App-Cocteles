@@ -1,5 +1,7 @@
 package com.barcraft.app.ui.social
 
+import com.barcraft.app.R
+import com.barcraft.app.utils.Txt
 import kotlinx.coroutines.flow.distinctUntilChanged
 import com.barcraft.app.model.SharedRecipe
 import androidx.lifecycle.ViewModel
@@ -70,34 +72,34 @@ class FeedViewModel(
     private val _messages = MutableSharedFlow<String>()
     val messages: SharedFlow<String> = _messages
 
-    fun toggleSave(post: Post) = launchSafely(_messages, "No se pudo guardar") {
+    fun toggleSave(post: Post) = launchSafely(_messages, Txt.get(R.string.msg_save_failed)) {
         if (post.id in savedIds.value) {
             social.unsavePost(myUid, post.id)
-            _messages.emit("Quitada de Guardados")
+            _messages.emit(Txt.get(R.string.msg_post_unsaved))
         } else {
             social.savePost(myUid, post)
-            _messages.emit("Guardada. La tienes en Perfil > Guardados")
+            _messages.emit(Txt.get(R.string.msg_post_saved))
         }
     }
 
-    fun edit(post: Post, text: String) = launchSafely(_messages, "No se pudo editar la publicación") {
+    fun edit(post: Post, text: String) = launchSafely(_messages, Txt.get(R.string.msg_post_edit_failed)) {
         social.editPost(post.id, text)
-        _messages.emit("Publicación actualizada")
+        _messages.emit(Txt.get(R.string.msg_post_updated))
     }
 
     fun toggleLike(post: Post, uid: String) =
-        launchSafely(_messages, "No se pudo guardar el me gusta") { social.setLiked(post.id, uid, !post.isLikedBy(uid)) }
+        launchSafely(_messages, Txt.get(R.string.msg_like_failed)) { social.setLiked(post.id, uid, !post.isLikedBy(uid)) }
 
     fun delete(post: Post) =
-        launchSafely(_messages, "No se pudo borrar la publicación") {
+        launchSafely(_messages, Txt.get(R.string.msg_post_delete_failed)) {
             social.deletePost(post.id)
             if (post.mediaId.isNotBlank()) container.mediaRepository.delete(post.mediaId)
-            _messages.emit("Publicación eliminada")
+            _messages.emit(Txt.get(R.string.msg_post_deleted))
         }
 
     fun messageAuthor(me: UserProfile, post: Post, onReady: (String) -> Unit) =
         // Si su cuenta es privada y no os seguís los dos, las reglas no dejan crear la conversación.
-        launchSafely(_messages, "No se pudo abrir el chat: si su cuenta es privada, tenéis que seguiros los dos") {
+        launchSafely(_messages, Txt.get(R.string.msg_chat_open_failed)) {
             onReady(chat.openRoom(me, post.authorId, post.authorName))
         }
 }
@@ -118,19 +120,19 @@ class PostDetailViewModel(
 
     fun toggleLike(uid: String) {
         val p = post.value ?: return
-        launchSafely(_messages, "No se pudo guardar el me gusta") { social.setLiked(p.id, uid, !p.isLikedBy(uid)) }
+        launchSafely(_messages, Txt.get(R.string.msg_like_failed)) { social.setLiked(p.id, uid, !p.isLikedBy(uid)) }
     }
 
     fun comment(me: UserProfile, text: String) {
         if (text.isBlank()) return
-        launchSafely(_messages, "No se pudo enviar el comentario") { social.addComment(postId, me, text) }
+        launchSafely(_messages, Txt.get(R.string.msg_comment_failed)) { social.addComment(postId, me, text) }
     }
 
     fun deleteComment(comment: Comment) =
-        launchSafely(_messages, "No se pudo borrar el comentario") { social.deleteComment(postId, comment.id) }
+        launchSafely(_messages, Txt.get(R.string.msg_comment_delete_failed)) { social.deleteComment(postId, comment.id) }
 
     fun deletePost(onDone: () -> Unit) =
-        launchSafely(_messages, "No se pudo borrar la publicación") {
+        launchSafely(_messages, Txt.get(R.string.msg_post_delete_failed)) {
             social.deletePost(postId)
             onDone()
         }
@@ -167,11 +169,11 @@ class ComposePostViewModel(
     fun publish(me: UserProfile, text: String, imageUrl: String, onDone: () -> Unit) {
         val cocktail = myCocktails.value.firstOrNull { it.cocktail.id == _attachedId.value }
         if (!Permissions.canPublishPosts(me.role)) {
-            viewModelScope.launch { _messages.emit("Solo los barmans pueden publicar") }
+            viewModelScope.launch { _messages.emit(Txt.get(R.string.msg_only_barmans_publish)) }
             return
         }
         if (text.isBlank() && cocktail == null && _photo.value == null) {
-            viewModelScope.launch { _messages.emit("Escribe algo o adjunta un cóctel") }
+            viewModelScope.launch { _messages.emit(Txt.get(R.string.msg_post_empty)) }
             return
         }
         viewModelScope.launch {
@@ -193,23 +195,23 @@ class ComposePostViewModel(
                 )
             }
             _sending.value = false
-            if (result.isSuccess) onDone() else _messages.emit("No se pudo publicar. Revisa tu conexión.")
+            if (result.isSuccess) onDone() else _messages.emit(Txt.get(R.string.msg_publish_failed))
         }
     }
 
     /** Resumen de la receta que viaja con la publicación. */
     private fun summary(c: CocktailWithDetails): String = buildString {
         append(c.cocktail.category)
-        append(" · ${c.cocktail.prepTimeMinutes} min")
-        if (c.cocktail.hasSmoke) append(" · Humo")
+        append(Txt.get(R.string.compose_summary_minutes, c.cocktail.prepTimeMinutes))
+        if (c.cocktail.hasSmoke) append(Txt.get(R.string.compose_summary_smoke))
         appendLine()
-        c.sortedIngredients.forEach { appendLine("• ${it.amount} ${it.name}".trimEnd()) }
+        c.sortedIngredients.forEach { appendLine(Txt.get(R.string.cocktail_ingredient_bullet, it.amount, it.name).trimEnd()) }
         if (c.cocktail.hasGarnish && c.cocktail.garnishDescription.isNotBlank()) {
-            appendLine("Garnish: ${c.cocktail.garnishDescription}")
+            appendLine(Txt.get(R.string.compose_summary_garnish, c.cocktail.garnishDescription))
         }
         if (c.steps.isNotEmpty()) {
             appendLine()
-            c.sortedSteps.forEachIndexed { i, s -> appendLine("${i + 1}. ${s.instruction}") }
+            c.sortedSteps.forEachIndexed { i, s -> appendLine(Txt.get(R.string.shared_step, i + 1, s.instruction)) }
         }
     }.trim()
 }

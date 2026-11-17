@@ -1,5 +1,6 @@
 package com.barcraft.app.ui.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.LocalBar
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.barcraft.app.R
 
 object Routes {
     const val RECIPES = "recipes"
@@ -46,13 +48,13 @@ object Routes {
 /** Pestañas de la barra inferior. El panel de Admin se abre desde Perfil. */
 enum class TopDestination(
     val route: String,
-    val label: String,
+    @StringRes val labelRes: Int,
     val icon: ImageVector,
     val selectedIcon: ImageVector
 ) {
-    RECIPES(Routes.RECIPES, "Recetas", Icons.Outlined.LocalBar, Icons.Filled.LocalBar),
-    COMMUNITY(Routes.COMMUNITY, "Comunidad", Icons.Outlined.Public, Icons.Filled.Public),
-    CHATS(Routes.CHATS, "Chats", Icons.Outlined.Forum, Icons.Filled.Forum),
-    SEARCH(Routes.SEARCH, "Buscar", Icons.Outlined.PersonSearch, Icons.Filled.PersonSearch),
-    PROFILE(Routes.PROFILE, "Perfil", Icons.Outlined.Person, Icons.Filled.Person)
+    RECIPES(Routes.RECIPES, R.string.tab_recipes, Icons.Outlined.LocalBar, Icons.Filled.LocalBar),
+    COMMUNITY(Routes.COMMUNITY, R.string.tab_community, Icons.Outlined.Public, Icons.Filled.Public),
+    CHATS(Routes.CHATS, R.string.tab_chats, Icons.Outlined.Forum, Icons.Filled.Forum),
+    SEARCH(Routes.SEARCH, R.string.tab_search, Icons.Outlined.PersonSearch, Icons.Filled.PersonSearch),
+    PROFILE(Routes.PROFILE, R.string.tab_profile, Icons.Outlined.Person, Icons.Filled.Person)
 }

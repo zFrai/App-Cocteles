@@ -2,6 +2,8 @@
 
 package com.barcraft.app.ui.social
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -67,8 +69,8 @@ fun PostDetailScreen(postId: String, onBack: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { FitText("Publicación") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } }
+                title = { FitText(stringResource(R.string.post_detail_title)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } }
             )
         },
         bottomBar = {
@@ -76,7 +78,7 @@ fun PostDetailScreen(postId: String, onBack: () -> Unit) {
                 Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = text, onValueChange = { text = it },
-                        placeholder = { Text("Escribe un comentario") },
+                        placeholder = { Text(stringResource(R.string.post_comment_hint)) },
                         maxLines = 4,
                         shape = MaterialTheme.shapes.extraLarge,
                         modifier = Modifier.weight(1f)
@@ -85,7 +87,7 @@ fun PostDetailScreen(postId: String, onBack: () -> Unit) {
                     FilledIconButton(
                         onClick = { vm.comment(me, text); text = "" },
                         enabled = text.isNotBlank()
-                    ) { Icon(Icons.AutoMirrored.Filled.Send, "Enviar") }
+                    ) { Icon(Icons.AutoMirrored.Filled.Send, stringResource(R.string.action_send)) }
                 }
             }
         }
@@ -106,13 +108,13 @@ fun PostDetailScreen(postId: String, onBack: () -> Unit) {
                     expandedText = true
                 )
                 Spacer(Modifier.padding(8.dp))
-                Text("Comentarios (${comments.size})", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.post_comments_count, comments.size), style = MaterialTheme.typography.titleSmall)
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
               }
             }
             if (comments.isEmpty()) item {
                 Text(
-                    "Nadie ha comentado todavía.",
+                    stringResource(R.string.post_no_comments),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -146,7 +148,7 @@ private fun CommentRow(comment: Comment, canDelete: Boolean, onDelete: () -> Uni
             Text(comment.text, style = MaterialTheme.typography.bodyMedium)
         }
         if (canDelete) IconButton(onClick = onDelete) {
-            Icon(Icons.Outlined.Delete, "Borrar comentario", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(Icons.Outlined.Delete, stringResource(R.string.post_delete_comment), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

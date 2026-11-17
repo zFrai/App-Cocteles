@@ -4,12 +4,14 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.barcraft.app.R
 import com.barcraft.app.data.local.entity.CocktailEntity
 import com.barcraft.app.data.local.entity.CocktailWithDetails
 import com.barcraft.app.repository.CocktailDraft
 import com.barcraft.app.repository.CocktailRepository
 import com.barcraft.app.repository.IngredientDraft
 import com.barcraft.app.utils.ImageUtils
+import com.barcraft.app.utils.Txt
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -173,14 +175,14 @@ class CocktailEditorViewModel(
 
     fun pickImage(context: Context, uri: Uri) = viewModelScope.launch {
         val stored = ImageUtils.copyToAppStorage(context, uri)
-        if (stored == null) _errors.emit("No se pudo copiar la imagen") else update { copy(imageUri = stored) }
+        if (stored == null) _errors.emit(Txt.get(R.string.editor_error_copy_image)) else update { copy(imageUri = stored) }
     }
 
     fun save(onSaved: (Long) -> Unit) = viewModelScope.launch {
         val d = _draft.value
         when {
-            d.name.isBlank() -> _errors.emit("El nombre es obligatorio")
-            d.ingredients.isEmpty() -> _errors.emit("Añade al menos un ingrediente")
+            d.name.isBlank() -> _errors.emit(Txt.get(R.string.editor_error_name_required))
+            d.ingredients.isEmpty() -> _errors.emit(Txt.get(R.string.editor_error_ingredient_required))
             else -> {
                 val id = repo.save(d)
                 share?.let { publish -> repo.get(id)?.let(publish) }

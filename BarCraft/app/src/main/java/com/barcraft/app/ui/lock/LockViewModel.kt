@@ -3,8 +3,10 @@ package com.barcraft.app.ui.lock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barcraft.app.AppContainer
+import com.barcraft.app.R
 import com.barcraft.app.data.local.LockStore
 import com.barcraft.app.ui.auth.GoogleTokenResult
+import com.barcraft.app.utils.Txt
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +45,7 @@ class LockViewModel(private val container: AppContainer, private val uid: String
             needsSetup = !store.hasPin(uid),
             pinRequired = !bio || periodic,
             biometricEnabled = bio,
-            message = if (bio && periodic) "Por seguridad, cada ${LockStore.PIN_EVERY} entradas te pedimos el PIN." else null
+            message = if (bio && periodic) Txt.get(R.string.lock_periodic_pin, LockStore.PIN_EVERY) else null
         )
     }
 
@@ -71,7 +73,7 @@ class LockViewModel(private val container: AppContainer, private val uid: String
             it.copy(
                 biometricFails = fails,
                 pinRequired = it.pinRequired || forcePin,
-                message = if (forcePin) "Huella no reconocida ${LockStore.MAX_BIOMETRIC_FAILS} veces. Introduce tu PIN." else it.message
+                message = if (forcePin) Txt.get(R.string.lock_fingerprint_failed_times, LockStore.MAX_BIOMETRIC_FAILS) else it.message
             )
         }
         return forcePin
@@ -97,7 +99,7 @@ class LockViewModel(private val container: AppContainer, private val uid: String
             _state.update { it.copy(pinError = null, biometricFails = 0) }
             true
         } else {
-            _state.update { it.copy(pinError = "PIN incorrecto") }
+            _state.update { it.copy(pinError = Txt.get(R.string.lock_wrong_pin)) }
             false
         }
     }
@@ -125,7 +127,7 @@ class LockViewModel(private val container: AppContainer, private val uid: String
             val result = check()
             if (result.isSuccess) {
                 store.clear(uid)
-                _state.value = initialState().copy(message = "Cuenta comprobada. Crea un PIN nuevo.")
+                _state.value = initialState().copy(message = Txt.get(R.string.lock_account_verified))
             } else {
                 _state.update { it.copy(checkingPassword = false, passwordError = result.exceptionOrNull()?.message) }
             }

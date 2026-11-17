@@ -1,5 +1,7 @@
 package com.barcraft.app.ui.navigation
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -91,7 +93,7 @@ private fun MainScaffold(session: AppSession, onLogin: () -> Unit, onLogout: () 
                                 selected = selected,
                                 onClick = { nav.navigateToTab(tab.route) },
                                 icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
-                                label = { FitText(tab.label) }
+                                label = { FitText(stringResource(tab.labelRes)) }
                             )
                         }
                     }
@@ -213,7 +215,7 @@ private fun AppNavHost(
         // ── Buscar personas ───────────────────────────────────────────
         composable(Routes.SEARCH) {
             if (session.profile == null) {
-                AccountRequiredState(session, "Buscar personas", onLogin)
+                AccountRequiredState(session, stringResource(R.string.feature_search_people), onLogin)
             } else {
                 PeopleScreen(
                     onBack = null,

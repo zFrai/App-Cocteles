@@ -1,5 +1,8 @@
 package com.barcraft.app.model
 
+import com.barcraft.app.R
+import com.barcraft.app.utils.Txt
+
 /**
  * Seguimiento en un solo sentido (`follows/{followerUid_followedUid}`), como en Instagram.
  * Si la cuenta seguida es privada empieza como solicitud ([accepted] = false) hasta que la acepta.
@@ -28,7 +31,7 @@ data class Friendship(
     val createdAt: Long
 ) {
     fun otherId(myUid: String): String = users.firstOrNull { it != myUid } ?: myUid
-    fun otherName(myUid: String): String = names[otherId(myUid)] ?: "Usuario"
+    fun otherName(myUid: String): String = names[otherId(myUid)] ?: Txt.get(R.string.user_fallback_name)
     fun isIncomingFor(myUid: String): Boolean = !accepted && requesterId != myUid
 }
 

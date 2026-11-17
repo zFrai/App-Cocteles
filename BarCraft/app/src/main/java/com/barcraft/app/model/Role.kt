@@ -1,5 +1,9 @@
 package com.barcraft.app.model
 
+import androidx.annotation.StringRes
+import com.barcraft.app.R
+import com.barcraft.app.utils.Txt
+
 /**
  * Tipos de usuario. Se guarda como texto en Firestore (campo `role` de `users/{uid}`).
  *
@@ -7,10 +11,14 @@ package com.barcraft.app.model
  * - CLIENTE: comensal. Ve, valora, comenta y chatea. Puede usar la app sin cuenta.
  * - ADMIN: administra la app (roles, bloqueos y moderación).
  */
-enum class Role(val id: String, val label: String, val description: String) {
-    BARMAN("barman", "Barman", "Creo cócteles y los comparto"),
-    CLIENTE("cliente", "Comensal", "Descubro, valoro y pregunto"),
-    ADMIN("admin", "Admin", "Administro BarCraft");
+enum class Role(val id: String, @StringRes val labelRes: Int, @StringRes val descriptionRes: Int) {
+    BARMAN("barman", R.string.role_barman, R.string.role_barman_desc),
+    CLIENTE("cliente", R.string.role_cliente, R.string.role_cliente_desc),
+    ADMIN("admin", R.string.role_admin, R.string.role_admin_desc);
+
+    /** Nombre visible (sale de strings.xml). */
+    val label: String get() = Txt.get(labelRes)
+    val description: String get() = Txt.get(descriptionRes)
 
     companion object {
         /** Roles que se pueden elegir al registrarse (Admin solo lo da otro Admin). */

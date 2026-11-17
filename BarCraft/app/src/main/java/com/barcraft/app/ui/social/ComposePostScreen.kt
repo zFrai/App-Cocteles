@@ -2,6 +2,8 @@
 
 package com.barcraft.app.ui.social
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,8 +86,8 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { FitText("Nueva publicación") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Filled.Close, "Cancelar") } },
+                title = { FitText(stringResource(R.string.compose_title)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Filled.Close, stringResource(R.string.action_cancel)) } },
                 actions = {
                     Button(
                         onClick = { vm.publish(me, text, imageUrl, onDone) },
@@ -93,7 +95,7 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
                         if (sending) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                        else FitText("Publicar")
+                        else FitText(stringResource(R.string.compose_publish))
                     }
                 }
             )
@@ -114,7 +116,7 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
             item {
                 OutlinedTextField(
                     value = text, onValueChange = { text = it },
-                    placeholder = { Text("¿Qué has preparado hoy? Cuenta un truco, una receta o una duda…") },
+                    placeholder = { Text(stringResource(R.string.compose_hint)) },
                     minLines = 5,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -131,15 +133,15 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
                             FilledIconButton(
                                 onClick = { vm.setPhoto(null) },
                                 modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
-                            ) { Icon(Icons.Filled.Close, "Quitar foto") }
+                            ) { Icon(Icons.Filled.Close, stringResource(R.string.compose_remove_photo)) }
                         }
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilledTonalButton(onClick = { picker.camera() }, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Outlined.PhotoCamera, null); Spacer(Modifier.width(6.dp)); FitText("Cámara")
+                            Icon(Icons.Outlined.PhotoCamera, null); Spacer(Modifier.width(6.dp)); FitText(stringResource(R.string.compose_camera))
                         }
                         FilledTonalButton(onClick = { picker.gallery() }, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Outlined.PhotoLibrary, null); Spacer(Modifier.width(6.dp)); FitText("Galería")
+                            Icon(Icons.Outlined.PhotoLibrary, null); Spacer(Modifier.width(6.dp)); FitText(stringResource(R.string.compose_gallery))
                         }
                     }
                 }
@@ -147,7 +149,7 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
             if (photo == null) item {
                 OutlinedTextField(
                     value = imageUrl, onValueChange = { imageUrl = it },
-                    label = { Text("URL de una foto (opcional)") },
+                    label = { Text(stringResource(R.string.compose_photo_url)) },
                     leadingIcon = { Icon(Icons.Outlined.Link, null) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -155,10 +157,10 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
             }
             item {
                 Column {
-                    SectionTitle("Adjuntar una receta de tu barra")
+                    SectionTitle(stringResource(R.string.compose_attach_recipe))
                     if (cocktails.isEmpty()) {
                         Text(
-                            "Aún no tienes recetas guardadas.",
+                            stringResource(R.string.compose_no_recipes),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -174,7 +176,7 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
                             }
                         }
                         Text(
-                            "Se compartirán sus ingredientes, pasos y su foto.",
+                            stringResource(R.string.compose_attach_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 8.dp)

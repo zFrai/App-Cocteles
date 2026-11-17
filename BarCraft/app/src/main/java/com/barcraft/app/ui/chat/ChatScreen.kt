@@ -2,6 +2,8 @@
 
 package com.barcraft.app.ui.chat
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import android.Manifest
 import android.content.pm.PackageManager
@@ -140,13 +142,13 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
                         FitText(otherName)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } },
                 actions = {
                     if (r != null) Box {
-                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, "Más opciones") }
+                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.chat_more_options)) }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(
-                                text = { FitText("Denunciar a $otherName") },
+                                text = { FitText(stringResource(R.string.chat_report_user, otherName)) },
                                 leadingIcon = { Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.error) },
                                 onClick = { menuOpen = false; reporting = ReportDraft(message = null) }
                             )
@@ -164,8 +166,8 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
                             Icon(Icons.Outlined.Block, null, tint = MaterialTheme.colorScheme.error)
                             Spacer(Modifier.width(12.dp))
                             Text(
-                                if (r?.blockedBy?.contains(me.uid) == true) "Has bloqueado a $otherName. Desbloquéalo en Chats > Bloqueados."
-                                else "No puedes enviar mensajes en esta conversación.",
+                                if (r?.blockedBy?.contains(me.uid) == true) stringResource(R.string.chat_you_blocked, otherName)
+                                else stringResource(R.string.chat_cannot_send),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -175,11 +177,11 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
                             onSend = vm::stopAndSend
                         )
                         else -> Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { photoPicker.choose() }) { Icon(Icons.Outlined.AddPhotoAlternate, "Foto") }
-                            IconButton(onClick = { giphyOpen = true }) { Icon(Icons.Outlined.Gif, "GIFs y stickers") }
+                            IconButton(onClick = { photoPicker.choose() }) { Icon(Icons.Outlined.AddPhotoAlternate, stringResource(R.string.chat_photo)) }
+                            IconButton(onClick = { giphyOpen = true }) { Icon(Icons.Outlined.Gif, stringResource(R.string.chat_gifs_and_stickers)) }
                             OutlinedTextField(
                                 value = text, onValueChange = { text = it },
-                                placeholder = { Text("Mensaje") },
+                                placeholder = { Text(stringResource(R.string.chat_message_hint)) },
                                 maxLines = 5,
                                 shape = MaterialTheme.shapes.extraLarge,
                                 modifier = Modifier.weight(1f)
@@ -190,10 +192,10 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
                                     val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
                                         PackageManager.PERMISSION_GRANTED
                                     if (granted) vm.startRecording(context) else micPermission.launch(Manifest.permission.RECORD_AUDIO)
-                                }) { Icon(Icons.Filled.Mic, "Grabar nota de voz") }
+                                }) { Icon(Icons.Filled.Mic, stringResource(R.string.chat_record_voice)) }
                             } else {
                                 FilledIconButton(onClick = { vm.sendText(text); text = "" }) {
-                                    Icon(Icons.AutoMirrored.Filled.Send, "Enviar")
+                                    Icon(Icons.AutoMirrored.Filled.Send, stringResource(R.string.action_send))
                                 }
                             }
                         }
@@ -206,8 +208,8 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
         when {
             list == null -> LoadingBox(Modifier.padding(padding))
             list.isEmpty() -> EmptyState(
-                Icons.Outlined.Forum, "Empieza la conversación",
-                "Los mensajes llegan al instante a $otherName.",
+                Icons.Outlined.Forum, stringResource(R.string.chat_empty_title),
+                stringResource(R.string.chat_empty_message, otherName),
                 modifier = Modifier.padding(padding)
             )
             else -> LazyColumn(
@@ -234,7 +236,7 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
     selected?.let { msg ->
         AlertDialog(
             onDismissRequest = { selected = null },
-            title = { Text("Reaccionar") },
+            title = { Text(stringResource(R.string.chat_react)) },
             text = {
                 Column {
                     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
@@ -252,16 +254,16 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { selected = null }) { FitText("Cerrar") } },
+            confirmButton = { TextButton(onClick = { selected = null }) { FitText(stringResource(R.string.action_close)) } },
             dismissButton = {
                 if (msg.senderId == me.uid) TextButton(onClick = { vm.delete(msg); selected = null }) {
                     Icon(Icons.Outlined.Delete, null, tint = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.width(6.dp))
-                    FitText("Borrar para todos", color = MaterialTheme.colorScheme.error)
+                    FitText(stringResource(R.string.chat_delete_for_all), color = MaterialTheme.colorScheme.error)
                 } else TextButton(onClick = { reporting = ReportDraft(message = msg); selected = null }) {
                     Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.width(6.dp))
-                    FitText("Denunciar mensaje", color = MaterialTheme.colorScheme.error)
+                    FitText(stringResource(R.string.chat_report_message), color = MaterialTheme.colorScheme.error)
                 }
             }
         )
@@ -307,7 +309,7 @@ private fun ReportDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.error) },
-        title = { Text(if (message != null) "Denunciar mensaje" else "Denunciar a $otherName") },
+        title = { Text(if (message != null) stringResource(R.string.chat_report_message) else stringResource(R.string.chat_report_user, otherName)) },
         text = {
             Column {
                 if (message != null) {
@@ -317,14 +319,14 @@ private fun ReportDialog(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                     ) {
                         Text(
-                            "\u201C${message.preview}\u201D",
+                            stringResource(R.string.chat_quoted_message, message.preview),
                             maxLines = 3,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(8.dp)
                         )
                     }
                 }
-                Text("¿Qué ocurre?", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.chat_report_question), style = MaterialTheme.typography.titleSmall)
                 ReportReason.entries.forEach { option ->
                     Row(
                         Modifier
@@ -334,18 +336,18 @@ private fun ReportDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(selected = reason == option, onClick = { reason = option })
-                        Text(option.label, style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(option.labelRes), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 OutlinedTextField(
                     value = details,
                     onValueChange = { if (it.length <= 500) details = it },
-                    label = { Text("Detalles (opcional)") },
+                    label = { Text(stringResource(R.string.chat_report_details)) },
                     maxLines = 4,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
                 Text(
-                    "$otherName no sabrá quién le ha denunciado. Si además no quieres hablar con esta persona, bloquéala desde Chats.",
+                    stringResource(R.string.chat_report_anonymous, otherName),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp)
@@ -354,10 +356,10 @@ private fun ReportDialog(
         },
         confirmButton = {
             TextButton(enabled = reason != null, onClick = { reason?.let { onSend(it, details) } }) {
-                FitText("Enviar denuncia", color = if (reason != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                FitText(stringResource(R.string.chat_report_send), color = if (reason != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { FitText("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { FitText(stringResource(R.string.action_cancel)) } }
     )
 }
 
@@ -368,11 +370,11 @@ private fun RecordingBar(elapsed: () -> Long, onCancel: () -> Unit, onSend: () -
         while (true) { ms = elapsed(); delay(250) }
     }
     Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onCancel) { Icon(Icons.Filled.Close, "Cancelar") }
+        IconButton(onClick = onCancel) { Icon(Icons.Filled.Close, stringResource(R.string.action_cancel)) }
         Box(Modifier.size(12.dp).clip(CircleShape).background(MaterialTheme.colorScheme.error))
         Spacer(Modifier.width(10.dp))
-        Text("Grabando  ${formatDuration(ms)}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-        FilledIconButton(onClick = onSend) { Icon(Icons.AutoMirrored.Filled.Send, "Enviar nota de voz") }
+        Text(stringResource(R.string.chat_recording, formatDuration(ms)), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+        FilledIconButton(onClick = onSend) { Icon(Icons.AutoMirrored.Filled.Send, stringResource(R.string.chat_send_voice)) }
     }
 }
 
@@ -454,9 +456,9 @@ fun ImageViewer(mediaId: String, onSave: () -> Unit, onClose: () -> Unit) {
             Box {
                 RemoteImage(mediaId, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
                 Row(Modifier.align(Alignment.TopEnd).padding(16.dp)) {
-                    FilledIconButton(onClick = onSave) { Icon(Icons.Outlined.Download, "Guardar en la galería") }
+                    FilledIconButton(onClick = onSave) { Icon(Icons.Outlined.Download, stringResource(R.string.chat_save_to_gallery)) }
                     Spacer(Modifier.width(8.dp))
-                    FilledIconButton(onClick = onClose) { Icon(Icons.Filled.Close, "Cerrar") }
+                    FilledIconButton(onClick = onClose) { Icon(Icons.Filled.Close, stringResource(R.string.action_close)) }
                 }
             }
         }

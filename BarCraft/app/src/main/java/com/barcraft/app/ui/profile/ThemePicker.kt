@@ -57,7 +57,7 @@ fun ThemePicker(current: AppTheme, onApply: (AppTheme) -> Unit, modifier: Modifi
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ListItem(
             headlineContent = { Text(stringResource(R.string.theme_picker_title)) },
-            supportingContent = { Text(current.label) },
+            supportingContent = { Text(stringResource(current.labelRes)) },
             leadingContent = { Icon(Icons.Outlined.Palette, null) },
             trailingContent = {
                 Icon(
@@ -119,8 +119,8 @@ private fun ThemeCard(
                 Text(theme.emoji, style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(theme.label, style = MaterialTheme.typography.titleSmall, color = scheme.primary)
-                    Text(theme.description, style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
+                    Text(stringResource(theme.labelRes), style = MaterialTheme.typography.titleSmall, color = scheme.primary)
+                    Text(stringResource(theme.descriptionRes), style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
                 }
                 Spacer(Modifier.width(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {

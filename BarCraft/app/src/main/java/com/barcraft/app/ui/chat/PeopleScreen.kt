@@ -2,6 +2,8 @@
 
 package com.barcraft.app.ui.chat
 
+import androidx.compose.ui.res.stringResource
+import com.barcraft.app.R
 import com.barcraft.app.ui.components.FitText
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -69,9 +71,9 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { FitText("Buscar personas") },
+                title = { FitText(stringResource(R.string.people_title)) },
                 navigationIcon = {
-                    if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") }
+                    if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) }
                 },
                 actions = {
                     // Escanear el QR de otro perfil: le sigue (o le envía solicitud) automáticamente.
@@ -84,7 +86,7 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
                             },
                             onError = { msg -> scope.launch { snackbar.showSnackbar(msg) } }
                         )
-                    }) { Icon(Icons.Outlined.QrCodeScanner, "Escanear QR") }
+                    }) { Icon(Icons.Outlined.QrCodeScanner, stringResource(R.string.people_scan_qr)) }
                 }
             )
         }
@@ -92,16 +94,16 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
         Column(Modifier.fillMaxSize().padding(padding)) {
             OutlinedTextField(
                 value = query, onValueChange = { query = it },
-                placeholder = { Text("Nombre o @nombre #1234") },
+                placeholder = { Text(stringResource(R.string.people_search_hint)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null) },
                 singleLine = true,
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
             )
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                item { FilterChip(selected = roleFilter == null, onClick = { roleFilter = null }, label = { FitText("Todos") }) }
+                item { FilterChip(selected = roleFilter == null, onClick = { roleFilter = null }, label = { FitText(stringResource(R.string.people_filter_all)) }) }
                 items(Role.entries) { r ->
-                    FilterChip(selected = roleFilter == r, onClick = { roleFilter = if (roleFilter == r) null else r }, label = { FitText(r.label) })
+                    FilterChip(selected = roleFilter == r, onClick = { roleFilter = if (roleFilter == r) null else r }, label = { FitText(stringResource(r.labelRes)) })
                 }
             }
             val list = people.everyone.filter {
@@ -113,8 +115,8 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
             when {
                 !people.loaded -> LoadingBox()
                 list.isEmpty() -> EmptyState(
-                    Icons.Outlined.PersonSearch, "No hay nadie",
-                    if (query.isBlank()) "Cuando otras personas se registren aparecerán aquí." else "Nadie coincide con \"$query\"."
+                    Icons.Outlined.PersonSearch, stringResource(R.string.people_empty_title),
+                    if (query.isBlank()) stringResource(R.string.people_empty_message) else stringResource(R.string.people_no_match, query)
                 )
                 else -> LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                     items(list, key = { it.profile.uid }) { person ->

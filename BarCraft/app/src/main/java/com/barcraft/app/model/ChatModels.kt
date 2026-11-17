@@ -1,5 +1,8 @@
 package com.barcraft.app.model
 
+import com.barcraft.app.R
+import com.barcraft.app.utils.Txt
+
 /** Conversación privada entre dos usuarios (`chats/{roomId}`). */
 data class ChatRoom(
     val id: String,
@@ -12,7 +15,7 @@ data class ChatRoom(
     val blockedBy: List<String> = emptyList()
 ) {
     fun otherId(myUid: String): String = participants.firstOrNull { it != myUid } ?: myUid
-    fun otherName(myUid: String): String = names[otherId(myUid)] ?: "Usuario"
+    fun otherName(myUid: String): String = names[otherId(myUid)] ?: Txt.get(R.string.user_fallback_name)
     val isBlocked: Boolean get() = blockedBy.isNotEmpty()
 }
 
@@ -43,10 +46,10 @@ data class ChatMessage(
     val preview: String
         get() = when (type) {
             MessageType.TEXT -> text
-            MessageType.IMAGE -> "📷 Foto"
-            MessageType.AUDIO -> "🎤 Nota de voz"
-            MessageType.GIF -> "GIF"
-            MessageType.STICKER -> "Sticker"
+            MessageType.IMAGE -> Txt.get(R.string.message_preview_image)
+            MessageType.AUDIO -> Txt.get(R.string.message_preview_audio)
+            MessageType.GIF -> Txt.get(R.string.message_preview_gif)
+            MessageType.STICKER -> Txt.get(R.string.message_preview_sticker)
         }
 }
 

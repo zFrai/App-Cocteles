@@ -8,6 +8,7 @@ import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import com.barcraft.app.R
 import javax.crypto.Cipher
 
 fun Context.findFragmentActivity(): FragmentActivity? {
@@ -43,9 +44,9 @@ fun showBiometricPrompt(
         }
     )
     val info = BiometricPrompt.PromptInfo.Builder()
-        .setTitle("Desbloquear BarCraft")
-        .setSubtitle("Usa tu huella para entrar")
-        .setNegativeButtonText("Usar PIN")
+        .setTitle(activity.getString(R.string.biometric_unlock_title))
+        .setSubtitle(activity.getString(R.string.biometric_unlock_subtitle))
+        .setNegativeButtonText(activity.getString(R.string.lock_use_pin))
         .setAllowedAuthenticators(BIOMETRIC_WEAK)
         .build()
     prompt.authenticate(info)
@@ -74,7 +75,7 @@ fun showCryptoBiometricPrompt(
         object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 val authorized = result.cryptoObject?.cipher
-                if (authorized != null) onSuccess(authorized) else onError("No se pudo usar la huella. Inténtalo de nuevo.")
+                if (authorized != null) onSuccess(authorized) else onError(activity.getString(R.string.biometric_error_retry))
             }
 
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -88,7 +89,7 @@ fun showCryptoBiometricPrompt(
     val info = BiometricPrompt.PromptInfo.Builder()
         .setTitle(title)
         .setSubtitle(subtitle)
-        .setNegativeButtonText("Cancelar")
+        .setNegativeButtonText(activity.getString(R.string.action_cancel))
         .setAllowedAuthenticators(BIOMETRIC_STRONG)
         .build()
     prompt.authenticate(info, BiometricPrompt.CryptoObject(cipher))

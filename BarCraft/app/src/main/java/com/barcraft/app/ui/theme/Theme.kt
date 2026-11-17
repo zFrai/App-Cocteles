@@ -1,18 +1,25 @@
 package com.barcraft.app.ui.theme
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import com.barcraft.app.R
+import com.barcraft.app.utils.Txt
 
 /** Temas visuales que el usuario puede elegir en Perfil. */
-enum class AppTheme(val label: String, val description: String, val emoji: String, val isLight: Boolean) {
-    DELUXE("Deluxe", "Negro y dorado", "🥃", false),
-    VOLCAN("Volcán", "Brasas y ámbar", "🌋", false),
-    ABISAL("Abisal", "Azul profundo", "🌊", false),
-    CIELO("Cielo", "Claro y fresco", "☀️", true);
+enum class AppTheme(@StringRes val labelRes: Int, @StringRes val descriptionRes: Int, val emoji: String, val isLight: Boolean) {
+    DELUXE(R.string.theme_deluxe, R.string.theme_deluxe_desc, "🥃", false),
+    VOLCAN(R.string.theme_volcan, R.string.theme_volcan_desc, "🌋", false),
+    ABISAL(R.string.theme_abisal, R.string.theme_abisal_desc, "🌊", false),
+    CIELO(R.string.theme_cielo, R.string.theme_cielo_desc, "☀️", true);
+
+    /** Nombre visible (sale de strings.xml). */
+    val label: String get() = Txt.get(labelRes)
+    val description: String get() = Txt.get(descriptionRes)
 
     val colorScheme: ColorScheme
         get() = when (this) {
