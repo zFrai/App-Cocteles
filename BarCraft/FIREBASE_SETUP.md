@@ -53,9 +53,11 @@ Usa dos móviles o dos emuladores (o un móvil y un emulador), registra una cuen
 y en **Chats > Nuevo chat** busca al otro usuario. Los mensajes llegan al instante.
 
 ## @usuario (tag único)
-Cada cuenta tiene un identificador único y fijo, como `@laura4821`: su nombre sin tildes ni
-espacios + 4 cifras. Se crea solo al entrar en la app (también a las cuentas que ya existían),
-se ve en **Perfil** y sirve para buscar a alguien en la pestaña **Buscar** (escribe `@laura`).
+Cada cuenta tiene un identificador único y fijo, como `@laura #4821`: su nombre en minúsculas
+(admite tildes como á à â ä, números y los símbolos `_ - . / \ |`; sin espacios, máx. 16) + 4 cifras.
+El número se puede repetir con otro nombre y el nombre con otro número, pero nunca los dos.
+Se crea solo al entrar en la app (también a las cuentas que ya existían; los tags ya creados no cambian),
+se ve en **Perfil** y sirve para buscar a alguien en la pestaña **Buscar** (escribe `@laura` o `@laura #4821`).
 Firestore guarda un documento por tag en la colección `tags`, así que no puede haber dos iguales.
 Necesita las reglas actualizadas: vuelve a publicar `firestore.rules`.
 

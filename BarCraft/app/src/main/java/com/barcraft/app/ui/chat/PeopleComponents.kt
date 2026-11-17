@@ -46,7 +46,8 @@ fun PersonRow(
 ) {
     var menu by remember { mutableStateOf(false) }
     val p = person.profile
-    val openChat = { vm.openChat(p.uid, p.name, onOpenChat) }
+    // Tipo explícito: vm.openChat devuelve un Job y onClick espera () -> Unit (era el error de compilación).
+    val openChat: () -> Unit = { vm.openChat(p.uid, p.name, onOpenChat) }
 
     ListItem(
         leadingContent = { UserAvatar(p.name) },
@@ -68,7 +69,7 @@ fun PersonRow(
                 FriendState.REQUEST_RECEIVED -> "Quiere ser tu amigo"
                 FriendState.NONE -> p.bio.ifBlank { p.role.description }
             }
-            // "@laura4821 · Amigo": el @tag distingue a personas con el mismo nombre.
+            // "@laura #4821 · Amigo": el @tag distingue a personas con el mismo nombre.
             Text(
                 if (p.handle.isBlank()) status else "${p.handle} · $status",
                 maxLines = 1, overflow = TextOverflow.Ellipsis

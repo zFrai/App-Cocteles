@@ -49,6 +49,19 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
     /** Cuentas a las que ya se ha intentado dar @tag en esta ejecución (para no repetirlo en cada cambio). */
     private val tagRequested = mutableSetOf<String>()
 
+    /** Cuentas cuyo email ya se ha sincronizado en esta ejecución. */
+    private val emailSynced = mutableSetOf<String>()
+
+    /** Una vez por ejecución: email a emails/{uid} y, si estaba en el perfil público, se borra de ahí. */
+    private fun syncEmail(profile: UserProfile) {
+        if (!emailSynced.add(profile.uid)) return
+        viewModelScope.launch {
+            val email = container.authRepository.currentEmail.ifBlank { profile.email }
+            runCatching { container.userRepository.syncPrivateEmail(profile.uid, email, publicCopy = profile.email.isNotBlank()) }
+                .onFailure { emailSynced.remove(profile.uid) }
+        }
+    }
+
     /** Las cuentas sin @tag (nuevas o de antes de existir) reciben uno al entrar. */
     private fun assignTagIfMissing(profile: UserProfile) {
         if (profile.tag.isNotBlank() || profile.banned || !tagRequested.add(profile.uid)) return
@@ -68,6 +81,9 @@ class SessionViewModel(private val container: AppContainer) : ViewModel() {
                         uid != null -> container.userRepository.observeUser(uid)
                             .onEach { if (it == null) runCatching { container.authRepository.ensureProfile(uid) } }
                             .onEach { it?.let(::assignTagIfMissing) }
+                            .onEach { it?.let(::syncEmail) }
+                            // El email propio se toma de Firebase Auth, no del documento público.
+                            .map { it?.copy(email = container.authRepository.currentEmail) }
                             .map { profile ->
                                 when {
                                     profile == null -> SessionState.Loading
