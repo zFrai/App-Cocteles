@@ -15,7 +15,17 @@ enum class AppTheme(@StringRes val labelRes: Int, @StringRes val descriptionRes:
     DELUXE(R.string.theme_deluxe, R.string.theme_deluxe_desc, "🥃", false),
     VOLCAN(R.string.theme_volcan, R.string.theme_volcan_desc, "🌋", false),
     ABISAL(R.string.theme_abisal, R.string.theme_abisal_desc, "🌊", false),
-    CIELO(R.string.theme_cielo, R.string.theme_cielo_desc, "☀️", true);
+    CIELO(R.string.theme_cielo, R.string.theme_cielo_desc, "☀️", true),
+    ABSENTA(R.string.theme_absenta, R.string.theme_absenta_desc, "🌿", false),
+    MENTA(R.string.theme_menta, R.string.theme_menta_desc, "🍃", true),
+    GRANADINA(R.string.theme_granadina, R.string.theme_granadina_desc, "🍒", false),
+    FRESA(R.string.theme_fresa, R.string.theme_fresa_desc, "🍓", true),
+    MEDIANOCHE(R.string.theme_medianoche, R.string.theme_medianoche_desc, "🌙", false),
+    LAVANDA(R.string.theme_lavanda, R.string.theme_lavanda_desc, "💜", true),
+    NEGRONI(R.string.theme_negroni, R.string.theme_negroni_desc, "🍊", false),
+    SPRITZ(R.string.theme_spritz, R.string.theme_spritz_desc, "🥂", true),
+    ESPRESSO(R.string.theme_espresso, R.string.theme_espresso_desc, "☕", false),
+    CREMA(R.string.theme_crema, R.string.theme_crema_desc, "🥛", true);
 
     /** Nombre visible (sale de strings.xml). */
     val label: String get() = Txt.get(labelRes)
@@ -27,6 +37,16 @@ enum class AppTheme(@StringRes val labelRes: Int, @StringRes val descriptionRes:
             VOLCAN -> VolcanScheme
             ABISAL -> AbisalScheme
             CIELO -> CieloScheme
+            ABSENTA -> AbsentaScheme
+            MENTA -> MentaScheme
+            GRANADINA -> GranadinaScheme
+            FRESA -> FresaScheme
+            MEDIANOCHE -> MedianocheScheme
+            LAVANDA -> LavandaScheme
+            NEGRONI -> NegroniScheme
+            SPRITZ -> SpritzScheme
+            ESPRESSO -> EspressoScheme
+            CREMA -> CremaScheme
         }
 }
 

@@ -38,6 +38,26 @@
     <string name="theme_abisal_desc">Azul profundo</string>
     <string name="theme_cielo">Cielo</string>
     <string name="theme_cielo_desc">Claro y fresco</string>
+    <string name="theme_absenta">Absenta</string>
+    <string name="theme_absenta_desc">Verde absenta en la noche</string>
+    <string name="theme_menta">Menta</string>
+    <string name="theme_menta_desc">Absenta, versión clara</string>
+    <string name="theme_granadina">Granadina</string>
+    <string name="theme_granadina_desc">Rojo granadina y cobre</string>
+    <string name="theme_fresa">Fresa</string>
+    <string name="theme_fresa_desc">Granadina, versión clara</string>
+    <string name="theme_medianoche">Medianoche</string>
+    <string name="theme_medianoche_desc">Violeta y azul nocturno</string>
+    <string name="theme_lavanda">Lavanda</string>
+    <string name="theme_lavanda_desc">Medianoche, versión clara</string>
+    <string name="theme_negroni">Negroni</string>
+    <string name="theme_negroni_desc">Naranja amargo y ámbar</string>
+    <string name="theme_spritz">Spritz</string>
+    <string name="theme_spritz_desc">Negroni, versión clara</string>
+    <string name="theme_espresso">Espresso</string>
+    <string name="theme_espresso_desc">Café tostado y crema</string>
+    <string name="theme_crema">Crema</string>
+    <string name="theme_crema_desc">Espresso, versión clara</string>
     <!-- Usuario sin nombre y vista previa de mensajes -->
     <string name="user_fallback_name">Usuario</string>
     <string name="user_no_name">Sin nombre</string>
