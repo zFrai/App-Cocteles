@@ -30,8 +30,10 @@ internal fun ViewModel.launchSafely(
     messages: MutableSharedFlow<String>,
     errorText: String,
     block: suspend () -> Unit
-) = viewModelScope.launch {
-    runCatching { block() }.onFailure { messages.emit(errorText) }
+) {
+    viewModelScope.launch {
+        runCatching { block() }.onFailure { messages.emit(errorText) }
+    }
 }
 
 class FeedViewModel(
