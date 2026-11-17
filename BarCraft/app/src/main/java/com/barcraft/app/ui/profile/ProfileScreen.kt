@@ -78,6 +78,7 @@ import com.barcraft.app.ui.navigation.LocalAppSession
 import com.barcraft.app.ui.theme.AppTheme
 import com.barcraft.app.utils.DateUtils
 import com.barcraft.app.utils.appViewModel
+import kotlinx.coroutines.flow.flowOf
 
 @Composable
 fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> Unit) {
@@ -89,6 +90,9 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
     val snackbar = remember { SnackbarHostState() }
     var editing by remember { mutableStateOf(false) }
     var editingLinks by remember { mutableStateOf(false) }
+    // Fuera de la lista: así el listener de Firestore no se crea de nuevo cada vez que el bloque entra en pantalla.
+    val prefs by remember(me?.uid) { me?.let { vm.notificationPrefs(it.uid) } ?: flowOf(NotificationPrefs()) }
+        .collectAsStateWithLifecycle(NotificationPrefs())
 
     LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
 
@@ -175,8 +179,6 @@ fun ProfileScreen(onLogin: () -> Unit, onLogout: () -> Unit, onOpenAdmin: () -> 
 
             // ── Configuración: privacidad y avisos ────────────────────
             if (me != null) item {
-                val prefs by remember(me.uid) { vm.notificationPrefs(me.uid) }
-                    .collectAsStateWithLifecycle(NotificationPrefs())
                 val itemColors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionTitle("Configuración")

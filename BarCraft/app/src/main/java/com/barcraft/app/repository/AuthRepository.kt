@@ -23,6 +23,9 @@ class AuthRepository(
 ) {
     val currentUid: String? get() = auth.currentUser?.uid
 
+    /** Email de la sesión actual (viene de Firebase Auth, no del perfil público). */
+    val currentEmail: String get() = auth.currentUser?.email.orEmpty()
+
     fun observeUid(): Flow<String?> = auth.uidFlow()
 
     suspend fun login(email: String, password: String): Result<Unit> = runCatching {
@@ -48,10 +51,14 @@ class AuthRepository(
     }
 
     private suspend fun createProfile(uid: String, name: String, email: String, role: Role) {
+        // El email no va en el perfil público (lo leería cualquier usuario): se guarda aparte en emails/{uid}.
+        // Si falla (p. ej. reglas aún sin publicar) no se bloquea el registro: se reintenta al entrar.
+        if (email.isNotBlank()) {
+            runCatching { db.collection(Collections.EMAILS).document(uid).set(mapOf("email" to email)).await() }
+        }
         db.collection(Collections.USERS).document(uid).set(
             mapOf(
                 "name" to name,
-                "email" to email,
                 // Barman o Comensal. Admin solo lo puede dar otro Admin (lo impiden las reglas).
                 "role" to (if (role == Role.ADMIN) Role.CLIENTE else role).id,
                 "banned" to false,

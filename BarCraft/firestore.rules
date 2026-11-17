@@ -28,7 +28,9 @@ service cloud.firestore {
         return request.resource.data.get('bio', '').size() <= 250
                && (!('links' in request.resource.data)
                    || (request.resource.data.links is map && request.resource.data.links.size() <= 6))
-               && request.resource.data.get('privateAccount', false) is bool;
+               && request.resource.data.get('privateAccount', false) is bool
+               // El email ya no vive aquí (cualquiera podría leerlo): solo se permite borrarlo.
+               && (!('email' in changed()) || !('email' in request.resource.data));
       }
 
       allow read: if signedIn();
@@ -36,7 +38,8 @@ service cloud.firestore {
       allow create: if signedIn() && request.auth.uid == uid
                     && request.resource.data.role in ['barman', 'cliente']
                     && request.resource.data.banned == false
-                    && !('tag' in request.resource.data);
+                    && !('tag' in request.resource.data)
+                    && !('email' in request.resource.data);
       // Cada uno edita su nombre y bio, pero no su rol ni su bloqueo.
       // También su descripción, "Dónde encontrarme" y si la cuenta es privada.
       allow update: if (signedIn() && request.auth.uid == uid && !changed().hasAny(['role', 'banned']) && tagOk()
@@ -55,6 +58,15 @@ service cloud.firestore {
 
     // ── @tags (identificador único de cada usuario) ────────────
     // tags/{tag} = { uid }. El id del documento es el tag, así que no puede haber dos iguales.
+    // ── Emails (fuera del perfil público) ──────────────────────────
+    match /emails/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if signedIn() && request.auth.uid == uid
+                            && request.resource.data.keys().hasOnly(['email'])
+                            && request.resource.data.email == request.auth.token.email;
+      allow delete: if false;
+    }
+
     match /tags/{tag} {
       allow read: if signedIn();
       // Solo se reserva junto con el perfil (misma transacción) y con formato válido.

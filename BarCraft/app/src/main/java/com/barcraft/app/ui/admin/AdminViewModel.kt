@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 /** Panel de administración: roles, bloqueos, moderación del muro y denuncias. */
@@ -27,7 +29,10 @@ class AdminViewModel(
 ) : ViewModel() {
 
     val allUsers: StateFlow<List<UserProfile>?> =
-        users.observeAll().map<List<UserProfile>, List<UserProfile>?> { it }
+        // El email ya no está en el perfil público: se cruza con emails/{uid}, que solo lee el Admin.
+        combine(users.observeAll(), users.observeEmails().onStart { emit(emptyMap()) }) { list, emails ->
+            list.map { u -> u.copy(email = emails[u.uid] ?: u.email) }
+        }.map<List<UserProfile>, List<UserProfile>?> { it }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val posts: StateFlow<List<Post>> =

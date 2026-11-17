@@ -34,6 +34,22 @@ class UserRepository(private val db: FirebaseFirestore) {
         users.document(uid).update(mapOf("name" to name.trim(), "bio" to bio.trim().take(UserProfile.BIO_MAX))).await()
     }
 
+    /**
+     * Guarda el email de la cuenta en `emails/{uid}` (solo lo leen su dueño y los Admins).
+     * Las cuentas antiguas lo tenían también en el perfil público, que lee cualquiera: si [publicCopy]
+     * es true se borra de ahí, siempre después de haberlo guardado aparte.
+     */
+    suspend fun syncPrivateEmail(uid: String, email: String, publicCopy: Boolean) {
+        if (email.isNotBlank()) db.collection(Collections.EMAILS).document(uid).set(mapOf("email" to email)).await()
+        if (publicCopy) users.document(uid).update("email", FieldValue.delete()).await()
+    }
+
+    /** uid -> email de todas las cuentas. Solo funciona para Admins (lo exigen las reglas). */
+    fun observeEmails(): Flow<Map<String, String>> =
+        db.collection(Collections.EMAILS).snapshotFlow().map { snap ->
+            snap.documents.associate { it.id to it.getString("email").orEmpty() }
+        }
+
     /** Guarda "Dónde encontrarme" entero (los campos vacíos lo borran). */
     suspend fun updateLinks(uid: String, links: ProfileLinks) {
         users.document(uid).update("links", links.cleaned().toMap()).await()
