@@ -2,11 +2,9 @@ package com.barcraft.app.ui.profile
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,14 +42,11 @@ import com.barcraft.app.ui.theme.AppTheme
 
 /**
  * Selector de "Tema del perfil" como desplegable de fichas.
- * Un toque marca la ficha; un doble toque la aplica. El tema activo lleva un tick abajo a la derecha.
+ * Un toque aplica el tema. El tema activo lleva borde y un tick abajo a la derecha.
  */
 @Composable
 fun ThemePicker(current: AppTheme, onApply: (AppTheme) -> Unit, modifier: Modifier = Modifier) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    var marked by rememberSaveable { mutableStateOf(current.name) }
-    // Al cerrar el desplegable o cambiar el tema, la marca vuelve al tema actual.
-    LaunchedEffect(expanded, current) { if (!expanded) marked = current.name }
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ListItem(
@@ -79,13 +73,8 @@ fun ThemePicker(current: AppTheme, onApply: (AppTheme) -> Unit, modifier: Modifi
                 AppTheme.entries.forEach { t ->
                     ThemeCard(
                         theme = t,
-                        marked = t.name == marked,
                         active = t == current,
-                        onClick = { marked = t.name },
-                        onDoubleClick = {
-                            marked = t.name
-                            if (t != current) onApply(t)
-                        }
+                        onClick = { if (t != current) onApply(t) }
                     )
                 }
             }
@@ -93,14 +82,11 @@ fun ThemePicker(current: AppTheme, onApply: (AppTheme) -> Unit, modifier: Modifi
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ThemeCard(
     theme: AppTheme,
-    marked: Boolean,
     active: Boolean,
-    onClick: () -> Unit,
-    onDoubleClick: () -> Unit
+    onClick: () -> Unit
 ) {
     val scheme = theme.colorScheme
     val shape = MaterialTheme.shapes.medium
@@ -108,11 +94,11 @@ private fun ThemeCard(
         shape = shape,
         color = scheme.surfaceContainer,
         contentColor = scheme.onSurface,
-        border = if (marked) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        border = if (active) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .combinedClickable(onClick = onClick, onDoubleClick = onDoubleClick)
+            .clickable(onClick = onClick)
     ) {
         Box {
             Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
