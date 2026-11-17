@@ -59,7 +59,8 @@ class FeedViewModel(
         }
 
     fun messageAuthor(me: UserProfile, post: Post, onReady: (String) -> Unit) =
-        launchSafely(_messages, "No se pudo abrir el chat") {
+        // Si su cuenta es privada y no os seguís los dos, las reglas no dejan crear la conversación.
+        launchSafely(_messages, "No se pudo abrir el chat: si su cuenta es privada, tenéis que seguiros los dos") {
             onReady(chat.openRoom(me, post.authorId, post.authorName))
         }
 }

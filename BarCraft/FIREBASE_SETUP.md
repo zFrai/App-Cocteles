@@ -50,7 +50,13 @@ Las denuncias se guardan en la colección `reports` y solo las ve el Admin, en
 
 ## Probar el chat entre dos usuarios
 Usa dos móviles o dos emuladores (o un móvil y un emulador), registra una cuenta en cada uno,
-y en **Chats > Nuevo chat** busca al otro usuario. Los mensajes llegan al instante.
+y en la pestaña **Buscar** busca al otro usuario y pulsa el icono de mensaje. Los mensajes llegan al instante.
+
+## Seguir y seguidores
+Seguir es en un solo sentido (colección `follows`, un documento `{quienSigue}_{aQuién}`).
+Si la cuenta es privada (Perfil > Configuración), seguirla envía una **solicitud** que se acepta en
+**Chats > Solicitudes**. Se puede chatear con quien tenga la cuenta pública o con quien os sigáis los dos.
+Las amistades de la versión anterior se convierten solas en seguimiento mutuo al abrir Chats o Buscar.
 
 ## @usuario (tag único)
 Cada cuenta tiene un identificador único y fijo, como `@laura #4821`: su nombre en minúsculas

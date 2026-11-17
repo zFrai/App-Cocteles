@@ -29,7 +29,10 @@ object Collections {
     const val MESSAGES = "messages"
     const val POSTS = "posts"
     const val COMMENTS = "comments"
+    /** Amistades del sistema anterior; solo se leen para convertirlas en seguimientos. */
     const val FRIENDSHIPS = "friendships"
+    /** Seguimientos: `follows/{followerUid_followedUid}`. */
+    const val FOLLOWS = "follows"
     const val MEDIA = "media"
     const val REPORTS = "reports"
     const val PRIVATE = "private"

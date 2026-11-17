@@ -3,6 +3,7 @@ package com.barcraft.app.data.remote
 import com.barcraft.app.model.ChatMessage
 import com.barcraft.app.model.ChatRoom
 import com.barcraft.app.model.Comment
+import com.barcraft.app.model.Follow
 import com.barcraft.app.model.Friendship
 import com.barcraft.app.model.MessageType
 import com.barcraft.app.model.NotificationPrefs
@@ -71,6 +72,14 @@ fun DocumentSnapshot.toChatMessage(): ChatMessage = ChatMessage(
     createdAt = millis("createdAt")
 )
 
+fun DocumentSnapshot.toFollow(): Follow = Follow(
+    id = id,
+    followerId = getString("followerId").orEmpty(),
+    followedId = getString("followedId").orEmpty(),
+    accepted = getString("status") == "accepted",
+    createdAt = millis("createdAt")
+)
+
 fun DocumentSnapshot.toFriendship(): Friendship = Friendship(
     id = id,
     users = stringList("users"),
@@ -85,6 +94,7 @@ fun DocumentSnapshot.toPrivateSettings(): PrivateSettings =
     else PrivateSettings(
         favorites = stringList("favorites"),
         blocked = stringList("blocked"),
+        followsMigrated = getBoolean("followsMigrated") ?: false,
         notifications = NotificationPrefs(
             comments = getBoolean(NotificationPrefs.COMMENTS) ?: true,
             messages = getBoolean(NotificationPrefs.MESSAGES) ?: true,

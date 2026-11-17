@@ -1,6 +1,24 @@
 package com.barcraft.app.model
 
-/** Relación de amistad entre dos usuarios (`friendships/{uidA_uidB}`). */
+/**
+ * Seguimiento en un solo sentido (`follows/{followerUid_followedUid}`), como en Instagram.
+ * Si la cuenta seguida es privada empieza como solicitud ([accepted] = false) hasta que la acepta.
+ */
+data class Follow(
+    val id: String,
+    val followerId: String,
+    val followedId: String,
+    val accepted: Boolean,
+    val createdAt: Long
+)
+
+/** Estado de un seguimiento visto desde un lado. */
+enum class FollowState { NONE, REQUESTED, FOLLOWING }
+
+/**
+ * Amistad del sistema anterior (`friendships/{uidA_uidB}`). Ya no se crean: al entrar se convierten
+ * en seguimientos (ver FriendsRepository.migrateFriendships).
+ */
 data class Friendship(
     val id: String,
     val users: List<String>,
@@ -18,6 +36,8 @@ data class Friendship(
 data class PrivateSettings(
     val favorites: List<String> = emptyList(),
     val blocked: List<String> = emptyList(),
+    /** true cuando las amistades antiguas ya se han convertido en seguimientos. */
+    val followsMigrated: Boolean = false,
     val notifications: NotificationPrefs = NotificationPrefs()
 )
 
@@ -37,5 +57,3 @@ data class NotificationPrefs(
     }
 }
 
-/** Estado de la relación con otra persona, para pintar botones. */
-enum class FriendState { NONE, REQUEST_SENT, REQUEST_RECEIVED, FRIENDS }
