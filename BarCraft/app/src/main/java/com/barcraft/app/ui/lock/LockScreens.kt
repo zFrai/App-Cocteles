@@ -40,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -55,8 +56,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.biometric.BiometricPrompt
 import com.barcraft.app.data.local.LockStore
 import com.barcraft.app.model.UserProfile
+import com.barcraft.app.ui.auth.requestGoogleIdToken
 import com.barcraft.app.utils.appContainer
 import com.barcraft.app.utils.appViewModel
+import kotlinx.coroutines.launch
 
 /**
  * Protege la app de una cuenta con PIN + huella.
@@ -217,7 +220,29 @@ private fun LockScreen(profile: UserProfile, vm: LockViewModel, state: LockUiSta
         TextButton(onClick = onLogout) { Text("Cerrar sesión") }
     }
 
-    if (forgot) {
+    if (forgot && vm.recoversWithGoogle) {
+        val scope = rememberCoroutineScope()
+        AlertDialog(
+            onDismissRequest = { forgot = false },
+            title = { Text("Recuperar el PIN") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Tu cuenta usa Google. Elige la misma cuenta de Google (${profile.email}) para crear un PIN nuevo.")
+                    state.passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        vm.onGoogleRecoverStarted()
+                        scope.launch { vm.onGoogleRecoverResult(requestGoogleIdToken(context)) }
+                    },
+                    enabled = !state.checkingPassword
+                ) { Text("Continuar con Google") }
+            },
+            dismissButton = { TextButton(onClick = { forgot = false }) { Text("Cancelar") } }
+        )
+    } else if (forgot) {
         var password by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { forgot = false },

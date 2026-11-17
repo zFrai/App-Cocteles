@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barcraft.app.AppContainer
 import com.barcraft.app.data.local.LockStore
+import com.barcraft.app.ui.auth.GoogleTokenResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +27,7 @@ data class LockUiState(
  * - Se entra con huella si está activada.
  * - Cada [LockStore.PIN_EVERY] entradas con huella se pide el PIN una vez.
  * - Tras [LockStore.MAX_BIOMETRIC_FAILS] huellas fallidas seguidas el PIN es obligatorio.
- * - Si se olvida el PIN, se recupera con la contraseña de la cuenta.
+ * - Si se olvida el PIN, se recupera con la contraseña de la cuenta (o con Google si la cuenta es de Google).
  */
 class LockViewModel(private val container: AppContainer, private val uid: String) : ViewModel() {
 
@@ -101,14 +102,30 @@ class LockViewModel(private val container: AppContainer, private val uid: String
         }
     }
 
+    /** Las cuentas creadas con Google no tienen contraseña: el PIN se recupera confirmando Google. */
+    val recoversWithGoogle: Boolean get() = !container.authRepository.hasPasswordLogin
+
     /** "He olvidado el PIN": se comprueba la contraseña de la cuenta y se crea un PIN nuevo. */
-    fun recoverWithPassword(password: String) {
+    fun recoverWithPassword(password: String) = recover { container.authRepository.verifyPassword(password) }
+
+    fun onGoogleRecoverStarted() = _state.update { it.copy(checkingPassword = true, passwordError = null) }
+
+    /** "He olvidado el PIN" en una cuenta de Google. */
+    fun onGoogleRecoverResult(result: GoogleTokenResult) {
+        when (result) {
+            is GoogleTokenResult.Success -> recover { container.authRepository.verifyGoogle(result.idToken) }
+            is GoogleTokenResult.Error -> _state.update { it.copy(checkingPassword = false, passwordError = result.message) }
+            GoogleTokenResult.Cancelled -> _state.update { it.copy(checkingPassword = false) }
+        }
+    }
+
+    private fun recover(check: suspend () -> Result<Unit>) {
         viewModelScope.launch {
             _state.update { it.copy(checkingPassword = true, passwordError = null) }
-            val result = container.authRepository.verifyPassword(password)
+            val result = check()
             if (result.isSuccess) {
                 store.clear(uid)
-                _state.value = initialState().copy(message = "Contraseña correcta. Crea un PIN nuevo.")
+                _state.value = initialState().copy(message = "Cuenta comprobada. Crea un PIN nuevo.")
             } else {
                 _state.update { it.copy(checkingPassword = false, passwordError = result.exceptionOrNull()?.message) }
             }

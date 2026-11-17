@@ -18,6 +18,29 @@ hace falta un proyecto de Firebase (gratis, plan Spark). Son unos 10 minutos.
 1. Menú **Compilación > Authentication > Comenzar**.
 2. Pestaña **Método de acceso** > **Correo electrónico/contraseña** > Habilitar > Guardar.
 
+### Iniciar sesión con Google (opcional)
+1. En la misma pestaña **Método de acceso** > **Agregar proveedor nuevo** > **Google** > Habilitar,
+   elige el correo de asistencia y Guardar.
+2. Google exige la huella **SHA-1** del certificado con el que se firma la app. Sácala en Android Studio
+   con el panel **Gradle > BarCraft > Tasks > android > signingReport** (o `gradlew signingReport`).
+   Aparecen la de `debug` y, si tienes keystore de publicación, la de `release`.
+3. En **Configuración del proyecto** (rueda dentada) > **Tus apps** > la app Android > **Agregar huella digital**:
+   añade la SHA-1 de debug y la de release (y la SHA-256 si quieres).
+4. **Vuelve a descargar `google-services.json`** y sustituye el de `app/`: ahora incluye el ID de cliente
+   web que necesita el botón de Google. Sin esto el botón muestra "Google no está configurado".
+5. Si publicas en Google Play con "Firma de apps de Google Play", añade también la SHA-1 que aparece en
+   Play Console > Integridad de la app.
+
+Las cuentas nuevas creadas con Google desde **Iniciar sesión** son Comensal; desde **Crear cuenta**
+usan el rol elegido arriba. Como no tienen contraseña, el PIN olvidado se recupera eligiendo la misma
+cuenta de Google.
+
+### Iniciar sesión con huella
+No necesita nada en Firebase. Al entrar con email y contraseña, marca **Entrar con huella la próxima vez**:
+el acceso se guarda cifrado en el móvil con una clave del Android Keystore que solo se abre con la huella.
+Después de cerrar sesión aparece **Entrar con huella**. Si cambias la contraseña o añades huellas nuevas
+en el móvil, hay que volver a activarlo. Las cuentas de Google no lo necesitan: entran con un toque.
+
 ## 4. Crear la base de datos
 1. Menú **Compilación > Firestore Database > Crear base de datos**.
 2. Ubicación: `eur3 (europe-west)` o la más cercana.

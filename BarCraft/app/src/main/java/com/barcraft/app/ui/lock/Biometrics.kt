@@ -3,10 +3,12 @@ package com.barcraft.app.ui.lock
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import javax.crypto.Cipher
 
 fun Context.findFragmentActivity(): FragmentActivity? {
     var ctx: Context = this
@@ -47,5 +49,48 @@ fun showBiometricPrompt(
         .setAllowedAuthenticators(BIOMETRIC_WEAK)
         .build()
     prompt.authenticate(info)
+    return prompt
+}
+
+/** ¿Hay huella "fuerte" (la que permite usar claves cifradas del Keystore)? */
+fun Context.strongBiometricAvailable(): Boolean =
+    BiometricManager.from(this).canAuthenticate(BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
+
+/**
+ * Diálogo de huella que además autoriza un [Cipher] del Keystore (para cifrar o leer credenciales).
+ * [onError] recibe null si la persona simplemente canceló, o el mensaje del sistema si algo falló.
+ */
+fun showCryptoBiometricPrompt(
+    activity: FragmentActivity,
+    cipher: Cipher,
+    title: String,
+    subtitle: String,
+    onSuccess: (Cipher) -> Unit,
+    onError: (String?) -> Unit
+): BiometricPrompt {
+    val prompt = BiometricPrompt(
+        activity,
+        ContextCompat.getMainExecutor(activity),
+        object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                val authorized = result.cryptoObject?.cipher
+                if (authorized != null) onSuccess(authorized) else onError("No se pudo usar la huella. Inténtalo de nuevo.")
+            }
+
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                val cancelled = errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
+                    errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                    errorCode == BiometricPrompt.ERROR_CANCELED
+                onError(if (cancelled) null else errString.toString())
+            }
+        }
+    )
+    val info = BiometricPrompt.PromptInfo.Builder()
+        .setTitle(title)
+        .setSubtitle(subtitle)
+        .setNegativeButtonText("Cancelar")
+        .setAllowedAuthenticators(BIOMETRIC_STRONG)
+        .build()
+    prompt.authenticate(info, BiometricPrompt.CryptoObject(cipher))
     return prompt
 }
