@@ -1,16 +1,19 @@
 package com.barcraft.app.ui.profile
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barcraft.app.AppContainer
 import com.barcraft.app.R
 import com.barcraft.app.model.NotificationPrefs
 import com.barcraft.app.model.ProfileLinks
+import com.barcraft.app.model.UserProfile
 import com.barcraft.app.ui.social.launchSafely
 import com.barcraft.app.ui.theme.AppTheme
 import com.barcraft.app.utils.Txt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -32,6 +35,42 @@ class ProfileViewModel(private val container: AppContainer) : ViewModel() {
         launchSafely(_messages, Txt.get(R.string.msg_profile_save_failed)) {
             container.userRepository.updateProfile(uid, name, bio)
             _messages.emit(Txt.get(R.string.msg_profile_updated))
+        }
+    }
+
+    // ── Foto de perfil ───────────────────────────────────────────────
+    private val _uploadingPhoto = MutableStateFlow(false)
+    val uploadingPhoto: StateFlow<Boolean> = _uploadingPhoto
+
+    /** Sube la foto elegida, la pone en el perfil y borra la anterior. */
+    fun setPhoto(me: UserProfile, source: Uri) {
+        if (_uploadingPhoto.value) return
+        _uploadingPhoto.value = true
+        viewModelScope.launch {
+            val media = container.mediaRepository
+            var newId: String? = null
+            runCatching {
+                val id = media.uploadAvatar(me.uid, source).also { newId = it }
+                container.userRepository.setPhoto(me.uid, id)
+                container.avatarCache.set(me.uid, id)
+                if (me.photoId.isNotBlank() && me.photoId != id) media.delete(me.photoId)
+            }.onSuccess {
+                _messages.emit(Txt.get(R.string.msg_profile_photo_updated))
+            }.onFailure {
+                newId?.let { media.delete(it) } // no dejar la foto subida sin usar
+                _messages.emit(Txt.get(R.string.msg_profile_photo_failed))
+            }
+            _uploadingPhoto.value = false
+        }
+    }
+
+    fun removePhoto(me: UserProfile) {
+        if (me.photoId.isBlank()) return
+        launchSafely(_messages, Txt.get(R.string.msg_profile_photo_failed)) {
+            container.userRepository.setPhoto(me.uid, "")
+            container.avatarCache.set(me.uid, "")
+            container.mediaRepository.delete(me.photoId)
+            _messages.emit(Txt.get(R.string.msg_profile_photo_removed))
         }
     }
 

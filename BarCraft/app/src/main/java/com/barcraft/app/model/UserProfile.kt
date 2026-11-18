@@ -21,7 +21,9 @@ data class UserProfile(
      * Cuenta privada: quien quiera seguirla tendrá que enviar una solicitud.
      * El seguimiento llega en una versión posterior; de momento solo se guarda la preferencia.
      */
-    val privateAccount: Boolean = false
+    val privateAccount: Boolean = false,
+    /** Foto de perfil: id del archivo en la colección `media` (vacío = se muestra la inicial). */
+    val photoId: String = ""
 ) {
     companion object {
         const val BIO_MAX = 250
