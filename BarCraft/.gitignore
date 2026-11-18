@@ -10,6 +10,7 @@
 .cxx
 # Credenciales de Firebase: cada desarrollador usa la suya
 app/google-services.json
+/google-services.json
 
 # Claves de APIs (GIPHY)
 secrets.properties
