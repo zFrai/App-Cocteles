@@ -2,6 +2,7 @@ package com.barcraft.app.repository
 
 import com.barcraft.app.data.remote.Collections
 import com.barcraft.app.data.remote.snapshotFlow
+import com.barcraft.app.data.remote.snapshotFlowOrFail
 import com.barcraft.app.data.remote.toChatMessage
 import com.barcraft.app.data.remote.toChatRoom
 import com.barcraft.app.model.ChatMessage
@@ -35,7 +36,7 @@ class ChatRepository(private val db: FirebaseFirestore) {
     fun roomIdFor(uidA: String, uidB: String): String = listOf(uidA, uidB).sorted().joinToString("_")
 
     fun observeRooms(myUid: String): Flow<List<ChatRoom>> =
-        chats.whereArrayContains("participants", myUid).snapshotFlow().map { snap ->
+        chats.whereArrayContains("participants", myUid).snapshotFlowOrFail().map { snap ->
             snap.documents.map { it.toChatRoom() }.sortedByDescending { it.updatedAt }
         }
 

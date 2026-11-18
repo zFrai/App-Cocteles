@@ -45,6 +45,7 @@ import com.barcraft.app.model.Post
 import com.barcraft.app.ui.components.AccountRequiredState
 import com.barcraft.app.ui.components.EmptyState
 import com.barcraft.app.ui.components.LoadingBox
+import com.barcraft.app.ui.components.LoadProblemBanner
 import com.barcraft.app.ui.navigation.LocalAppSession
 import com.barcraft.app.utils.appViewModel
 
@@ -91,6 +92,8 @@ fun FeedScreen(
         val canPublish = Permissions.canPublishPosts(me.role)
         val posts by vm.posts.collectAsStateWithLifecycle()
         val recipes by vm.recipes.collectAsStateWithLifecycle()
+        val recipesProblem by vm.recipesProblem.collectAsStateWithLifecycle()
+        val postsProblem by vm.postsProblem.collectAsStateWithLifecycle()
         var toDelete by remember { mutableStateOf<Post?>(null) }
         var toEdit by remember { mutableStateOf<Post?>(null) }
         val savedIds by vm.savedIds.collectAsStateWithLifecycle()
@@ -104,10 +107,11 @@ fun FeedScreen(
             }
             // Recetas: públicas + las de "Seguidores" de las cuentas que sigo.
             if (tab == 0) {
-                SharedRecipeList(recipes, onOpen = { onOpenRecipe(it.authorId, it.id) })
+                SharedRecipeList(recipes, onOpen = { onOpenRecipe(it.authorId, it.id) }, problem = recipesProblem)
                 return@Column
             }
 
+            postsProblem?.let { LoadProblemBanner(it) }
             val list = posts
             when {
                 list == null -> LoadingBox()

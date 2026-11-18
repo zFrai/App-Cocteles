@@ -1,6 +1,10 @@
 package com.barcraft.app.ui.social
 
 import com.barcraft.app.R
+import com.barcraft.app.data.remote.LoadProblem
+import com.barcraft.app.data.remote.orOnProblem
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onStart
 import com.barcraft.app.utils.Txt
 import kotlinx.coroutines.flow.distinctUntilChanged
 import com.barcraft.app.model.SharedRecipe
@@ -44,11 +48,22 @@ class FeedViewModel(
     private val social = container.socialRepository
     private val chat = container.chatRepository
 
+    /** Si Firestore rechaza alguna lista (falta el índice, reglas sin publicar...), se avisa en pantalla. */
+    private val _postsProblem = MutableStateFlow<LoadProblem?>(null)
+    val postsProblem: StateFlow<LoadProblem?> = _postsProblem.asStateFlow()
+    private val _recipesProblem = MutableStateFlow<LoadProblem?>(null)
+    val recipesProblem: StateFlow<LoadProblem?> = _recipesProblem.asStateFlow()
+
+    /** Bloqueados: no se espera a tenerlos para enseñar la lista (al llegar se filtra). */
+    private val blocked = container.friendsRepository.observeSettings(me.uid)
+        .map { it.blocked.toSet() }.onStart { emit(emptySet()) }
+
     /** Publicaciones, sin las de personas que he bloqueado. */
     val posts: StateFlow<List<Post>?> =
-        combine(social.observeFeed(), container.friendsRepository.observeSettings(me.uid)) { posts, settings ->
-            posts.filter { it.authorId !in settings.blocked }
+        combine(social.observeFeed(), blocked) { posts, blocked ->
+            posts.filter { it.authorId !in blocked }
         }.map<List<Post>, List<Post>?> { it }
+            .orOnProblem(emptyList()) { _postsProblem.value = it }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Recetas compartidas: públicas + "Seguidores" de quien sigo, sin las de bloqueados (null = cargando). */
@@ -59,9 +74,12 @@ class FeedViewModel(
                 container.friendsRepository.observeFollowing(me.uid)
                     .map { list -> list.filter { it.accepted }.map { it.followedId }.sorted() }
                     .distinctUntilChanged()
+                    // Si no se pueden leer los seguidos, al menos salen las públicas.
+                    .catch { emit(emptyList()) }
             ),
-            container.friendsRepository.observeSettings(me.uid)
-        ) { recipes, settings -> recipes?.filter { it.authorId !in settings.blocked } }
+            blocked
+        ) { recipes, blocked -> recipes?.filter { it.authorId !in blocked } }
+            .orOnProblem(emptyList()) { _recipesProblem.value = it }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val myUid = me.uid

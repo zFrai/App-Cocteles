@@ -54,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.barcraft.app.ui.components.AccountRequiredState
 import com.barcraft.app.ui.components.EmptyState
 import com.barcraft.app.ui.components.LoadingBox
+import com.barcraft.app.ui.components.LoadProblemBanner
 import com.barcraft.app.ui.components.UserAvatar
 import com.barcraft.app.ui.navigation.LocalAppSession
 import com.barcraft.app.utils.DateUtils
@@ -85,6 +86,7 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
         val vm = appViewModel(key = "people_${me.uid}") { PeopleViewModel(it, me) }
         val people by vm.state.collectAsStateWithLifecycle()
         val rooms by vm.rooms.collectAsStateWithLifecycle()
+        val problem by vm.problem.collectAsStateWithLifecycle()
         LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
 
         Column(Modifier.fillMaxSize().padding(padding)) {
@@ -100,7 +102,9 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
                 Tab(selected = tab == 4, onClick = { tab = 4 }, text = { FitText(stringResource(R.string.chats_tab_blocked)) })
             }
 
-            if (!people.loaded) { LoadingBox(); return@Column }
+            problem?.let { LoadProblemBanner(it) }
+            // La pestaña Chats no espera a la lista de personas: las conversaciones salen en cuanto llegan.
+            if (tab != 0 && !people.loaded) { LoadingBox(); return@Column }
 
             when (tab) {
                 0 -> {

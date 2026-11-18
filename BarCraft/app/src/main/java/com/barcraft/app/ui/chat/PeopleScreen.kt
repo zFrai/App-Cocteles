@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.barcraft.app.model.Role
 import com.barcraft.app.ui.components.EmptyState
 import com.barcraft.app.ui.components.LoadingBox
+import com.barcraft.app.ui.components.LoadProblemBanner
 import com.barcraft.app.ui.navigation.LocalAppSession
 import com.barcraft.app.ui.qr.ProfileQr
 import com.barcraft.app.utils.appViewModel
@@ -59,6 +60,7 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
     val me = LocalAppSession.current.profile ?: return
     val vm = appViewModel(key = "people_dir_${me.uid}") { PeopleViewModel(it, me) }
     val people by vm.state.collectAsStateWithLifecycle()
+    val problem by vm.problem.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     var query by rememberSaveable { mutableStateOf("") }
     var roleFilter by rememberSaveable { mutableStateOf<Role?>(null) }
@@ -106,6 +108,7 @@ fun PeopleScreen(onBack: (() -> Unit)?, onRoomReady: (String) -> Unit) {
                     FilterChip(selected = roleFilter == r, onClick = { roleFilter = if (roleFilter == r) null else r }, label = { FitText(stringResource(r.labelRes)) })
                 }
             }
+            problem?.let { LoadProblemBanner(it) }
             val list = people.everyone.filter {
                 !it.blocked && !it.profile.banned &&
                     (roleFilter == null || it.profile.role == roleFilter) &&
