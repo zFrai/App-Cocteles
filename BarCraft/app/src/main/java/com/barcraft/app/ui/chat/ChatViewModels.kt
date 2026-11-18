@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barcraft.app.AppContainer
 import com.barcraft.app.R
+import com.barcraft.app.data.remote.LoadProblem
+import com.barcraft.app.data.remote.orOnProblem
 import com.barcraft.app.model.ChatMessage
 import com.barcraft.app.model.ChatRoom
 import com.barcraft.app.model.Follow
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
@@ -83,14 +86,25 @@ class PeopleViewModel(private val container: AppContainer, private val me: UserP
     private val friends = container.friendsRepository
     private var migrationStarted = false
 
+    /** Si Firestore rechaza alguna lista (reglas sin publicar, sin conexión...), se avisa en pantalla. */
+    private val _problem = MutableStateFlow<LoadProblem?>(null)
+    val problem: StateFlow<LoadProblem?> = _problem.asStateFlow()
+    private fun report(p: LoadProblem) { if (_problem.value == null) _problem.value = p }
+
+    /**
+     * La lista sale en cuanto llegan los perfiles: seguidores, seguidos y ajustes se van
+     * rellenando según llegan, sin esperar a que estén todos (antes se esperaba a los cuatro).
+     */
     val state: StateFlow<PeopleState> =
         combine(
             container.userRepository.observeAll(),
-            friends.observeFollowing(me.uid),
-            friends.observeFollowers(me.uid),
-            friends.observeSettings(me.uid)
-        ) { users, following, followers, settings ->
-            if (!settings.followsMigrated) migrateOnce(users)
+            friends.observeFollowing(me.uid).orOnProblem(emptyList(), ::report).onStart { emit(emptyList()) },
+            friends.observeFollowers(me.uid).orOnProblem(emptyList(), ::report).onStart { emit(emptyList()) },
+            friends.observeSettings(me.uid).map<PrivateSettings, PrivateSettings?> { it }.onStart { emit(null) }
+        ) { users, following, followers, loadedSettings ->
+            // Solo con los ajustes reales: si no, la migración se lanzaría en cada arranque.
+            if (loadedSettings != null && !loadedSettings.followsMigrated) migrateOnce(users)
+            val settings = loadedSettings ?: PrivateSettings()
             val iFollow = following.associateBy { it.followedId }
             val followsMe = followers.associateBy { it.followerId }
             PeopleState(
@@ -120,6 +134,7 @@ class PeopleViewModel(private val container: AppContainer, private val me: UserP
 
     val rooms: StateFlow<List<ChatRoom>?> =
         container.chatRepository.observeRooms(me.uid).map<List<ChatRoom>, List<ChatRoom>?> { it }
+            .orOnProblem(emptyList(), ::report)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val _messages = MutableSharedFlow<String>()

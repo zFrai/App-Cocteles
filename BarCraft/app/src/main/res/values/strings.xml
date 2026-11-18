@@ -678,4 +678,12 @@
     <string name="msg_admin_report_failed">No se pudo actualizar la denuncia</string>
     <string name="msg_admin_report_dismissed">Denuncia descartada</string>
     <string name="msg_admin_report_resolved">Denuncia revisada</string>
+    <!-- Errores de carga de Firestore (LoadProblemBanner) -->
+    <string name="load_problem_index_title">Falta un índice en Firestore</string>
+    <string name="load_problem_index_message">Firestore necesita un índice para esta lista. Pulsa Crear índice (o créalo en Firestore Database &gt; Índices), espera a que ponga Habilitado y vuelve a abrir la app.</string>
+    <string name="load_problem_create_index">Crear índice</string>
+    <string name="load_problem_rules_title">Firestore no deja leer esto</string>
+    <string name="load_problem_rules_message">Las reglas publicadas no coinciden con la app. Copia firestore.rules del proyecto, pégalo en Firestore Database &gt; Reglas y pulsa Publicar.</string>
+    <string name="load_problem_other_title">No se ha podido cargar</string>
+    <string name="load_problem_other_message">Revisa la conexión y vuelve a abrir esta pestaña. En Logcat (filtro BarCraft) está el error completo.</string>
 </resources>

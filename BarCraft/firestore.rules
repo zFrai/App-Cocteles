@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Reglas de seguridad de BarCraft (v3).
+// Reglas de seguridad de BarCraft (v3.1).
 // Pégalas en Firebase Console > Firestore Database > Reglas > Publicar.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -148,8 +148,16 @@ service cloud.firestore {
 
     // ── Amistades ──────────────────────────────────────────────
     match /follows/{followId} {
-      allow read: if signedIn()
-                  && request.auth.uid in [resource.data.followerId, resource.data.followedId];
+      // Escrito con "==" y "||" para que Firestore pueda comprobar las consultas de la app
+      // (where followerId == yo / where followedId == yo); con "in [ ... ]" las puede rechazar.
+      allow list: if signedIn()
+                  && (resource.data.followerId == request.auth.uid
+                      || resource.data.followedId == request.auth.uid);
+      // Leer uno suelto: también si aún no existe (la app lo mira antes de seguir para no repetirlo).
+      allow get: if signedIn()
+                 && (resource == null
+                     || resource.data.followerId == request.auth.uid
+                     || resource.data.followedId == request.auth.uid);
       // Solo sigo yo; a una cuenta privada se le envía solicitud ("pending"), salvo amistad antigua aceptada.
       allow create: if active()
                     && request.resource.data.followerId == request.auth.uid

@@ -116,11 +116,21 @@ Al editar una receta eliges **Privada** (solo en tu móvil), **Seguidores** o **
 se copian a `users/{uid}/recipes/{id}` y salen en **Comunidad > Recetas**: las públicas para todo el mundo
 y las de Seguidores solo para quien te sigue. Las fotos guardadas en el móvil no se suben.
 
-La lista de recetas públicas usa una consulta de grupo y **necesita un índice**: la primera vez que abras
-Comunidad > Recetas, en Logcat (filtro `BarCraft`) aparecerá un error de Firestore con un enlace para crearlo.
-Ábrelo, pulsa **Crear índice** y espera unos minutos. También puedes crearlo a mano en
-Firestore Database > Índices > **Exenciones de campo único**: colección `recipes`, campo `visibility`,
-ámbito **Grupo de colecciones**, ascendente activado.
+La lista de recetas públicas usa una consulta de grupo y **necesita un índice** (sin él, Comunidad > Recetas
+muestra un aviso rojo "Falta un índice en Firestore"). Dos formas de crearlo:
+
+- **Desde la app:** en el aviso rojo pulsa **Crear índice**. Se abre la consola con todo rellenado:
+  pulsa **Guardar** / **Crear índice**.
+- **A mano:** Firestore Database > **Índices** > pestaña **Campo único** (o "Exenciones de campo único")
+  > **Agregar exención**: ID de colección `recipes`, ruta del campo `visibility`, marca **Grupo de colecciones**
+  y deja activados los índices (ascendente sobre todo) > Guardar.
+
+Tarda unos minutos: espera a que el estado ponga **Habilitado** y cierra y abre la app.
+El archivo `firestore.indexes.json` de la raíz recoge el mismo índice por si algún día usas la Firebase CLI
+(`firebase deploy --only firestore:indexes`).
+
+Las demás listas (seguidores, seguidos, chats, publicaciones) usan los índices que Firestore crea solo.
+Si alguna sale con el aviso "Firestore no deja leer esto", vuelve a publicar `firestore.rules`.
 
 ## Mis publicaciones y Guardados
 En **Perfil > Mis publicaciones** puedes editar el texto o borrar lo que has publicado. En Comunidad,

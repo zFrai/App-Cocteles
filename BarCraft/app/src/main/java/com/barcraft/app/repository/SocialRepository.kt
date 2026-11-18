@@ -2,6 +2,7 @@ package com.barcraft.app.repository
 
 import com.barcraft.app.data.remote.Collections
 import com.barcraft.app.data.remote.snapshotFlow
+import com.barcraft.app.data.remote.snapshotFlowOrFail
 import com.barcraft.app.data.remote.toComment
 import com.barcraft.app.data.remote.toPost
 import com.barcraft.app.data.remote.toSavedPost
@@ -24,7 +25,7 @@ class SocialRepository(private val db: FirebaseFirestore) {
 
     fun observeFeed(limit: Long = 100): Flow<List<Post>> =
         posts.orderBy("createdAt", Query.Direction.DESCENDING).limit(limit)
-            .snapshotFlow()
+            .snapshotFlowOrFail()
             .map { snap -> snap.documents.map { it.toPost() } }
 
     fun observePost(postId: String): Flow<Post?> =

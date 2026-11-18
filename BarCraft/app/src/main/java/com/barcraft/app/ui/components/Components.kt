@@ -20,8 +20,11 @@ import androidx.compose.material.icons.filled.LocalBar
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +38,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +54,7 @@ import androidx.compose.runtime.LaunchedEffect
 import coil.compose.AsyncImage
 import com.barcraft.app.R
 import com.barcraft.app.model.Role
+import com.barcraft.app.data.remote.LoadProblem
 
 /** Mensaje centrado para listas vacías. */
 @Composable
@@ -278,5 +283,43 @@ fun SectionCard(
         color = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Box(Modifier.padding(contentPadding)) { content() }
+    }
+}
+
+/**
+ * Aviso cuando Firestore no deja cargar algo (en vez de un círculo cargando para siempre).
+ * Si falta un índice y el error trae el enlace, el botón abre la consola para crearlo.
+ */
+@Composable
+fun LoadProblemBanner(problem: LoadProblem, modifier: Modifier = Modifier) {
+    val uriHandler = LocalUriHandler.current
+    val (title, message) = when (problem.kind) {
+        LoadProblem.Kind.MISSING_INDEX ->
+            stringResource(R.string.load_problem_index_title) to stringResource(R.string.load_problem_index_message)
+        LoadProblem.Kind.PERMISSION_DENIED ->
+            stringResource(R.string.load_problem_rules_title) to stringResource(R.string.load_problem_rules_message)
+        LoadProblem.Kind.OTHER ->
+            stringResource(R.string.load_problem_other_title) to stringResource(R.string.load_problem_other_message)
+    }
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.ErrorOutline, null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                Spacer(Modifier.width(8.dp))
+                Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+            val url = problem.indexUrl
+            if (url != null) {
+                Spacer(Modifier.height(12.dp))
+                Button(onClick = { runCatching { uriHandler.openUri(url) } }) {
+                    FitText(stringResource(R.string.load_problem_create_index))
+                }
+            }
+        }
     }
 }

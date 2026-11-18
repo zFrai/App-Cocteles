@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.combine
@@ -38,7 +39,7 @@ class AdminViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val posts: StateFlow<List<Post>> =
-        social.observeFeed(limit = 200).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+        social.observeFeed(limit = 200).catch { emit(emptyList()) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /** Denuncias pendientes de revisar (null = cargando). */
     val openReports: StateFlow<List<Report>?> =

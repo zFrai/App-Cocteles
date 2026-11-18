@@ -2,6 +2,7 @@ package com.barcraft.app.repository
 
 import com.barcraft.app.data.remote.Collections
 import com.barcraft.app.data.remote.snapshotFlow
+import com.barcraft.app.data.remote.snapshotFlowOrFail
 import com.barcraft.app.data.remote.toFollow
 import com.barcraft.app.data.remote.toFriendship
 import com.barcraft.app.data.remote.toPrivateSettings
@@ -37,22 +38,28 @@ class FriendsRepository(private val db: FirebaseFirestore) {
     /** Id del seguimiento: quién sigue + "_" + a quién. Debe coincidir con firestore.rules. */
     fun followId(followerUid: String, followedUid: String): String = "${followerUid}_$followedUid"
 
-    /** A quién sigo yo (y a quién he pedido seguir). */
+    /** A quién sigo yo (y a quién he pedido seguir). Si Firestore la rechaza, el Flow falla (ver orOnProblem). */
     fun observeFollowing(myUid: String): Flow<List<Follow>> =
-        follows.whereEqualTo("followerId", myUid).snapshotFlow()
+        follows.whereEqualTo("followerId", myUid).snapshotFlowOrFail()
             .map { snap -> snap.documents.map { it.toFollow() } }
 
     /** Quién me sigue (y quién me ha pedido seguirme). */
     fun observeFollowers(myUid: String): Flow<List<Follow>> =
-        follows.whereEqualTo("followedId", myUid).snapshotFlow()
+        follows.whereEqualTo("followedId", myUid).snapshotFlowOrFail()
             .map { snap -> snap.documents.map { it.toFollow() } }
 
     fun observeSettings(myUid: String): Flow<PrivateSettings> =
         settingsDoc(myUid).snapshotFlow().map { it.toPrivateSettings() }
 
-    /** Sigue a [other]. Si su cuenta es privada queda como solicitud. */
+    /**
+     * Sigue a [other]. Si su cuenta es privada queda como solicitud.
+     * Si ya le sigo (o ya se lo he pedido) no hace nada: volver a escribir el documento sería
+     * una modificación, y las reglas solo dejan modificarlo a la cuenta seguida (para aceptar).
+     */
     suspend fun follow(me: UserProfile, other: UserProfile) {
-        follows.document(followId(me.uid, other.uid)).set(
+        val doc = follows.document(followId(me.uid, other.uid))
+        if (doc.get().await().exists()) return
+        doc.set(
             mapOf(
                 "followerId" to me.uid,
                 "followedId" to other.uid,

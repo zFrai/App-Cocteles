@@ -4,6 +4,7 @@ import android.util.Log
 import com.barcraft.app.data.local.entity.CocktailWithDetails
 import com.barcraft.app.data.remote.Collections
 import com.barcraft.app.data.remote.snapshotFlow
+import com.barcraft.app.data.remote.snapshotFlowOrFail
 import com.barcraft.app.data.remote.toSharedRecipe
 import com.barcraft.app.model.RecipeVisibility
 import com.barcraft.app.model.SharedRecipe
@@ -12,6 +13,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -80,20 +82,25 @@ class RecipeShareRepository(private val db: FirebaseFirestore) {
     /**
      * Comunidad: las públicas de todo el mundo + las de "Seguidores" de las cuentas que sigo.
      * Emite null mientras carga. Las más recientes primero.
+     *
+     * Si Firestore rechaza la consulta de las públicas (lo normal la primera vez: falta el índice de
+     * grupo en `recipes.visibility`), el Flow falla con ese error para que la pantalla lo muestre.
+     * Si falla la de una cuenta seguida, solo se omiten sus recetas.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun observeCommunity(myUid: String, followingIds: Flow<List<String>>): Flow<List<SharedRecipe>?> {
         val publicRecipes = db.collectionGroup(Collections.RECIPES)
             .whereEqualTo("visibility", RecipeVisibility.PUBLIC.id)
             .limit(MAX_PUBLIC)
-            .snapshotFlow()
+            .snapshotFlowOrFail()
             .map { snap -> snap.documents.map { it.toSharedRecipe() } }
 
         val forFollowers = followingIds.flatMapLatest { ids ->
             val flows = ids.take(MAX_FOLLOWED).map { authorId ->
-                myRecipes(authorId).whereEqualTo("visibility", RecipeVisibility.FOLLOWERS.id).snapshotFlow()
+                myRecipes(authorId).whereEqualTo("visibility", RecipeVisibility.FOLLOWERS.id).snapshotFlowOrFail()
                     .map { snap -> snap.documents.map { it.toSharedRecipe() } }
                     .onStart { emit(emptyList()) }
+                    .catch { emit(emptyList()) } // ya queda en Logcat; el resto de recetas se ve igual
             }
             if (flows.isEmpty()) flowOf(emptyList()) else combine(flows) { lists -> lists.toList().flatten() }
         }.onStart { emit(emptyList()) }

@@ -61,6 +61,8 @@ import com.barcraft.app.ui.components.CocktailImage
 import com.barcraft.app.ui.components.DifficultyDots
 import com.barcraft.app.ui.components.EmptyState
 import com.barcraft.app.ui.components.LoadingBox
+import com.barcraft.app.ui.components.LoadProblemBanner
+import com.barcraft.app.data.remote.LoadProblem
 import com.barcraft.app.ui.components.SectionCard
 import com.barcraft.app.ui.components.SectionTitle
 import com.barcraft.app.ui.components.UserAvatar
@@ -124,7 +126,25 @@ private fun VisibilityLabel(visibility: RecipeVisibility) {
 
 /** Lista de recetas de Comunidad. */
 @Composable
-fun SharedRecipeList(recipes: List<SharedRecipe>?, onOpen: (SharedRecipe) -> Unit, modifier: Modifier = Modifier) {
+fun SharedRecipeList(
+    recipes: List<SharedRecipe>?,
+    onOpen: (SharedRecipe) -> Unit,
+    modifier: Modifier = Modifier,
+    /** Si Firestore ha rechazado la consulta (p. ej. falta el índice), se avisa encima de la lista. */
+    problem: LoadProblem? = null
+) {
+    if (problem != null) {
+        Column(modifier.fillMaxSize()) {
+            LoadProblemBanner(problem)
+            SharedRecipeListContent(recipes, onOpen, Modifier.weight(1f))
+        }
+    } else {
+        SharedRecipeListContent(recipes, onOpen, modifier)
+    }
+}
+
+@Composable
+private fun SharedRecipeListContent(recipes: List<SharedRecipe>?, onOpen: (SharedRecipe) -> Unit, modifier: Modifier) {
     when {
         recipes == null -> LoadingBox(modifier)
         recipes.isEmpty() -> EmptyState(
