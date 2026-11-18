@@ -28,7 +28,7 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 3
-        versionName = "3.0"
+        versionName = "1.3.0"
 
         buildConfigField("String", "GIPHY_API_KEY", "\"${secrets.getProperty("GIPHY_API_KEY", "")}\"")
     }

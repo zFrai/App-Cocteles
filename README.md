@@ -2,7 +2,7 @@
 
 Recetario de coctelería para Android con su propia comunidad. Los barmans guardan su carta de cócteles en el móvil (funciona **sin conexión**) y, si quieren, la comparten con sus seguidores o con todo el mundo. Además hay muro de publicaciones, chats en tiempo real, perfiles con @usuario y QR, y un panel de moderación para los administradores.
 
-**Android** · **Kotlin** · **Jetpack Compose** · **Firebase** · **minSdk 26 (Android 8.0)** · **Versión 3.0**
+**Android** · **Kotlin** · **Jetpack Compose** · **Firebase** · **minSdk 26 (Android 8.0)** · **Versión 1.3.0**
 
 📲 **[Descargar el APK](https://github.com/zFrai/App-Cocteles/releases/latest)** desde GitHub Releases.
 
