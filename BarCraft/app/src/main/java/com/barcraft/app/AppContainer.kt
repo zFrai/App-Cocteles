@@ -7,6 +7,7 @@ import com.barcraft.app.data.local.LockStore
 import com.barcraft.app.data.local.SettingsStore
 import com.barcraft.app.data.remote.FirebaseProvider
 import com.barcraft.app.repository.AuthRepository
+import com.barcraft.app.repository.AvatarCache
 import com.barcraft.app.repository.ChatRepository
 import com.barcraft.app.repository.CocktailRepository
 import com.barcraft.app.repository.FriendsRepository
@@ -57,4 +58,5 @@ class AppContainer(context: Context) {
     val friendsRepository by lazy { FriendsRepository(firestore) }
     val mediaRepository by lazy { MediaRepository(firestore, appContext) }
     val reportRepository by lazy { ReportRepository(firestore) }
+    val avatarCache by lazy { AvatarCache(userRepository) }
 }

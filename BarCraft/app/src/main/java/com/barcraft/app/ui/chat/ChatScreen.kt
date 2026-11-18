@@ -137,7 +137,7 @@ fun ChatScreen(roomId: String, onBack: () -> Unit) {
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        UserAvatar(otherName.ifBlank { "?" }, size = 36.dp)
+                        UserAvatar(otherName.ifBlank { "?" }, size = 36.dp, uid = r?.otherId(me.uid))
                         Spacer(Modifier.width(12.dp))
                         FitText(otherName)
                     }

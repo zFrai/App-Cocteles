@@ -56,6 +56,11 @@ private fun rememberMediaFile(mediaId: String): MediaLoad {
     return state
 }
 
+/** Archivo de una foto del servidor: null mientras se descarga o si no hay conexión. */
+@Composable
+internal fun rememberMediaFileOrNull(mediaId: String): File? =
+    (rememberMediaFile(mediaId) as? MediaLoad.Ready)?.file
+
 /** Foto guardada en el servidor: se descarga al móvil la primera vez y después carga sin conexión. */
 @Composable
 fun RemoteImage(mediaId: String, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Crop) {

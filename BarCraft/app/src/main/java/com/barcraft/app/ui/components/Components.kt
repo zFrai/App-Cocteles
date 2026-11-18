@@ -43,6 +43,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import com.barcraft.app.utils.appContainer
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import coil.compose.AsyncImage
 import com.barcraft.app.R
 import com.barcraft.app.model.Role
 
@@ -93,7 +98,15 @@ fun LoadingBox(modifier: Modifier = Modifier) {
 
 /** Círculo con las iniciales del usuario, de color estable según el nombre. */
 @Composable
-fun UserAvatar(name: String, size: Dp = 44.dp, modifier: Modifier = Modifier) {
+fun UserAvatar(
+    name: String,
+    size: Dp = 44.dp,
+    modifier: Modifier = Modifier,
+    /** Si se indica, se busca su foto de perfil (y si no tiene, se ve la inicial). */
+    uid: String? = null,
+    /** Foto ya conocida (p. ej. del perfil completo); evita leer el perfil otra vez. */
+    photoId: String? = null
+) {
     val palette = listOf(
         Color(0xFFE9C46A), Color(0xFF8ED3C0), Color(0xFFD3BBF5), Color(0xFFFFB59A),
         Color(0xFF9ECAFF), Color(0xFFF4A3C0), Color(0xFFB5D98A)
@@ -101,17 +114,46 @@ fun UserAvatar(name: String, size: Dp = 44.dp, modifier: Modifier = Modifier) {
     val color = palette[(name.hashCode() and Int.MAX_VALUE) % palette.size]
     val initials = name.trim().split(" ").filter { it.isNotBlank() }.take(2)
         .joinToString("") { it.first().uppercase() }.ifBlank { "?" }
+    val photo = avatarPhotoId(uid, photoId)
     Box(
         modifier = modifier.size(size).clip(CircleShape).background(color),
         contentAlignment = Alignment.Center
     ) {
+        // La inicial se ve mientras la foto se descarga o si no hay conexión.
         Text(
             initials,
             color = Color(0xFF1B1B1F),
             fontWeight = FontWeight.Bold,
             fontSize = (size.value * 0.38f).sp
         )
+        if (photo.isNotBlank()) {
+            val file = rememberMediaFileOrNull(photo)
+            if (file != null) {
+                AsyncImage(
+                    model = file,
+                    contentDescription = stringResource(R.string.avatar_photo_of, name),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
     }
+}
+
+/** Id de la foto de perfil que hay que mostrar ("" = ninguna). */
+@Composable
+private fun avatarPhotoId(uid: String?, photoId: String?): String {
+    if (uid.isNullOrBlank()) return photoId.orEmpty()
+    val container = appContainer()
+    if (!container.firebaseEnabled) return ""
+    val cache = container.avatarCache
+    if (photoId != null) {
+        LaunchedEffect(uid, photoId) { cache.set(uid, photoId) }
+        return photoId
+    }
+    LaunchedEffect(uid) { cache.load(uid) }
+    val photos by cache.photos.collectAsState()
+    return photos[uid].orEmpty()
 }
 
 /**

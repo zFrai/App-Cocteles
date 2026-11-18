@@ -6,6 +6,16 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.barcraft.app.BuildConfig
 import com.barcraft.app.R
+import com.barcraft.app.ui.components.rememberPhotoPicker
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import com.barcraft.app.ui.components.FitText
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
@@ -112,6 +122,8 @@ fun ProfileScreen(
         .collectAsStateWithLifecycle(NotificationPrefs())
 
     LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
+    val uploadingPhoto by vm.uploadingPhoto.collectAsStateWithLifecycle()
+    val photoPicker = rememberPhotoPicker { uri -> me?.let { vm.setPhoto(it, uri) } }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
@@ -127,7 +139,16 @@ fun ProfileScreen(
             item {
                 SectionCard {
                     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                        UserAvatar(me?.name ?: stringResource(R.string.profile_guest), size = 84.dp)
+                        if (me != null) {
+                            ProfilePhoto(
+                                me = me,
+                                uploading = uploadingPhoto,
+                                onChange = { photoPicker.choose() },
+                                onRemove = { vm.removePhoto(me) }
+                            )
+                        } else {
+                            UserAvatar(stringResource(R.string.profile_guest), size = 84.dp)
+                        }
                         Spacer(Modifier.height(12.dp))
                         Text(me?.name ?: stringResource(R.string.profile_guest), style = MaterialTheme.typography.headlineSmall)
                         if (me != null) {
@@ -447,4 +468,60 @@ private fun formatBytes(bytes: Long): String = when {
     bytes < 1024 -> "$bytes B"
     bytes < 1024 * 1024 -> "%.0f KB".format(bytes / 1024f)
     else -> "%.1f MB".format(bytes / (1024f * 1024f))
+}
+
+/** Foto de perfil grande de la cabecera: al tocarla se cambia o se quita. */
+@Composable
+private fun ProfilePhoto(me: UserProfile, uploading: Boolean, onChange: () -> Unit, onRemove: () -> Unit) {
+    var menu by remember { mutableStateOf(false) }
+    Box(
+        Modifier
+            .size(84.dp)
+            .clickable(enabled = !uploading, onClickLabel = stringResource(R.string.profile_photo_change)) {
+                if (me.photoId.isBlank()) onChange() else menu = true
+            }
+    ) {
+        UserAvatar(me.name, size = 84.dp, uid = me.uid, photoId = me.photoId)
+        if (uploading) {
+            Box(
+                Modifier.matchParentSize().clip(CircleShape).background(Color.Black.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) { CircularProgressIndicator(Modifier.size(32.dp), strokeWidth = 3.dp, color = Color.White) }
+        }
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary,
+            border = BorderStroke(2.dp, MaterialTheme.colorScheme.surfaceContainerLow),
+            modifier = Modifier.align(Alignment.BottomEnd).size(28.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.PhotoCamera, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+            }
+        }
+    }
+
+    if (menu) {
+        AlertDialog(
+            onDismissRequest = { menu = false },
+            title = { Text(stringResource(R.string.profile_photo_title)) },
+            text = {
+                Column {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.profile_photo_change)) },
+                        leadingContent = { Icon(Icons.Outlined.PhotoCamera, null) },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        modifier = Modifier.clickable { menu = false; onChange() }
+                    )
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.profile_photo_remove)) },
+                        leadingContent = { Icon(Icons.Outlined.Delete, null) },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        modifier = Modifier.clickable { menu = false; onRemove() }
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { menu = false }) { FitText(stringResource(R.string.action_cancel)) } }
+        )
+    }
 }

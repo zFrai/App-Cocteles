@@ -84,7 +84,7 @@ fun PostCard(
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                UserAvatar(post.authorName, size = 40.dp)
+                UserAvatar(post.authorName, size = 40.dp, uid = post.authorId)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

@@ -56,12 +56,21 @@ service cloud.firestore {
                    && getAfter(/databases/$(database)/documents/tags/$(tagKey(request.resource.data.tag))).data.uid == uid);
       }
 
+      function photoOk(p) {
+        return p is string
+               && (p == '' || (p.size() <= 64
+                               && exists(/databases/$(database)/documents/media/$(p))
+                               && get(/databases/$(database)/documents/media/$(p)).data.ownerId == uid));
+      }
+
       // Descripción de 250 caracteres como máximo y "Dónde encontrarme" como mapa de textos cortos.
       function profileFieldsOk() {
         return request.resource.data.get('bio', '').size() <= 250
                && (!('links' in request.resource.data)
                    || (request.resource.data.links is map && request.resource.data.links.size() <= 6))
                && request.resource.data.get('privateAccount', false) is bool
+               // Foto de perfil: vacía o un archivo propio de media/ (ver UserRepository.setPhoto).
+               && (!('photoId' in changed()) || photoOk(request.resource.data.get('photoId', '')))
                // El email ya no vive aquí (cualquiera podría leerlo): solo se permite borrarlo.
                && (!('email' in changed()) || !('email' in request.resource.data));
       }
@@ -74,7 +83,7 @@ service cloud.firestore {
                     && !('tag' in request.resource.data)
                     && !('email' in request.resource.data);
       // Cada uno edita su nombre y bio, pero no su rol ni su bloqueo.
-      // También su descripción, "Dónde encontrarme" y si la cuenta es privada.
+      // También su descripción, "Dónde encontrarme", si la cuenta es privada y su foto de perfil.
       allow update: if (signedIn() && request.auth.uid == uid && !changed().hasAny(['role', 'banned']) && tagOk()
                         && profileFieldsOk())
                     // Un Admin cambia roles y bloqueos de otros.

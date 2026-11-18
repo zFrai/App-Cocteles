@@ -133,7 +133,7 @@ fun PostDetailScreen(postId: String, onBack: () -> Unit) {
 @Composable
 private fun CommentRow(comment: Comment, canDelete: Boolean, onDelete: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-        UserAvatar(comment.authorName, size = 34.dp)
+        UserAvatar(comment.authorName, size = 34.dp, uid = comment.authorId)
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
