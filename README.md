@@ -370,6 +370,6 @@ Copyright (c) 2026 Fräi
 
 ### Servicios de terceros
 
-**GIPHY.** Los GIFs y stickers que muestra la app se obtienen a través de la [API de GIPHY](https://developers.giphy.com/). Ese contenido no está cubierto por la licencia MIT de este proyecto: pertenece a GIPHY y a sus autores, y su uso se rige por las [condiciones de GIPHY](https://support.giphy.com/hc/en-us/articles/360020027752-GIPHY-Terms-of-Service). Como exigen esas condiciones, la app muestra la atribución **"Powered by GIPHY"** allí donde aparece contenido de GIPHY.
+**GIPHY.** Los GIFs y stickers que muestra la app se obtienen a través de la [API de GIPHY](https://developers.giphy.com/). Ese contenido no está cubierto por la licencia MIT de este proyecto: pertenece a GIPHY y a sus autores, y su uso se rige por las [condiciones de GIPHY](https://giphy.com/terms). Como exigen esas condiciones, la app muestra la atribución **"Powered by GIPHY"** allí donde aparece contenido de GIPHY.
 
 La clave de la API de GIPHY es personal y no se incluye en el repositorio.
