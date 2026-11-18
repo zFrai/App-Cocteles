@@ -43,6 +43,18 @@ class MediaRepository(private val db: FirebaseFirestore, context: Context) {
         return upload(ownerUid, bytes, "image/jpeg")
     }
 
+    /** Foto de perfil: se recorta en cuadrado por el centro (se ve en círculo) y se reduce a [AVATAR_SIDE] px. */
+    suspend fun uploadAvatar(ownerUid: String, source: Uri): String {
+        val bytes = withContext(Dispatchers.Default) {
+            val full = decode(source)
+            val side = minOf(full.width, full.height)
+            val square = Bitmap.createBitmap(full, (full.width - side) / 2, (full.height - side) / 2, side, side)
+            val scaled = if (side > AVATAR_SIDE) Bitmap.createScaledBitmap(square, AVATAR_SIDE, AVATAR_SIDE, true) else square
+            ByteArrayOutputStream().also { scaled.compress(Bitmap.CompressFormat.JPEG, 85, it) }.toByteArray()
+        }
+        return upload(ownerUid, bytes, "image/jpeg")
+    }
+
     /** Sube una nota de voz ya grabada. */
     suspend fun uploadAudio(ownerUid: String, file: File): String {
         val bytes = withContext(Dispatchers.IO) { file.readBytes() }
@@ -163,5 +175,6 @@ class MediaRepository(private val db: FirebaseFirestore, context: Context) {
         const val MAX_BYTES = 900 * 1024
         private const val TARGET_IMAGE_BYTES = 450 * 1024
         private const val MAX_SIDE = 1280
+        private const val AVATAR_SIDE = 512
     }
 }

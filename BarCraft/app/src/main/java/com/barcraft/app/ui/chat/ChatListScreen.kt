@@ -126,7 +126,7 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
                                     val name = room.otherName(me.uid)
                                     val fav = people.byUid(room.otherId(me.uid))?.favorite == true
                                     ListItem(
-                                        leadingContent = { UserAvatar(name) },
+                                        leadingContent = { UserAvatar(name, uid = room.otherId(me.uid)) },
                                         headlineContent = {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Text(name, style = MaterialTheme.typography.titleMedium)
@@ -184,7 +184,7 @@ fun ChatListScreen(onLogin: () -> Unit, onOpenRoom: (String) -> Unit, onFindPeop
                 ) else LazyColumn(contentPadding = PaddingValues(bottom = 96.dp)) {
                     items(people.blocked, key = { it.profile.uid }) { p ->
                         ListItem(
-                            leadingContent = { UserAvatar(p.profile.name) },
+                            leadingContent = { UserAvatar(p.profile.name, uid = p.profile.uid, photoId = p.profile.photoId) },
                             headlineContent = { Text(p.profile.name) },
                             supportingContent = { Text(stringResource(R.string.chats_blocked_label)) },
                             trailingContent = {

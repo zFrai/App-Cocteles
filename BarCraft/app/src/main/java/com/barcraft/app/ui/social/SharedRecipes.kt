@@ -80,7 +80,7 @@ fun SharedRecipeCard(recipe: SharedRecipe, onOpen: () -> Unit) {
     ElevatedCard(Modifier.fillMaxWidth().clickable(onClick = onOpen)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                UserAvatar(recipe.authorName, size = 32.dp)
+                UserAvatar(recipe.authorName, size = 32.dp, uid = recipe.authorId)
                 Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f)) {
                     Text(recipe.authorName, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)

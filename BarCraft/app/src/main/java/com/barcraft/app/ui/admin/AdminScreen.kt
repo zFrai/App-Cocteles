@@ -179,7 +179,7 @@ fun AdminScreen(onOpenPost: (String) -> Unit, onBack: () -> Unit) {
                 LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                     items(posts, key = { it.id }) { post ->
                         ListItem(
-                            leadingContent = { UserAvatar(post.authorName, size = 36.dp) },
+                            leadingContent = { UserAvatar(post.authorName, size = 36.dp, uid = post.authorId) },
                             headlineContent = {
                                 Text(
                                     post.text.ifBlank { post.cocktailName.ifBlank { stringResource(R.string.admin_post_no_text) } },
@@ -248,7 +248,7 @@ private fun ReportRow(
     ) {
         Column(Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                UserAvatar(report.reportedName, size = 36.dp)
+                UserAvatar(report.reportedName, size = 36.dp, uid = report.reportedId)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(report.reportedName, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -315,7 +315,7 @@ private fun UserAdminRow(
 ) {
     var menu by remember { mutableStateOf(false) }
     ListItem(
-        leadingContent = { UserAvatar(user.name) },
+        leadingContent = { UserAvatar(user.name, uid = user.uid, photoId = user.photoId) },
         headlineContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(user.name + if (isMe) stringResource(R.string.admin_you_suffix) else "", maxLines = 1, overflow = TextOverflow.Ellipsis)

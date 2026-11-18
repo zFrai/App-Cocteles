@@ -54,7 +54,7 @@ fun PersonRow(
     val openChat: () -> Unit = { vm.openChat(person, onOpenChat) }
 
     ListItem(
-        leadingContent = { UserAvatar(p.name) },
+        leadingContent = { UserAvatar(p.name, uid = p.uid, photoId = p.photoId) },
         headlineContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(p.name, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))

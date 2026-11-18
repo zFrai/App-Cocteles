@@ -55,6 +55,15 @@ class UserRepository(private val db: FirebaseFirestore) {
         users.document(uid).update("links", links.cleaned().toMap()).await()
     }
 
+    /** Pone o quita (con "") la foto de perfil. [photoId] es un archivo propio de la colección `media`. */
+    suspend fun setPhoto(uid: String, photoId: String) {
+        users.document(uid).update("photoId", photoId).await()
+    }
+
+    /** Foto de perfil de otra persona (una sola lectura, sin quedarse escuchando). */
+    suspend fun photoIdOf(uid: String): String =
+        users.document(uid).get().await().getString("photoId").orEmpty()
+
     suspend fun setPrivateAccount(uid: String, private: Boolean) {
         users.document(uid).update("privateAccount", private).await()
     }

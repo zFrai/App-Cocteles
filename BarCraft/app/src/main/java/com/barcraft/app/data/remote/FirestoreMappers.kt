@@ -51,7 +51,8 @@ fun DocumentSnapshot.toUserProfile(): UserProfile? {
         createdAt = millis("createdAt"),
         tag = getString("tag").orEmpty(),
         links = ProfileLinks.fromMap(stringMap("links")),
-        privateAccount = getBoolean("privateAccount") ?: false
+        privateAccount = getBoolean("privateAccount") ?: false,
+        photoId = getString("photoId").orEmpty()
     )
 }
 

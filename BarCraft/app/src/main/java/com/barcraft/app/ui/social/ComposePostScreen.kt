@@ -108,7 +108,7 @@ fun ComposePostScreen(initialCocktailId: Long, onDone: () -> Unit, onBack: () ->
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    UserAvatar(me.name, size = 40.dp)
+                    UserAvatar(me.name, size = 40.dp, uid = me.uid, photoId = me.photoId)
                     Spacer(Modifier.width(12.dp))
                     Text(me.name, style = MaterialTheme.typography.titleMedium)
                 }
